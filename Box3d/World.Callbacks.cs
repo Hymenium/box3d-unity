@@ -47,7 +47,7 @@ namespace Box3d
             {
                 CustomFilterCallback callback = CustomFilters[(uint)context];
                 if (callback == null) return true;
-                return callback(new Shape { Id = shapeIdA }, new Shape { Id = shapeIdB });
+                return callback(Shape.WrapUnchecked(shapeIdA), Shape.WrapUnchecked(shapeIdB));
             }
             catch (Exception exception)
             {
@@ -63,7 +63,7 @@ namespace Box3d
             {
                 PreSolveCallback callback = PreSolves[(uint)context];
                 if (callback == null) return true;
-                return callback(new Shape { Id = shapeIdA }, new Shape { Id = shapeIdB }, point, normal);
+                return callback(Shape.WrapUnchecked(shapeIdA), Shape.WrapUnchecked(shapeIdB), point, normal);
             }
             catch (Exception exception)
             {
@@ -148,7 +148,7 @@ namespace Box3d
         {
             CustomFilters[Id.Index1] = null;
             PreSolves[Id.Index1] = null;
-            DebugDrawBridge.SetBridgeOwned(Id, false);
+            NativeDebugDrawBridge.SetBridgeOwned(Id, false);
             // The mixers are global (see SetFrictionCallback) — clearing on any world destroy
             // prevents the last registered delegate (and its closure) from being rooted forever.
             _frictionMix = null;

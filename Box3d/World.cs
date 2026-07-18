@@ -12,24 +12,16 @@ namespace Box3d
         public static unsafe World Create(in WorldDef def)
         {
             WorldDef local = def;
+            bool isDebugEnabled = NativeDebugDrawBridge.IsConfigured;
+            if (isDebugEnabled)
+            {
+                NativeDebugDrawBridge.ConfigureWorldDef(ref local);
+            }
 #if UNITY_WEBGL && !UNITY_EDITOR
             local.WorkerCount = 1; // WebGL players are single-threaded
 #endif
-            // Debug-shape callbacks must be set at world creation for DrawDebug to render shape
-            // interiors. Wire the bridge unless the user supplied their own pair.
-            bool bridgeOwnsDebugShapes = local.CreateDebugShape == IntPtr.Zero && local.DestroyDebugShape == IntPtr.Zero;
-            if (bridgeOwnsDebugShapes)
-            {
-                local.CreateDebugShape = DebugDrawBridge.CreateShapePtr;
-                local.DestroyDebugShape = DebugDrawBridge.DestroyShapePtr;
-            }
-            else if (local.CreateDebugShape == IntPtr.Zero || local.DestroyDebugShape == IntPtr.Zero)
-            {
-                Debug.LogWarning("[Box3d] WorldDef sets only one of CreateDebugShape/DestroyDebugShape — " +
-                                 "the native engine requires both; expect crashes when shapes are drawn/destroyed.");
-            }
             var world = new World { Id = UnsafeBindings.b3CreateWorld(&local) };
-            DebugDrawBridge.SetBridgeOwned(world.Id, bridgeOwnsDebugShapes);
+            NativeDebugDrawBridge.SetBridgeOwned(world.Id, isDebugEnabled);
             return world;
         }
 
@@ -42,7 +34,7 @@ namespace Box3d
             Id = default;
         }
 
-        public bool IsValid => UnsafeBindings.b3World_IsValid(Id);
+        public readonly bool IsValid => UnsafeBindings.b3World_IsValid(Id);
 
         /// <summary>Advances the simulation. Use a fixed timeStep (e.g. Time.fixedDeltaTime);
         /// 4 sub-steps is the recommended default.</summary>
@@ -54,7 +46,7 @@ namespace Box3d
         public unsafe Body CreateBody(in BodyDef def)
         {
             BodyDef local = def;
-            return new Body { Id = UnsafeBindings.b3CreateBody(Id, &local) };
+            return Body.WrapUnchecked(UnsafeBindings.b3CreateBody(Id, &local));
         }
 
         /// <summary>Move events for bodies that moved during the last step.
