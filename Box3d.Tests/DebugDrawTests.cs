@@ -3,12 +3,40 @@ using Unity.Mathematics;
 
 namespace Box3d.Tests
 {
+    public sealed class TestingDebugDrawBackend : IDebugDrawBackend
+    {
+        public bool WasCalled { get; private set; }
+
+        public IDebugShape CreateSphere(in Sphere shape, in DebugShapeSource source)
+        {
+            WasCalled = true;
+            return null;
+        }
+
+        public IDebugShape CreateCapsule(in Capsule shape, in DebugShapeSource source) => null;
+        public IDebugShape CreateHull(HullView hull, in DebugShapeSource source) => null;
+        public IDebugShape CreateMesh(MeshView mesh, in DebugShapeSource source) => null;
+        public IDebugShape CreateHeightField(HeightFieldView heightField, in DebugShapeSource source) => null;
+        public void DestroyShape(IDebugShape shape) { }
+        public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color) => true;
+        public void DrawSegment(float3 start, float3 end, uint color) { }
+        public void DrawTransform(in B3Transform transform) { }
+        public void DrawPoint(float3 position, float size, uint color) { }
+        public void DrawSphere(float3 position, float radius, uint color, float alpha) { }
+        public void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha) { }
+        public void DrawBounds(in B3Aabb bounds, uint color) { }
+        public void DrawBox(float3 extents, in B3Transform transform, uint color) { }
+        public void DrawString(float3 p, string str, uint color) { }
+    }
+
     /// <summary>Debug-draw bridge: native draw callbacks must reach the managed trampolines.</summary>
     public class DebugDrawTests
     {
         [Test]
         public void DrawDebug_InvokesBridgeCallbacks()
         {
+            TestingDebugDrawBackend backend = new();
+            DebugDraw.SetBackend(backend);
             World world = World.Create(WorldDef.Default);
 
             BodyDef bodyDef = BodyDef.Default;
@@ -26,8 +54,7 @@ namespace Box3d.Tests
 
             world.DrawDebug(DebugDrawFlags.Shapes | DebugDrawFlags.Bounds | DebugDrawFlags.Mass);
 
-            Assert.Greater(DebugDrawBridge.DrawCallCount, 0,
-                "drawing a world with shapes should invoke the managed draw trampolines");
+            Assert.IsTrue(backend.WasCalled, "drawing a world with shapes should invoke the managed draw trampolines");
 
             world.Destroy();
         }
