@@ -17,6 +17,8 @@ namespace Box3d
             Id = default;
         }
 
+        public static Body WrapUnchecked(BodyId id) => new() { Id = id };
+
         public float3 Position => UnsafeBindings.b3Body_GetPosition(Id);
 
         public quaternion Rotation => UnsafeBindings.b3Body_GetRotation(Id);
@@ -98,14 +100,14 @@ namespace Box3d
         {
             ShapeDef localDef = def;
             Sphere localSphere = sphere;
-            return new Shape { Id = UnsafeBindings.b3CreateSphereShape(Id, &localDef, &localSphere) };
+            return Shape.WrapUnchecked(UnsafeBindings.b3CreateSphereShape(Id, &localDef, &localSphere));
         }
 
         public unsafe Shape CreateCapsuleShape(in ShapeDef def, in Capsule capsule)
         {
             ShapeDef localDef = def;
             Capsule localCapsule = capsule;
-            return new Shape { Id = UnsafeBindings.b3CreateCapsuleShape(Id, &localDef, &localCapsule) };
+            return Shape.WrapUnchecked(UnsafeBindings.b3CreateCapsuleShape(Id, &localDef, &localCapsule));
         }
 
         /// <summary>Attaches a convex hull shape. The hull data is fully cloned by the engine, so a
@@ -114,7 +116,7 @@ namespace Box3d
         {
             ShapeDef localDef = def;
             BoxHull localHull = hull;
-            return new Shape { Id = UnsafeBindings.b3CreateHullShape(Id, &localDef, &localHull.Base) };
+            return Shape.WrapUnchecked(UnsafeBindings.b3CreateHullShape(Id, &localDef, &localHull.Base));
         }
 
         /// <summary>Attaches a convex hull shape. The hull data is cloned into the world — the
@@ -123,7 +125,7 @@ namespace Box3d
         {
             if (!hull.IsCreated) throw new ArgumentException("Hull is not created (default or already destroyed)", nameof(hull));
             ShapeDef localDef = def;
-            return new Shape { Id = UnsafeBindings.b3CreateHullShape(Id, &localDef, (HullData*)hull.Data) };
+            return Shape.WrapUnchecked(UnsafeBindings.b3CreateHullShape(Id, &localDef, (HullData*)hull.Data));
         }
 
         /// <summary>Attaches a triangle mesh shape (static bodies only). The mesh data is
@@ -132,7 +134,7 @@ namespace Box3d
         {
             if (!mesh.IsCreated) throw new ArgumentException("TriangleMesh is not created (default or already destroyed)", nameof(mesh));
             ShapeDef localDef = def;
-            return new Shape { Id = UnsafeBindings.b3CreateMeshShape(Id, &localDef, (b3MeshData*)mesh.Data, scale) };
+            return Shape.WrapUnchecked(UnsafeBindings.b3CreateMeshShape(Id, &localDef, (b3MeshData*)mesh.Data, scale));
         }
 
         public Shape CreateMeshShape(in ShapeDef def, TriangleMesh mesh)
@@ -146,7 +148,7 @@ namespace Box3d
         {
             if (!heightField.IsCreated) throw new ArgumentException("HeightField is not created (default or already destroyed)", nameof(heightField));
             ShapeDef localDef = def;
-            return new Shape { Id = UnsafeBindings.b3CreateHeightFieldShape(Id, &localDef, (b3HeightFieldData*)heightField.Data) };
+            return Shape.WrapUnchecked(UnsafeBindings.b3CreateHeightFieldShape(Id, &localDef, (b3HeightFieldData*)heightField.Data));
         }
 
         /// <summary>Attaches a compound shape (static bodies only). The data is REFERENCED —
@@ -155,7 +157,7 @@ namespace Box3d
         {
             if (!compound.IsCreated) throw new ArgumentException("Compound is not created (default or already destroyed)", nameof(compound));
             ShapeDef localDef = def;
-            return new Shape { Id = UnsafeBindings.b3CreateCompoundShape(Id, &localDef, (b3CompoundData*)compound.Data) };
+            return Shape.WrapUnchecked(UnsafeBindings.b3CreateCompoundShape(Id, &localDef, (b3CompoundData*)compound.Data));
         }
 
         public bool Equals(Body other)

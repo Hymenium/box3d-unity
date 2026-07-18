@@ -130,8 +130,8 @@ namespace Box3d
 
             return new ContactData
             {
-                ShapeA = new Shape { Id = native.shapeIdA },
-                ShapeB = new Shape { Id = native.shapeIdB },
+                ShapeA = Shape.WrapUnchecked(native.shapeIdA),
+                ShapeB = Shape.WrapUnchecked(native.shapeIdB),
                 Manifolds = manifolds,
             };
         }

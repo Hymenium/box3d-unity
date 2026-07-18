@@ -9,6 +9,29 @@ namespace Box3d
 
         public bool IsValid => UnsafeBindings.b3Shape_IsValid(Id);
 
+        public static Shape Wrap(ShapeId id)
+        {
+            if (id.IsNull)
+            {
+                throw new ArgumentException("Cannot wrap a null shape ID.", nameof(id));
+            }
+
+            Shape shape = new() { Id = id };
+
+            if (!shape.IsValid)
+            {
+                throw new ArgumentException(
+                    "Cannot wrap an invalid or stale shape ID.",
+                    nameof(id));
+            }
+
+            return shape;
+        }
+
+        internal static Shape WrapUnchecked(ShapeId id) => new() { Id = id };
+
+        public Body GetBodyWrapper() => Body.WrapUnchecked(GetBody());
+
         public void Destroy(bool updateBodyMass = true)
         {
             if (Id.IsNull) return; // double-destroy would pass a null id into unvalidated native paths
