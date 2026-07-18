@@ -67,6 +67,95 @@ namespace Box3d
             }
         }
 
+        public readonly unsafe ref struct ContactView
+        {
+            private readonly ReadOnlySpan<b3ContactData> _contact;
+
+            internal ContactView(ReadOnlySpan<b3ContactData> contact)
+            {
+                _contact = contact;
+            }
+
+            private ref readonly b3ContactData Native =>
+                ref _contact[0];
+
+            public ContactId Id => Native.contactId;
+
+            public Shape ShapeA =>
+                Shape.WrapUnchecked(Native.shapeIdA);
+
+            public Shape ShapeB =>
+                Shape.WrapUnchecked(Native.shapeIdB);
+
+            public ReadOnlySpan<Manifold> Manifolds =>
+                new(Native.manifolds, Native.manifoldCount);
+        }
+
+        public readonly ref struct ContactCollection
+        {
+            private readonly ReadOnlySpan<b3ContactData> _contacts;
+
+            internal ContactCollection(ReadOnlySpan<b3ContactData> contacts)
+            {
+                _contacts = contacts;
+            }
+
+            public int Count => _contacts.Length;
+
+            public ContactView this[int index] => new(_contacts.Slice(index, 1));
+
+            public Enumerator GetEnumerator() => new(_contacts);
+
+            public ref struct Enumerator
+            {
+                private readonly ReadOnlySpan<b3ContactData> _contacts;
+                private int _index;
+
+                internal Enumerator(ReadOnlySpan<b3ContactData> contacts)
+                {
+                    _contacts = contacts;
+                    _index = -1;
+                }
+
+                public readonly ContactView Current => new(_contacts.Slice(_index, 1));
+
+                public bool MoveNext() => ++_index < _contacts.Length;
+            }
+        }
+
+        // foreach (ContactView contact in body.GetContacts())
+        // {
+        //     Shape shapeA = contact.ShapeA;
+
+        //     foreach (ref readonly Manifold manifold in contact.Manifolds)
+        //     {
+        //         // Directly reads Box3D's manifold storage.
+        //     }
+        // }
+        public unsafe readonly ContactCollection GetContactCollection()
+        {
+            int capacity = UnsafeBindings.b3Body_GetContactCapacity(Id);
+
+            if (capacity == 0)
+            {
+                return new ContactCollection(
+                    ReadOnlySpan<b3ContactData>.Empty);
+            }
+
+            var buffer = new b3ContactData[capacity];
+
+            int count;
+            fixed (b3ContactData* contacts = buffer)
+            {
+                count = UnsafeBindings.b3Body_GetContactData(
+                    Id,
+                    contacts,
+                    capacity);
+            }
+
+            return new ContactCollection(buffer.AsSpan(0, count));
+        }
+
         /// <summary>Snapshots every contact currently on this body — the touching shapes and their
         /// manifold(s) (points, normal, separation, impulses), as of the last <c>World.Step</c>.
         ///
