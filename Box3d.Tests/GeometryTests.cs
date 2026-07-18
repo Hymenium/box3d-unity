@@ -28,7 +28,7 @@ namespace Box3d.Tests
         [Test]
         public void GeometryCreateDestroy_DoesNotLeak()
         {
-            int baseline = UnsafeBindings.b3GetByteCount();
+            int baseline = Ffi.b3GetByteCount();
 
             Hull hull = Hull.CreateCylinder(2f, 0.5f);
             TriangleMesh mesh = TriangleMesh.CreateBox(float3.zero, new float3(1f, 1f, 1f));
@@ -36,13 +36,13 @@ namespace Box3d.Tests
             Assert.IsTrue(hull.IsCreated);
             Assert.IsTrue(mesh.IsCreated);
             Assert.IsTrue(field.IsCreated);
-            Assert.Greater(UnsafeBindings.b3GetByteCount(), baseline);
+            Assert.Greater(Ffi.b3GetByteCount(), baseline);
 
             hull.Destroy();
             mesh.Destroy();
             field.Destroy();
             Assert.IsFalse(hull.IsCreated);
-            Assert.AreEqual(baseline, UnsafeBindings.b3GetByteCount(), "geometry memory should return to baseline");
+            Assert.AreEqual(baseline, Ffi.b3GetByteCount(), "geometry memory should return to baseline");
         }
 
         [Test]
