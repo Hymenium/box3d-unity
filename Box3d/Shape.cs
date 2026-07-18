@@ -2,12 +2,14 @@ using System;
 
 namespace Box3d
 {
+    using Sys;
+
     /// <summary>A collision shape attached to a body. Thin value wrapper over a shape id.</summary>
     public partial struct Shape : IEquatable<Shape>
     {
         public ShapeId Id;
 
-        public bool IsValid => UnsafeBindings.b3Shape_IsValid(Id);
+        public bool IsValid => Ffi.b3Shape_IsValid(Id);
 
         public static Shape Wrap(ShapeId id)
         {
@@ -35,29 +37,29 @@ namespace Box3d
         public void Destroy(bool updateBodyMass = true)
         {
             if (Id.IsNull) return; // double-destroy would pass a null id into unvalidated native paths
-            UnsafeBindings.b3DestroyShape(Id, updateBodyMass);
+            Ffi.b3DestroyShape(Id, updateBodyMass);
             Id = default;
         }
 
         /// <summary>Application-specific data attached to the shape.</summary>
         public unsafe IntPtr UserData
         {
-            get => (IntPtr)UnsafeBindings.b3Shape_GetUserData(Id);
-            set => UnsafeBindings.b3Shape_SetUserData(Id, (void*)value);
+            get => (IntPtr)Ffi.b3Shape_GetUserData(Id);
+            set => Ffi.b3Shape_SetUserData(Id, (void*)value);
         }
 
         /// <summary>Replaces the sphere geometry of a sphere shape.</summary>
         public unsafe void SetSphere(in Sphere sphere)
         {
             Sphere local = sphere;
-            UnsafeBindings.b3Shape_SetSphere(Id, &local);
+            Ffi.b3Shape_SetSphere(Id, &local);
         }
 
         /// <summary>Replaces the capsule geometry of a capsule shape.</summary>
         public unsafe void SetCapsule(in Capsule capsule)
         {
             Capsule local = capsule;
-            UnsafeBindings.b3Shape_SetCapsule(Id, &local);
+            Ffi.b3Shape_SetCapsule(Id, &local);
         }
 
         /// <summary>Snapshots every contact currently on this shape — the touching shapes and their
@@ -75,7 +77,7 @@ namespace Box3d
         /// returns only touching contacts.)</para></summary>
         public unsafe ContactData[] GetContacts()
         {
-            int capacity = UnsafeBindings.b3Shape_GetContactCapacity(Id);
+            int capacity = Ffi.b3Shape_GetContactCapacity(Id);
             if (capacity == 0) return Array.Empty<ContactData>();
 
             Span<b3ContactData> buffer = capacity <= 32
@@ -84,7 +86,7 @@ namespace Box3d
             int count;
             fixed (b3ContactData* p = buffer)
             {
-                count = UnsafeBindings.b3Shape_GetContactData(Id, p, capacity);
+                count = Ffi.b3Shape_GetContactData(Id, p, capacity);
             }
 
             var result = new ContactData[count];

@@ -6,6 +6,8 @@ using UnityEngine;
 
 namespace Box3d
 {
+    using Sys;
+
     /// <summary>Decides if two shapes should collide. Both shapes have EnableCustomFiltering.
     /// THREAD SAFETY: invoked from worker threads during Step when the world is multithreaded —
     /// must be pure: no Unity API, no world mutation, no allocation.</summary>
@@ -26,8 +28,8 @@ namespace Box3d
         // context from box3d, so the wrapper can only hold one GLOBAL managed mixer of each kind —
         // setting one on any world replaces it for all worlds that registered one.
 
-        private static readonly CustomFilterCallback[] CustomFilters = new CustomFilterCallback[UnsafeBindings.B3_MAX_WORLDS + 1];
-        private static readonly PreSolveCallback[] PreSolves = new PreSolveCallback[UnsafeBindings.B3_MAX_WORLDS + 1];
+        private static readonly CustomFilterCallback[] CustomFilters = new CustomFilterCallback[Ffi.B3_MAX_WORLDS + 1];
+        private static readonly PreSolveCallback[] PreSolves = new PreSolveCallback[Ffi.B3_MAX_WORLDS + 1];
         private static MaterialMixCallback _frictionMix;
         private static MaterialMixCallback _restitutionMix;
 
@@ -112,7 +114,7 @@ namespace Box3d
         public void SetCustomFilterCallback(CustomFilterCallback callback)
         {
             CustomFilters[Id.Index1] = callback;
-            UnsafeBindings.b3World_SetCustomFilterCallback(Id,
+            Ffi.b3World_SetCustomFilterCallback(Id,
                 callback != null ? CustomFilterPtr : IntPtr.Zero, (void*)(uint)Id.Index1);
         }
 
@@ -122,7 +124,7 @@ namespace Box3d
         public void SetPreSolveCallback(PreSolveCallback callback)
         {
             PreSolves[Id.Index1] = callback;
-            UnsafeBindings.b3World_SetPreSolveCallback(Id,
+            Ffi.b3World_SetPreSolveCallback(Id,
                 callback != null ? PreSolvePtr : IntPtr.Zero, (void*)(uint)Id.Index1);
         }
 
@@ -132,7 +134,7 @@ namespace Box3d
         public void SetFrictionCallback(MaterialMixCallback callback)
         {
             _frictionMix = callback;
-            UnsafeBindings.b3World_SetFrictionCallback(Id, callback != null ? FrictionPtr : IntPtr.Zero);
+            Ffi.b3World_SetFrictionCallback(Id, callback != null ? FrictionPtr : IntPtr.Zero);
         }
 
         /// <summary>Registers a restitution mixing function (default: max(a, b)). GLOBAL managed
@@ -141,7 +143,7 @@ namespace Box3d
         public void SetRestitutionCallback(MaterialMixCallback callback)
         {
             _restitutionMix = callback;
-            UnsafeBindings.b3World_SetRestitutionCallback(Id, callback != null ? RestitutionPtr : IntPtr.Zero);
+            Ffi.b3World_SetRestitutionCallback(Id, callback != null ? RestitutionPtr : IntPtr.Zero);
         }
 
         internal void ClearCallbackSlots()

@@ -9,7 +9,7 @@ namespace Box3d
 
         /// <summary>Contacts are destroyed automatically by simulation and world changes —
         /// always validate ids taken from events before use.</summary>
-        public bool IsValid => UnsafeBindings.b3Contact_IsValid(Id);
+        public bool IsValid => Ffi.b3Contact_IsValid(Id);
 
         /// <summary>Returns a snapshot of this contact — the two shapes and their manifold(s), with
         /// contact points, normal, separation and impulses. Reflects the state at the last
@@ -21,7 +21,7 @@ namespace Box3d
         /// <see cref="IsValid"/> before calling on an id taken from an event.</para></summary>
         public ContactData GetData()
         {
-            return ContactData.FromNative(UnsafeBindings.b3Contact_GetData(Id));
+            return ContactData.FromNative(Ffi.b3Contact_GetData(Id));
         }
 
         public bool Equals(Contact other)

@@ -39,7 +39,7 @@ namespace Box3d
         public ulong MaskBits;
         public int GroupIndex;
 
-        public static CollisionFilter Default => UnsafeBindings.b3DefaultFilter();
+        public static CollisionFilter Default => Ffi.b3DefaultFilter();
     }
 
     /// <summary>Mirrors native b3SurfaceMaterial (40 bytes).</summary>
@@ -53,7 +53,7 @@ namespace Box3d
         public ulong UserMaterialId;
         public uint CustomColor;
 
-        public static SurfaceMaterial Default => UnsafeBindings.b3DefaultSurfaceMaterial();
+        public static SurfaceMaterial Default => Ffi.b3DefaultSurfaceMaterial();
     }
 
     /// <summary>Mirrors native b3WorldDef (144 bytes on x64). Create via <see cref="Default"/> only.</summary>
@@ -82,7 +82,7 @@ namespace Box3d
         public Capacity Capacity;
         internal int InternalValue;
 
-        public static WorldDef Default => UnsafeBindings.b3DefaultWorldDef();
+        public static WorldDef Default => Ffi.b3DefaultWorldDef();
     }
 
     /// <summary>Mirrors native b3BodyDef (104 bytes on x64). Create via <see cref="Default"/> only.</summary>
@@ -109,7 +109,7 @@ namespace Box3d
         public NativeBool EnableContactRecycling;
         internal int InternalValue;
 
-        public static BodyDef Default => UnsafeBindings.b3DefaultBodyDef();
+        public static BodyDef Default => Ffi.b3DefaultBodyDef();
     }
 
     /// <summary>Mirrors native b3ShapeDef (112 bytes on x64). Create via <see cref="Default"/> only.</summary>
@@ -133,6 +133,6 @@ namespace Box3d
         public NativeBool UpdateBodyMass;
         internal int InternalValue;
 
-        public static ShapeDef Default => UnsafeBindings.b3DefaultShapeDef();
+        public static ShapeDef Default => Ffi.b3DefaultShapeDef();
     }
 }

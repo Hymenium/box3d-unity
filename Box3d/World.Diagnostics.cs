@@ -1,5 +1,7 @@
 namespace Box3d
 {
+    using Sys;
+
     public partial struct World
     {
         /// <summary>Per-phase timing breakdown of the last <see cref="Step"/> (milliseconds). Use it to
@@ -7,7 +9,7 @@ namespace Box3d
         public unsafe Profile GetProfile()
         {
             // b3Profile is 23 sequential floats, layout-identical to Profile — reinterpret the copy.
-            b3Profile p = UnsafeBindings.b3World_GetProfile(Id);
+            b3Profile p = Ffi.b3World_GetProfile(Id);
             return *(Profile*)&p;
         }
 
@@ -15,7 +17,7 @@ namespace Box3d
         /// the last step. Native b3World_GetCounters (scalar fields).</summary>
         public unsafe Counters GetCounters()
         {
-            b3Counters c = UnsafeBindings.b3World_GetCounters(Id);
+            b3Counters c = Ffi.b3World_GetCounters(Id);
             return new Counters
             {
                 BodyCount = c.bodyCount,

@@ -14,7 +14,7 @@ namespace Box3d
         public ulong Id;
         public IntPtr Name;
 
-        public static QueryFilter Default => UnsafeBindings.b3DefaultQueryFilter();
+        public static QueryFilter Default => Ffi.b3DefaultQueryFilter();
     }
 
     /// <summary>Mirrors native b3RayResult (64 bytes). Result of a closest-hit ray cast.</summary>
@@ -67,6 +67,6 @@ namespace Box3d
         public float Falloff;
         public float ImpulsePerArea;
 
-        public static ExplosionDef Default => UnsafeBindings.b3DefaultExplosionDef();
+        public static ExplosionDef Default => Ffi.b3DefaultExplosionDef();
     }
 }

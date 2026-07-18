@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Box3d
 {
+    using Sys;
     /// <summary>A Box3d simulation world. Thin value wrapper over a generation-validated world id —
     /// safe to copy; a stale handle fails <see cref="IsValid"/> rather than crashing.</summary>
     public partial struct World : IEquatable<World>
@@ -20,7 +21,7 @@ namespace Box3d
 #if UNITY_WEBGL && !UNITY_EDITOR
             local.WorkerCount = 1; // WebGL players are single-threaded
 #endif
-            var world = new World { Id = UnsafeBindings.b3CreateWorld(&local) };
+            var world = new World { Id = Ffi.b3CreateWorld(&local) };
             NativeDebugDrawBridge.SetBridgeOwned(world.Id, isDebugEnabled);
             return world;
         }
@@ -30,23 +31,23 @@ namespace Box3d
         {
             if (Id.IsNull) return; // double-destroy would pass a null id into unvalidated native paths
             ClearCallbackSlots();
-            UnsafeBindings.b3DestroyWorld(Id);
+            Ffi.b3DestroyWorld(Id);
             Id = default;
         }
 
-        public readonly bool IsValid => UnsafeBindings.b3World_IsValid(Id);
+        public readonly bool IsValid => Ffi.b3World_IsValid(Id);
 
         /// <summary>Advances the simulation. Use a fixed timeStep (e.g. Time.fixedDeltaTime);
         /// 4 sub-steps is the recommended default.</summary>
         public void Step(float timeStep, int subStepCount = 4)
         {
-            UnsafeBindings.b3World_Step(Id, timeStep, subStepCount);
+            Ffi.b3World_Step(Id, timeStep, subStepCount);
         }
 
         public unsafe Body CreateBody(in BodyDef def)
         {
             BodyDef local = def;
-            return Body.WrapUnchecked(UnsafeBindings.b3CreateBody(Id, &local));
+            return Body.WrapUnchecked(Ffi.b3CreateBody(Id, &local));
         }
 
         /// <summary>Move events for bodies that moved during the last step.
@@ -54,7 +55,7 @@ namespace Box3d
         /// world mutation. Consume immediately; do not store.</summary>
         public unsafe ReadOnlySpan<BodyMoveEvent> GetBodyMoveEvents()
         {
-            BodyEventsRaw raw = UnsafeBindings.b3World_GetBodyEvents(Id);
+            BodyEventsRaw raw = Ffi.b3World_GetBodyEvents(Id);
             return new ReadOnlySpan<BodyMoveEvent>((void*)raw.MoveEvents, raw.MoveCount);
         }
 
@@ -63,7 +64,7 @@ namespace Box3d
         /// EnableHitEvents (both false by default).</summary>
         public unsafe ContactEvents GetContactEvents()
         {
-            ContactEventsRaw raw = UnsafeBindings.b3World_GetContactEvents(Id);
+            ContactEventsRaw raw = Ffi.b3World_GetContactEvents(Id);
             return new ContactEvents(
                 new ReadOnlySpan<ContactBeginTouchEvent>((void*)raw.BeginEvents, raw.BeginCount),
                 new ReadOnlySpan<ContactEndTouchEvent>((void*)raw.EndEvents, raw.EndCount),
@@ -75,7 +76,7 @@ namespace Box3d
         /// ShapeDef.EnableSensorEvents (false by default).</summary>
         public unsafe SensorEvents GetSensorEvents()
         {
-            SensorEventsRaw raw = UnsafeBindings.b3World_GetSensorEvents(Id);
+            SensorEventsRaw raw = Ffi.b3World_GetSensorEvents(Id);
             return new SensorEvents(
                 new ReadOnlySpan<SensorBeginTouchEvent>((void*)raw.BeginEvents, raw.BeginCount),
                 new ReadOnlySpan<SensorEndTouchEvent>((void*)raw.EndEvents, raw.EndCount));
@@ -85,7 +86,7 @@ namespace Box3d
         /// valid only until the next Step or world mutation.</summary>
         public unsafe ReadOnlySpan<JointEvent> GetJointEvents()
         {
-            JointEventsRaw raw = UnsafeBindings.b3World_GetJointEvents(Id);
+            JointEventsRaw raw = Ffi.b3World_GetJointEvents(Id);
             return new ReadOnlySpan<JointEvent>((void*)raw.JointEvents, raw.Count);
         }
 
@@ -94,14 +95,14 @@ namespace Box3d
         public unsafe void Explode(in ExplosionDef def)
         {
             ExplosionDef local = def;
-            UnsafeBindings.b3World_Explode(Id, &local);
+            Ffi.b3World_Explode(Id, &local);
         }
 
         /// <summary>Application-specific data attached to the world.</summary>
         public unsafe IntPtr UserData
         {
-            get => (IntPtr)UnsafeBindings.b3World_GetUserData(Id);
-            set => UnsafeBindings.b3World_SetUserData(Id, (void*)value);
+            get => (IntPtr)Ffi.b3World_GetUserData(Id);
+            set => Ffi.b3World_SetUserData(Id, (void*)value);
         }
 
         public bool Equals(World other)

@@ -16,14 +16,14 @@ namespace Box3d
             Array.Copy(utf8, buf, utf8.Length); // trailing 0 already present
             fixed (byte* p = buf)
             {
-                UnsafeBindings.b3Body_SetName(Id, (sbyte*)p);
+                Ffi.b3Body_SetName(Id, (sbyte*)p);
             }
         }
 
         /// <summary>This body's name, or "" if unset. Reflects box3d's truncation.</summary>
         public unsafe string GetName()
         {
-            sbyte* p = UnsafeBindings.b3Body_GetName(Id);
+            sbyte* p = Ffi.b3Body_GetName(Id);
             return p == null ? "" : Marshal.PtrToStringUTF8((IntPtr)p) ?? "";
         }
     }

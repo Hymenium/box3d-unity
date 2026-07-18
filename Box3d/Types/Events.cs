@@ -79,75 +79,77 @@ namespace Box3d
         public IntPtr UserData;
     }
 
-    // Raw pointer+count containers returned by the native getters (transient memory).
-
-    /// <summary>Mirrors native b3BodyEvents (16 bytes).</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct BodyEventsRaw
+    //* Raw pointer+count containers returned by the native getters (transient memory).
+    namespace Sys
     {
-        public IntPtr MoveEvents;
-        public int MoveCount;
-    }
-
-    /// <summary>Mirrors native b3ContactEvents (40 bytes).</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct ContactEventsRaw
-    {
-        public IntPtr BeginEvents;
-        public IntPtr EndEvents;
-        public IntPtr HitEvents;
-        public int BeginCount;
-        public int EndCount;
-        public int HitCount;
-    }
-
-    /// <summary>Mirrors native b3SensorEvents (24 bytes).</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct SensorEventsRaw
-    {
-        public IntPtr BeginEvents;
-        public IntPtr EndEvents;
-        public int BeginCount;
-        public int EndCount;
-    }
-
-    /// <summary>Mirrors native b3JointEvents (16 bytes).</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct JointEventsRaw
-    {
-        public IntPtr JointEvents;
-        public int Count;
-    }
-
-    // Public span bundles handed out by World. Ref structs: cannot be stored on the heap, which
-    // enforces the consume-immediately rule at compile time.
-
-    /// <summary>Contact events from the last step. Valid only until the next Step/world mutation.</summary>
-    public readonly ref struct ContactEvents
-    {
-        public readonly ReadOnlySpan<ContactBeginTouchEvent> Begin;
-        public readonly ReadOnlySpan<ContactEndTouchEvent> End;
-        public readonly ReadOnlySpan<ContactHitEvent> Hit;
-
-        internal ContactEvents(ReadOnlySpan<ContactBeginTouchEvent> begin,
-            ReadOnlySpan<ContactEndTouchEvent> end, ReadOnlySpan<ContactHitEvent> hit)
+        /// <summary>Mirrors native b3BodyEvents (16 bytes).</summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BodyEventsRaw
         {
-            Begin = begin;
-            End = end;
-            Hit = hit;
+            public IntPtr MoveEvents;
+            public int MoveCount;
         }
-    }
 
-    /// <summary>Sensor events from the last step. Valid only until the next Step/world mutation.</summary>
-    public readonly ref struct SensorEvents
-    {
-        public readonly ReadOnlySpan<SensorBeginTouchEvent> Begin;
-        public readonly ReadOnlySpan<SensorEndTouchEvent> End;
-
-        internal SensorEvents(ReadOnlySpan<SensorBeginTouchEvent> begin, ReadOnlySpan<SensorEndTouchEvent> end)
+        /// <summary>Mirrors native b3ContactEvents (40 bytes).</summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct ContactEventsRaw
         {
-            Begin = begin;
-            End = end;
+            public IntPtr BeginEvents;
+            public IntPtr EndEvents;
+            public IntPtr HitEvents;
+            public int BeginCount;
+            public int EndCount;
+            public int HitCount;
+        }
+
+        /// <summary>Mirrors native b3SensorEvents (24 bytes).</summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SensorEventsRaw
+        {
+            public IntPtr BeginEvents;
+            public IntPtr EndEvents;
+            public int BeginCount;
+            public int EndCount;
+        }
+
+        /// <summary>Mirrors native b3JointEvents (16 bytes).</summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct JointEventsRaw
+        {
+            public IntPtr JointEvents;
+            public int Count;
+        }
+
+        // Public span bundles handed out by World. Ref structs: cannot be stored on the heap, which
+        // enforces the consume-immediately rule at compile time.
+
+        /// <summary>Contact events from the last step. Valid only until the next Step/world mutation.</summary>
+        public readonly ref struct ContactEvents
+        {
+            public readonly ReadOnlySpan<ContactBeginTouchEvent> Begin;
+            public readonly ReadOnlySpan<ContactEndTouchEvent> End;
+            public readonly ReadOnlySpan<ContactHitEvent> Hit;
+
+            internal ContactEvents(ReadOnlySpan<ContactBeginTouchEvent> begin,
+                ReadOnlySpan<ContactEndTouchEvent> end, ReadOnlySpan<ContactHitEvent> hit)
+            {
+                Begin = begin;
+                End = end;
+                Hit = hit;
+            }
+        }
+
+        /// <summary>Sensor events from the last step. Valid only until the next Step/world mutation.</summary>
+        public readonly ref struct SensorEvents
+        {
+            public readonly ReadOnlySpan<SensorBeginTouchEvent> Begin;
+            public readonly ReadOnlySpan<SensorEndTouchEvent> End;
+
+            internal SensorEvents(ReadOnlySpan<SensorBeginTouchEvent> begin, ReadOnlySpan<SensorEndTouchEvent> end)
+            {
+                Begin = begin;
+                End = end;
+            }
         }
     }
 }

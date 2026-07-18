@@ -1,5 +1,7 @@
 namespace Box3d
 {
+    using Sys;
+
     public partial struct World
     {
         /// <summary>Begins capturing this world's mutations into <paramref name="recording"/>. Stop with
@@ -7,7 +9,7 @@ namespace Box3d
         /// world's initial state (right after creation) so the whole run is reproducible.</summary>
         public unsafe void StartRecording(Recording recording)
         {
-            UnsafeBindings.b3World_StartRecording(Id, (b3Recording*)recording.Handle);
+            Ffi.b3World_StartRecording(Id, (b3Recording*)recording.Handle);
         }
 
         // StopRecording() is generated (World.g.cs).

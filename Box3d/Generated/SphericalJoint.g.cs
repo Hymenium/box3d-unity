@@ -7,31 +7,31 @@ namespace Box3d
 {
     public partial struct SphericalJoint
     {
-        public void EnableConeLimit(bool enableLimit) => UnsafeBindings.b3SphericalJoint_EnableConeLimit(Id, enableLimit);
-        public bool IsConeLimitEnabled() => UnsafeBindings.b3SphericalJoint_IsConeLimitEnabled(Id);
-        public float GetConeLimit() => UnsafeBindings.b3SphericalJoint_GetConeLimit(Id);
-        public void SetConeLimit(float angleRadians) => UnsafeBindings.b3SphericalJoint_SetConeLimit(Id, angleRadians);
-        public float GetConeAngle() => UnsafeBindings.b3SphericalJoint_GetConeAngle(Id);
-        public void EnableTwistLimit(bool enableLimit) => UnsafeBindings.b3SphericalJoint_EnableTwistLimit(Id, enableLimit);
-        public bool IsTwistLimitEnabled() => UnsafeBindings.b3SphericalJoint_IsTwistLimitEnabled(Id);
-        public float GetLowerTwistLimit() => UnsafeBindings.b3SphericalJoint_GetLowerTwistLimit(Id);
-        public float GetUpperTwistLimit() => UnsafeBindings.b3SphericalJoint_GetUpperTwistLimit(Id);
-        public void SetTwistLimits(float lowerLimitRadians, float upperLimitRadians) => UnsafeBindings.b3SphericalJoint_SetTwistLimits(Id, lowerLimitRadians, upperLimitRadians);
-        public float GetTwistAngle() => UnsafeBindings.b3SphericalJoint_GetTwistAngle(Id);
-        public void EnableSpring(bool enableSpring) => UnsafeBindings.b3SphericalJoint_EnableSpring(Id, enableSpring);
-        public bool IsSpringEnabled() => UnsafeBindings.b3SphericalJoint_IsSpringEnabled(Id);
-        public void SetSpringHertz(float hertz) => UnsafeBindings.b3SphericalJoint_SetSpringHertz(Id, hertz);
-        public float GetSpringHertz() => UnsafeBindings.b3SphericalJoint_GetSpringHertz(Id);
-        public void SetSpringDampingRatio(float dampingRatio) => UnsafeBindings.b3SphericalJoint_SetSpringDampingRatio(Id, dampingRatio);
-        public float GetSpringDampingRatio() => UnsafeBindings.b3SphericalJoint_GetSpringDampingRatio(Id);
-        public void SetTargetRotation(Unity.Mathematics.quaternion targetRotation) => UnsafeBindings.b3SphericalJoint_SetTargetRotation(Id, targetRotation);
-        public Unity.Mathematics.quaternion GetTargetRotation() => UnsafeBindings.b3SphericalJoint_GetTargetRotation(Id);
-        public void EnableMotor(bool enableMotor) => UnsafeBindings.b3SphericalJoint_EnableMotor(Id, enableMotor);
-        public bool IsMotorEnabled() => UnsafeBindings.b3SphericalJoint_IsMotorEnabled(Id);
-        public void SetMotorVelocity(Unity.Mathematics.float3 motorVelocity) => UnsafeBindings.b3SphericalJoint_SetMotorVelocity(Id, motorVelocity);
-        public Unity.Mathematics.float3 GetMotorVelocity() => UnsafeBindings.b3SphericalJoint_GetMotorVelocity(Id);
-        public Unity.Mathematics.float3 GetMotorTorque() => UnsafeBindings.b3SphericalJoint_GetMotorTorque(Id);
-        public void SetMaxMotorTorque(float torque) => UnsafeBindings.b3SphericalJoint_SetMaxMotorTorque(Id, torque);
-        public float GetMaxMotorTorque() => UnsafeBindings.b3SphericalJoint_GetMaxMotorTorque(Id);
+        public void EnableConeLimit(bool enableLimit) => Ffi.b3SphericalJoint_EnableConeLimit(Id, enableLimit);
+        public bool IsConeLimitEnabled() => Ffi.b3SphericalJoint_IsConeLimitEnabled(Id);
+        public float GetConeLimit() => Ffi.b3SphericalJoint_GetConeLimit(Id);
+        public void SetConeLimit(float angleRadians) => Ffi.b3SphericalJoint_SetConeLimit(Id, angleRadians);
+        public float GetConeAngle() => Ffi.b3SphericalJoint_GetConeAngle(Id);
+        public void EnableTwistLimit(bool enableLimit) => Ffi.b3SphericalJoint_EnableTwistLimit(Id, enableLimit);
+        public bool IsTwistLimitEnabled() => Ffi.b3SphericalJoint_IsTwistLimitEnabled(Id);
+        public float GetLowerTwistLimit() => Ffi.b3SphericalJoint_GetLowerTwistLimit(Id);
+        public float GetUpperTwistLimit() => Ffi.b3SphericalJoint_GetUpperTwistLimit(Id);
+        public void SetTwistLimits(float lowerLimitRadians, float upperLimitRadians) => Ffi.b3SphericalJoint_SetTwistLimits(Id, lowerLimitRadians, upperLimitRadians);
+        public float GetTwistAngle() => Ffi.b3SphericalJoint_GetTwistAngle(Id);
+        public void EnableSpring(bool enableSpring) => Ffi.b3SphericalJoint_EnableSpring(Id, enableSpring);
+        public bool IsSpringEnabled() => Ffi.b3SphericalJoint_IsSpringEnabled(Id);
+        public void SetSpringHertz(float hertz) => Ffi.b3SphericalJoint_SetSpringHertz(Id, hertz);
+        public float GetSpringHertz() => Ffi.b3SphericalJoint_GetSpringHertz(Id);
+        public void SetSpringDampingRatio(float dampingRatio) => Ffi.b3SphericalJoint_SetSpringDampingRatio(Id, dampingRatio);
+        public float GetSpringDampingRatio() => Ffi.b3SphericalJoint_GetSpringDampingRatio(Id);
+        public void SetTargetRotation(Unity.Mathematics.quaternion targetRotation) => Ffi.b3SphericalJoint_SetTargetRotation(Id, targetRotation);
+        public Unity.Mathematics.quaternion GetTargetRotation() => Ffi.b3SphericalJoint_GetTargetRotation(Id);
+        public void EnableMotor(bool enableMotor) => Ffi.b3SphericalJoint_EnableMotor(Id, enableMotor);
+        public bool IsMotorEnabled() => Ffi.b3SphericalJoint_IsMotorEnabled(Id);
+        public void SetMotorVelocity(Unity.Mathematics.float3 motorVelocity) => Ffi.b3SphericalJoint_SetMotorVelocity(Id, motorVelocity);
+        public Unity.Mathematics.float3 GetMotorVelocity() => Ffi.b3SphericalJoint_GetMotorVelocity(Id);
+        public Unity.Mathematics.float3 GetMotorTorque() => Ffi.b3SphericalJoint_GetMotorTorque(Id);
+        public void SetMaxMotorTorque(float torque) => Ffi.b3SphericalJoint_SetMaxMotorTorque(Id, torque);
+        public float GetMaxMotorTorque() => Ffi.b3SphericalJoint_GetMaxMotorTorque(Id);
     }
 }

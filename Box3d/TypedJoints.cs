@@ -11,7 +11,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(DistanceJoint joint)
         {
@@ -50,7 +50,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(MotorJoint joint)
         {
@@ -88,7 +88,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(ParallelJoint joint)
         {
@@ -126,7 +126,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(PrismaticJoint joint)
         {
@@ -164,7 +164,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(RevoluteJoint joint)
         {
@@ -202,7 +202,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(SphericalJoint joint)
         {
@@ -240,7 +240,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(WeldJoint joint)
         {
@@ -278,7 +278,7 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         public static implicit operator Joint(WheelJoint joint)
         {

@@ -7,26 +7,26 @@ namespace Box3d
 {
     public partial struct RevoluteJoint
     {
-        public void EnableSpring(bool enableSpring) => UnsafeBindings.b3RevoluteJoint_EnableSpring(Id, enableSpring);
-        public bool IsSpringEnabled() => UnsafeBindings.b3RevoluteJoint_IsSpringEnabled(Id);
-        public void SetSpringHertz(float hertz) => UnsafeBindings.b3RevoluteJoint_SetSpringHertz(Id, hertz);
-        public float GetSpringHertz() => UnsafeBindings.b3RevoluteJoint_GetSpringHertz(Id);
-        public void SetSpringDampingRatio(float dampingRatio) => UnsafeBindings.b3RevoluteJoint_SetSpringDampingRatio(Id, dampingRatio);
-        public float GetSpringDampingRatio() => UnsafeBindings.b3RevoluteJoint_GetSpringDampingRatio(Id);
-        public void SetTargetAngle(float targetRadians) => UnsafeBindings.b3RevoluteJoint_SetTargetAngle(Id, targetRadians);
-        public float GetTargetAngle() => UnsafeBindings.b3RevoluteJoint_GetTargetAngle(Id);
-        public float GetAngle() => UnsafeBindings.b3RevoluteJoint_GetAngle(Id);
-        public void EnableLimit(bool enableLimit) => UnsafeBindings.b3RevoluteJoint_EnableLimit(Id, enableLimit);
-        public bool IsLimitEnabled() => UnsafeBindings.b3RevoluteJoint_IsLimitEnabled(Id);
-        public float GetLowerLimit() => UnsafeBindings.b3RevoluteJoint_GetLowerLimit(Id);
-        public float GetUpperLimit() => UnsafeBindings.b3RevoluteJoint_GetUpperLimit(Id);
-        public void SetLimits(float lowerLimitRadians, float upperLimitRadians) => UnsafeBindings.b3RevoluteJoint_SetLimits(Id, lowerLimitRadians, upperLimitRadians);
-        public void EnableMotor(bool enableMotor) => UnsafeBindings.b3RevoluteJoint_EnableMotor(Id, enableMotor);
-        public bool IsMotorEnabled() => UnsafeBindings.b3RevoluteJoint_IsMotorEnabled(Id);
-        public void SetMotorSpeed(float motorSpeed) => UnsafeBindings.b3RevoluteJoint_SetMotorSpeed(Id, motorSpeed);
-        public float GetMotorSpeed() => UnsafeBindings.b3RevoluteJoint_GetMotorSpeed(Id);
-        public float GetMotorTorque() => UnsafeBindings.b3RevoluteJoint_GetMotorTorque(Id);
-        public void SetMaxMotorTorque(float torque) => UnsafeBindings.b3RevoluteJoint_SetMaxMotorTorque(Id, torque);
-        public float GetMaxMotorTorque() => UnsafeBindings.b3RevoluteJoint_GetMaxMotorTorque(Id);
+        public void EnableSpring(bool enableSpring) => Ffi.b3RevoluteJoint_EnableSpring(Id, enableSpring);
+        public bool IsSpringEnabled() => Ffi.b3RevoluteJoint_IsSpringEnabled(Id);
+        public void SetSpringHertz(float hertz) => Ffi.b3RevoluteJoint_SetSpringHertz(Id, hertz);
+        public float GetSpringHertz() => Ffi.b3RevoluteJoint_GetSpringHertz(Id);
+        public void SetSpringDampingRatio(float dampingRatio) => Ffi.b3RevoluteJoint_SetSpringDampingRatio(Id, dampingRatio);
+        public float GetSpringDampingRatio() => Ffi.b3RevoluteJoint_GetSpringDampingRatio(Id);
+        public void SetTargetAngle(float targetRadians) => Ffi.b3RevoluteJoint_SetTargetAngle(Id, targetRadians);
+        public float GetTargetAngle() => Ffi.b3RevoluteJoint_GetTargetAngle(Id);
+        public float GetAngle() => Ffi.b3RevoluteJoint_GetAngle(Id);
+        public void EnableLimit(bool enableLimit) => Ffi.b3RevoluteJoint_EnableLimit(Id, enableLimit);
+        public bool IsLimitEnabled() => Ffi.b3RevoluteJoint_IsLimitEnabled(Id);
+        public float GetLowerLimit() => Ffi.b3RevoluteJoint_GetLowerLimit(Id);
+        public float GetUpperLimit() => Ffi.b3RevoluteJoint_GetUpperLimit(Id);
+        public void SetLimits(float lowerLimitRadians, float upperLimitRadians) => Ffi.b3RevoluteJoint_SetLimits(Id, lowerLimitRadians, upperLimitRadians);
+        public void EnableMotor(bool enableMotor) => Ffi.b3RevoluteJoint_EnableMotor(Id, enableMotor);
+        public bool IsMotorEnabled() => Ffi.b3RevoluteJoint_IsMotorEnabled(Id);
+        public void SetMotorSpeed(float motorSpeed) => Ffi.b3RevoluteJoint_SetMotorSpeed(Id, motorSpeed);
+        public float GetMotorSpeed() => Ffi.b3RevoluteJoint_GetMotorSpeed(Id);
+        public float GetMotorTorque() => Ffi.b3RevoluteJoint_GetMotorTorque(Id);
+        public void SetMaxMotorTorque(float torque) => Ffi.b3RevoluteJoint_SetMaxMotorTorque(Id, torque);
+        public float GetMaxMotorTorque() => Ffi.b3RevoluteJoint_GetMaxMotorTorque(Id);
     }
 }

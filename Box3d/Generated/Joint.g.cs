@@ -7,24 +7,24 @@ namespace Box3d
 {
     public partial struct Joint
     {
-        public BodyId GetBodyA() => UnsafeBindings.b3Joint_GetBodyA(Id);
-        public BodyId GetBodyB() => UnsafeBindings.b3Joint_GetBodyB(Id);
-        public WorldId GetWorld() => UnsafeBindings.b3Joint_GetWorld(Id);
-        public void SetLocalFrameA(B3Transform localFrame) => UnsafeBindings.b3Joint_SetLocalFrameA(Id, localFrame);
-        public B3Transform GetLocalFrameA() => UnsafeBindings.b3Joint_GetLocalFrameA(Id);
-        public void SetLocalFrameB(B3Transform localFrame) => UnsafeBindings.b3Joint_SetLocalFrameB(Id, localFrame);
-        public B3Transform GetLocalFrameB() => UnsafeBindings.b3Joint_GetLocalFrameB(Id);
-        public void SetCollideConnected(bool shouldCollide) => UnsafeBindings.b3Joint_SetCollideConnected(Id, shouldCollide);
-        public bool GetCollideConnected() => UnsafeBindings.b3Joint_GetCollideConnected(Id);
-        public void WakeBodies() => UnsafeBindings.b3Joint_WakeBodies(Id);
-        public Unity.Mathematics.float3 GetConstraintForce() => UnsafeBindings.b3Joint_GetConstraintForce(Id);
-        public Unity.Mathematics.float3 GetConstraintTorque() => UnsafeBindings.b3Joint_GetConstraintTorque(Id);
-        public float GetLinearSeparation() => UnsafeBindings.b3Joint_GetLinearSeparation(Id);
-        public float GetAngularSeparation() => UnsafeBindings.b3Joint_GetAngularSeparation(Id);
-        public void SetConstraintTuning(float hertz, float dampingRatio) => UnsafeBindings.b3Joint_SetConstraintTuning(Id, hertz, dampingRatio);
-        public void SetForceThreshold(float threshold) => UnsafeBindings.b3Joint_SetForceThreshold(Id, threshold);
-        public float GetForceThreshold() => UnsafeBindings.b3Joint_GetForceThreshold(Id);
-        public void SetTorqueThreshold(float threshold) => UnsafeBindings.b3Joint_SetTorqueThreshold(Id, threshold);
-        public float GetTorqueThreshold() => UnsafeBindings.b3Joint_GetTorqueThreshold(Id);
+        public BodyId GetBodyA() => Ffi.b3Joint_GetBodyA(Id);
+        public BodyId GetBodyB() => Ffi.b3Joint_GetBodyB(Id);
+        public WorldId GetWorld() => Ffi.b3Joint_GetWorld(Id);
+        public void SetLocalFrameA(B3Transform localFrame) => Ffi.b3Joint_SetLocalFrameA(Id, localFrame);
+        public B3Transform GetLocalFrameA() => Ffi.b3Joint_GetLocalFrameA(Id);
+        public void SetLocalFrameB(B3Transform localFrame) => Ffi.b3Joint_SetLocalFrameB(Id, localFrame);
+        public B3Transform GetLocalFrameB() => Ffi.b3Joint_GetLocalFrameB(Id);
+        public void SetCollideConnected(bool shouldCollide) => Ffi.b3Joint_SetCollideConnected(Id, shouldCollide);
+        public bool GetCollideConnected() => Ffi.b3Joint_GetCollideConnected(Id);
+        public void WakeBodies() => Ffi.b3Joint_WakeBodies(Id);
+        public Unity.Mathematics.float3 GetConstraintForce() => Ffi.b3Joint_GetConstraintForce(Id);
+        public Unity.Mathematics.float3 GetConstraintTorque() => Ffi.b3Joint_GetConstraintTorque(Id);
+        public float GetLinearSeparation() => Ffi.b3Joint_GetLinearSeparation(Id);
+        public float GetAngularSeparation() => Ffi.b3Joint_GetAngularSeparation(Id);
+        public void SetConstraintTuning(float hertz, float dampingRatio) => Ffi.b3Joint_SetConstraintTuning(Id, hertz, dampingRatio);
+        public void SetForceThreshold(float threshold) => Ffi.b3Joint_SetForceThreshold(Id, threshold);
+        public float GetForceThreshold() => Ffi.b3Joint_GetForceThreshold(Id);
+        public void SetTorqueThreshold(float threshold) => Ffi.b3Joint_SetTorqueThreshold(Id, threshold);
+        public float GetTorqueThreshold() => Ffi.b3Joint_GetTorqueThreshold(Id);
     }
 }

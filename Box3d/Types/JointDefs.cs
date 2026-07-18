@@ -45,7 +45,7 @@ namespace Box3d
         public float MaxMotorForce;
         public float MotorSpeed;
 
-        public static DistanceJointDef Default => UnsafeBindings.b3DefaultDistanceJointDef();
+        public static DistanceJointDef Default => Ffi.b3DefaultDistanceJointDef();
     }
 
     /// <summary>Mirrors native b3MotorJointDef (168 bytes). Controls relative position and velocity
@@ -65,7 +65,7 @@ namespace Box3d
         public float AngularDampingRatio;
         public float MaxSpringTorque;
 
-        public static MotorJointDef Default => UnsafeBindings.b3DefaultMotorJointDef();
+        public static MotorJointDef Default => Ffi.b3DefaultMotorJointDef();
     }
 
     /// <summary>Mirrors native b3FilterJointDef (112 bytes). Disables collision between two bodies.</summary>
@@ -74,7 +74,7 @@ namespace Box3d
     {
         public JointDefBase Base;
 
-        public static FilterJointDef Default => UnsafeBindings.b3DefaultFilterJointDef();
+        public static FilterJointDef Default => Ffi.b3DefaultFilterJointDef();
     }
 
     /// <summary>Mirrors native b3ParallelJointDef (128 bytes). Spring-aligns body z-axes — keeps a
@@ -87,7 +87,7 @@ namespace Box3d
         public float DampingRatio;
         public float MaxTorque;
 
-        public static ParallelJointDef Default => UnsafeBindings.b3DefaultParallelJointDef();
+        public static ParallelJointDef Default => Ffi.b3DefaultParallelJointDef();
     }
 
     /// <summary>Mirrors native b3PrismaticJointDef (152 bytes). Slide along frame A's x-axis,
@@ -107,7 +107,7 @@ namespace Box3d
         public float MaxMotorForce;
         public float MotorSpeed;
 
-        public static PrismaticJointDef Default => UnsafeBindings.b3DefaultPrismaticJointDef();
+        public static PrismaticJointDef Default => Ffi.b3DefaultPrismaticJointDef();
     }
 
     /// <summary>Mirrors native b3RevoluteJointDef (152 bytes). Hinge around frame z-axis.</summary>
@@ -126,7 +126,7 @@ namespace Box3d
         public float MaxMotorTorque;
         public float MotorSpeed;
 
-        public static RevoluteJointDef Default => UnsafeBindings.b3DefaultRevoluteJointDef();
+        public static RevoluteJointDef Default => Ffi.b3DefaultRevoluteJointDef();
     }
 
     /// <summary>Mirrors native b3SphericalJointDef (184 bytes). Ball-and-socket with cone/twist
@@ -148,7 +148,7 @@ namespace Box3d
         public float MaxMotorTorque;
         public float3 MotorVelocity;
 
-        public static SphericalJointDef Default => UnsafeBindings.b3DefaultSphericalJointDef();
+        public static SphericalJointDef Default => Ffi.b3DefaultSphericalJointDef();
     }
 
     /// <summary>Mirrors native b3WeldJointDef (128 bytes). Rigid (or springy) connection.</summary>
@@ -161,7 +161,7 @@ namespace Box3d
         public float LinearDampingRatio;
         public float AngularDampingRatio;
 
-        public static WeldJointDef Default => UnsafeBindings.b3DefaultWeldJointDef();
+        public static WeldJointDef Default => Ffi.b3DefaultWeldJointDef();
     }
 
     /// <summary>Mirrors native b3WheelJointDef (184 bytes). Chassis (A) + wheel (B): suspension
@@ -188,6 +188,6 @@ namespace Box3d
         public float LowerSteeringLimit;
         public float UpperSteeringLimit;
 
-        public static WheelJointDef Default => UnsafeBindings.b3DefaultWheelJointDef();
+        public static WheelJointDef Default => Ffi.b3DefaultWheelJointDef();
     }
 }

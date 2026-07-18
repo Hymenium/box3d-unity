@@ -75,26 +75,26 @@ namespace Box3d
         /// <summary>A box hull with the given half-extents, centered at the local origin.</summary>
         public static BoxHull Create(float halfX, float halfY, float halfZ)
         {
-            return UnsafeBindings.b3MakeBoxHull(halfX, halfY, halfZ);
+            return Ffi.b3MakeBoxHull(halfX, halfY, halfZ);
         }
 
         /// <summary>A cube hull with the given half-width, centered at the local origin.</summary>
         public static BoxHull CreateCube(float halfWidth)
         {
-            return UnsafeBindings.b3MakeCubeHull(halfWidth);
+            return Ffi.b3MakeCubeHull(halfWidth);
         }
 
         /// <summary>A box hull with the given half-extents, centered at <paramref name="offset"/>.</summary>
         public static BoxHull CreateOffset(float halfX, float halfY, float halfZ, float3 offset)
         {
-            return UnsafeBindings.b3MakeOffsetBoxHull(halfX, halfY, halfZ, offset);
+            return Ffi.b3MakeOffsetBoxHull(halfX, halfY, halfZ, offset);
         }
 
         /// <summary>A box hull with the given half-extents, positioned and rotated by
         /// <paramref name="transform"/>.</summary>
         public static BoxHull CreateTransformed(float halfX, float halfY, float halfZ, B3Transform transform)
         {
-            return UnsafeBindings.b3MakeTransformedBoxHull(halfX, halfY, halfZ, transform);
+            return Ffi.b3MakeTransformedBoxHull(halfX, halfY, halfZ, transform);
         }
     }
 }

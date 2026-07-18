@@ -3,6 +3,8 @@ using Unity.Mathematics;
 
 namespace Box3d
 {
+    using Sys;
+
     // Owners of builder-allocated native geometry. Explicit lifetime: call Destroy() when done.
     //
     // THE LIFETIME RULE (the #1 footgun):
@@ -25,29 +27,29 @@ namespace Box3d
             if (points.Length < 4) throw new ArgumentException("a hull needs at least 4 points", nameof(points));
             fixed (float3* p = points)
             {
-                return new Hull { Data = (IntPtr)UnsafeBindings.b3CreateHull(p, points.Length, maxVertices) };
+                return new Hull { Data = (IntPtr)Ffi.b3CreateHull(p, points.Length, maxVertices) };
             }
         }
 
         public static unsafe Hull CreateCylinder(float height, float radius, float yOffset = 0f, int sides = 16)
         {
-            return new Hull { Data = (IntPtr)UnsafeBindings.b3CreateCylinder(height, radius, yOffset, sides) };
+            return new Hull { Data = (IntPtr)Ffi.b3CreateCylinder(height, radius, yOffset, sides) };
         }
 
         public static unsafe Hull CreateCone(float height, float bottomRadius, float topRadius = 0f, int slices = 16)
         {
-            return new Hull { Data = (IntPtr)UnsafeBindings.b3CreateCone(height, bottomRadius, topRadius, slices) };
+            return new Hull { Data = (IntPtr)Ffi.b3CreateCone(height, bottomRadius, topRadius, slices) };
         }
 
         public static unsafe Hull CreateRock(float radius)
         {
-            return new Hull { Data = (IntPtr)UnsafeBindings.b3CreateRock(radius) };
+            return new Hull { Data = (IntPtr)Ffi.b3CreateRock(radius) };
         }
 
         public unsafe void Destroy()
         {
             if (Data == IntPtr.Zero) return;
-            UnsafeBindings.b3DestroyHull((HullData*)Data);
+            Ffi.b3DestroyHull((HullData*)Data);
             Data = IntPtr.Zero;
         }
     }
@@ -80,26 +82,26 @@ namespace Box3d
                     weldVertices = weldVertices,
                     weldTolerance = weldTolerance,
                 };
-                return new TriangleMesh { Data = (IntPtr)UnsafeBindings.b3CreateMesh(&def, null, 0) };
+                return new TriangleMesh { Data = (IntPtr)Ffi.b3CreateMesh(&def, null, 0) };
             }
         }
 
         /// <summary>Engine-generated closed box mesh (extent = half sizes).</summary>
         public static unsafe TriangleMesh CreateBox(float3 center, float3 extent, bool identifyEdges = true)
         {
-            return new TriangleMesh { Data = (IntPtr)UnsafeBindings.b3CreateBoxMesh(center, extent, identifyEdges) };
+            return new TriangleMesh { Data = (IntPtr)Ffi.b3CreateBoxMesh(center, extent, identifyEdges) };
         }
 
         /// <summary>Engine-generated flat grid mesh in the XZ plane.</summary>
         public static unsafe TriangleMesh CreateGrid(int xCount, int zCount, float cellWidth, bool identifyEdges = true)
         {
-            return new TriangleMesh { Data = (IntPtr)UnsafeBindings.b3CreateGridMesh(xCount, zCount, cellWidth, 1, identifyEdges) };
+            return new TriangleMesh { Data = (IntPtr)Ffi.b3CreateGridMesh(xCount, zCount, cellWidth, 1, identifyEdges) };
         }
 
         public unsafe void Destroy()
         {
             if (Data == IntPtr.Zero) return;
-            UnsafeBindings.b3DestroyMesh((b3MeshData*)Data);
+            Ffi.b3DestroyMesh((b3MeshData*)Data);
             Data = IntPtr.Zero;
         }
     }
@@ -132,20 +134,20 @@ namespace Box3d
                     globalMaximumHeight = globalMaximumHeight,
                     clockwiseWinding = clockwiseWinding,
                 };
-                return new HeightField { Data = (IntPtr)UnsafeBindings.b3CreateHeightField(&def) };
+                return new HeightField { Data = (IntPtr)Ffi.b3CreateHeightField(&def) };
             }
         }
 
         /// <summary>Engine-generated flat grid height field.</summary>
         public static unsafe HeightField CreateGrid(int rowCount, int columnCount, float3 scale, bool makeHoles = false)
         {
-            return new HeightField { Data = (IntPtr)UnsafeBindings.b3CreateGrid(rowCount, columnCount, scale, makeHoles) };
+            return new HeightField { Data = (IntPtr)Ffi.b3CreateGrid(rowCount, columnCount, scale, makeHoles) };
         }
 
         public unsafe void Destroy()
         {
             if (Data == IntPtr.Zero) return;
-            UnsafeBindings.b3DestroyHeightField((b3HeightFieldData*)Data);
+            Ffi.b3DestroyHeightField((b3HeightFieldData*)Data);
             Data = IntPtr.Zero;
         }
     }
@@ -206,14 +208,14 @@ namespace Box3d
                     hulls = (b3CompoundHullDef*)h,
                     hullCount = hulls.Length,
                 };
-                return new Compound { Data = (IntPtr)UnsafeBindings.b3CreateCompound(&def) };
+                return new Compound { Data = (IntPtr)Ffi.b3CreateCompound(&def) };
             }
         }
 
         public unsafe void Destroy()
         {
             if (Data == IntPtr.Zero) return;
-            UnsafeBindings.b3DestroyCompound((b3CompoundData*)Data);
+            Ffi.b3DestroyCompound((b3CompoundData*)Data);
             Data = IntPtr.Zero;
         }
     }

@@ -5,6 +5,8 @@ using Unity.Mathematics;
 
 namespace Box3d
 {
+    using Sys;
+
     public unsafe partial struct World
     {
         // Collector trampolines: static, rooted for the process lifetime, IL2CPP-safe via
@@ -72,7 +74,7 @@ namespace Box3d
             fixed (ShapeId* buffer = results)
             {
                 var ctx = new ShapeCollectorContext { Buffer = buffer, Capacity = results.Length };
-                b3TreeStats s = UnsafeBindings.b3World_OverlapAABB(Id, aabb, filter, OverlapCollectorPtr, &ctx);
+                b3TreeStats s = Ffi.b3World_OverlapAABB(Id, aabb, filter, OverlapCollectorPtr, &ctx);
                 stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
                 return ctx.Count;
             }
@@ -94,7 +96,7 @@ namespace Box3d
             {
                 var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
                 var ctx = new ShapeCollectorContext { Buffer = buffer, Capacity = results.Length };
-                b3TreeStats s = UnsafeBindings.b3World_OverlapShape(Id, origin, &proxy, filter, OverlapCollectorPtr, &ctx);
+                b3TreeStats s = Ffi.b3World_OverlapShape(Id, origin, &proxy, filter, OverlapCollectorPtr, &ctx);
                 stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
                 return ctx.Count;
             }
@@ -111,7 +113,7 @@ namespace Box3d
             fixed (RayHit* buffer = hits)
             {
                 var ctx = new RayCollectorContext { Buffer = buffer, Capacity = hits.Length };
-                b3TreeStats s = UnsafeBindings.b3World_CastRay(Id, origin, translation, filter, CastCollectorPtr, &ctx);
+                b3TreeStats s = Ffi.b3World_CastRay(Id, origin, translation, filter, CastCollectorPtr, &ctx);
                 stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
                 return ctx.Count;
             }
@@ -133,7 +135,7 @@ namespace Box3d
             {
                 var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
                 var ctx = new RayCollectorContext { Buffer = buffer, Capacity = hits.Length };
-                b3TreeStats s = UnsafeBindings.b3World_CastShape(Id, origin, &proxy, translation, filter, CastCollectorPtr, &ctx);
+                b3TreeStats s = Ffi.b3World_CastShape(Id, origin, &proxy, translation, filter, CastCollectorPtr, &ctx);
                 stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
                 return ctx.Count;
             }

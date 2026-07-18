@@ -4,6 +4,8 @@ using Unity.Mathematics;
 
 namespace Box3d
 {
+    using Sys;
+
     /// <summary>One point of a contact manifold. Mirrors native b3ManifoldPoint. Positions are given
     /// relative to each body's center of mass (a world-space offset), so the absolute world contact
     /// point is <c>ContactData.ShapeA.GetBody()</c>'s world center of mass + <see cref="AnchorA"/>

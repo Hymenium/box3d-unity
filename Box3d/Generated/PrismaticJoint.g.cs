@@ -7,27 +7,27 @@ namespace Box3d
 {
     public partial struct PrismaticJoint
     {
-        public void EnableSpring(bool enableSpring) => UnsafeBindings.b3PrismaticJoint_EnableSpring(Id, enableSpring);
-        public bool IsSpringEnabled() => UnsafeBindings.b3PrismaticJoint_IsSpringEnabled(Id);
-        public void SetSpringHertz(float hertz) => UnsafeBindings.b3PrismaticJoint_SetSpringHertz(Id, hertz);
-        public float GetSpringHertz() => UnsafeBindings.b3PrismaticJoint_GetSpringHertz(Id);
-        public void SetSpringDampingRatio(float dampingRatio) => UnsafeBindings.b3PrismaticJoint_SetSpringDampingRatio(Id, dampingRatio);
-        public float GetSpringDampingRatio() => UnsafeBindings.b3PrismaticJoint_GetSpringDampingRatio(Id);
-        public void SetTargetTranslation(float targetTranslation) => UnsafeBindings.b3PrismaticJoint_SetTargetTranslation(Id, targetTranslation);
-        public float GetTargetTranslation() => UnsafeBindings.b3PrismaticJoint_GetTargetTranslation(Id);
-        public void EnableLimit(bool enableLimit) => UnsafeBindings.b3PrismaticJoint_EnableLimit(Id, enableLimit);
-        public bool IsLimitEnabled() => UnsafeBindings.b3PrismaticJoint_IsLimitEnabled(Id);
-        public float GetLowerLimit() => UnsafeBindings.b3PrismaticJoint_GetLowerLimit(Id);
-        public float GetUpperLimit() => UnsafeBindings.b3PrismaticJoint_GetUpperLimit(Id);
-        public void SetLimits(float lower, float upper) => UnsafeBindings.b3PrismaticJoint_SetLimits(Id, lower, upper);
-        public void EnableMotor(bool enableMotor) => UnsafeBindings.b3PrismaticJoint_EnableMotor(Id, enableMotor);
-        public bool IsMotorEnabled() => UnsafeBindings.b3PrismaticJoint_IsMotorEnabled(Id);
-        public void SetMotorSpeed(float motorSpeed) => UnsafeBindings.b3PrismaticJoint_SetMotorSpeed(Id, motorSpeed);
-        public float GetMotorSpeed() => UnsafeBindings.b3PrismaticJoint_GetMotorSpeed(Id);
-        public void SetMaxMotorForce(float force) => UnsafeBindings.b3PrismaticJoint_SetMaxMotorForce(Id, force);
-        public float GetMaxMotorForce() => UnsafeBindings.b3PrismaticJoint_GetMaxMotorForce(Id);
-        public float GetMotorForce() => UnsafeBindings.b3PrismaticJoint_GetMotorForce(Id);
-        public float GetTranslation() => UnsafeBindings.b3PrismaticJoint_GetTranslation(Id);
-        public float GetSpeed() => UnsafeBindings.b3PrismaticJoint_GetSpeed(Id);
+        public void EnableSpring(bool enableSpring) => Ffi.b3PrismaticJoint_EnableSpring(Id, enableSpring);
+        public bool IsSpringEnabled() => Ffi.b3PrismaticJoint_IsSpringEnabled(Id);
+        public void SetSpringHertz(float hertz) => Ffi.b3PrismaticJoint_SetSpringHertz(Id, hertz);
+        public float GetSpringHertz() => Ffi.b3PrismaticJoint_GetSpringHertz(Id);
+        public void SetSpringDampingRatio(float dampingRatio) => Ffi.b3PrismaticJoint_SetSpringDampingRatio(Id, dampingRatio);
+        public float GetSpringDampingRatio() => Ffi.b3PrismaticJoint_GetSpringDampingRatio(Id);
+        public void SetTargetTranslation(float targetTranslation) => Ffi.b3PrismaticJoint_SetTargetTranslation(Id, targetTranslation);
+        public float GetTargetTranslation() => Ffi.b3PrismaticJoint_GetTargetTranslation(Id);
+        public void EnableLimit(bool enableLimit) => Ffi.b3PrismaticJoint_EnableLimit(Id, enableLimit);
+        public bool IsLimitEnabled() => Ffi.b3PrismaticJoint_IsLimitEnabled(Id);
+        public float GetLowerLimit() => Ffi.b3PrismaticJoint_GetLowerLimit(Id);
+        public float GetUpperLimit() => Ffi.b3PrismaticJoint_GetUpperLimit(Id);
+        public void SetLimits(float lower, float upper) => Ffi.b3PrismaticJoint_SetLimits(Id, lower, upper);
+        public void EnableMotor(bool enableMotor) => Ffi.b3PrismaticJoint_EnableMotor(Id, enableMotor);
+        public bool IsMotorEnabled() => Ffi.b3PrismaticJoint_IsMotorEnabled(Id);
+        public void SetMotorSpeed(float motorSpeed) => Ffi.b3PrismaticJoint_SetMotorSpeed(Id, motorSpeed);
+        public float GetMotorSpeed() => Ffi.b3PrismaticJoint_GetMotorSpeed(Id);
+        public void SetMaxMotorForce(float force) => Ffi.b3PrismaticJoint_SetMaxMotorForce(Id, force);
+        public float GetMaxMotorForce() => Ffi.b3PrismaticJoint_GetMaxMotorForce(Id);
+        public float GetMotorForce() => Ffi.b3PrismaticJoint_GetMotorForce(Id);
+        public float GetTranslation() => Ffi.b3PrismaticJoint_GetTranslation(Id);
+        public float GetSpeed() => Ffi.b3PrismaticJoint_GetSpeed(Id);
     }
 }

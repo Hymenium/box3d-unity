@@ -5,6 +5,8 @@ using Unity.Mathematics;
 
 namespace Box3d
 {
+    using Sys;
+
     public unsafe partial struct World
     {
         private static readonly b3PlaneResultFcn PlaneCollectorDelegate = PlaneCollector;
@@ -46,7 +48,7 @@ namespace Box3d
             fixed (CollisionPlane* buffer = planes)
             {
                 var ctx = new PlaneCollectorContext { Buffer = buffer, Capacity = planes.Length, PushLimit = pushLimit };
-                UnsafeBindings.b3World_CollideMover(Id, origin, &localMover, filter, PlaneCollectorPtr, &ctx);
+                Ffi.b3World_CollideMover(Id, origin, &localMover, filter, PlaneCollectorPtr, &ctx);
                 return ctx.Count;
             }
         }
@@ -56,7 +58,7 @@ namespace Box3d
         public float CastMover(float3 origin, in Capsule mover, float3 translation, QueryFilter filter)
         {
             Capsule localMover = mover;
-            return UnsafeBindings.b3World_CastMover(Id, origin, &localMover, translation, filter, IntPtr.Zero, null);
+            return Ffi.b3World_CastMover(Id, origin, &localMover, translation, filter, IntPtr.Zero, null);
         }
     }
 
@@ -72,7 +74,7 @@ namespace Box3d
         {
             fixed (CollisionPlane* p = planes)
             {
-                return UnsafeBindings.b3SolvePlanes(targetDelta, p, planes.Length);
+                return Ffi.b3SolvePlanes(targetDelta, p, planes.Length);
             }
         }
 
@@ -82,7 +84,7 @@ namespace Box3d
         {
             fixed (CollisionPlane* p = planes)
             {
-                return UnsafeBindings.b3ClipVector(vector, p, planes.Length);
+                return Ffi.b3ClipVector(vector, p, planes.Length);
             }
         }
     }

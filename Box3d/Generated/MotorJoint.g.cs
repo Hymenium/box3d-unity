@@ -7,25 +7,25 @@ namespace Box3d
 {
     public partial struct MotorJoint
     {
-        public void SetLinearVelocity(Unity.Mathematics.float3 velocity) => UnsafeBindings.b3MotorJoint_SetLinearVelocity(Id, velocity);
-        public Unity.Mathematics.float3 GetLinearVelocity() => UnsafeBindings.b3MotorJoint_GetLinearVelocity(Id);
-        public void SetAngularVelocity(Unity.Mathematics.float3 velocity) => UnsafeBindings.b3MotorJoint_SetAngularVelocity(Id, velocity);
-        public Unity.Mathematics.float3 GetAngularVelocity() => UnsafeBindings.b3MotorJoint_GetAngularVelocity(Id);
-        public void SetMaxVelocityForce(float maxForce) => UnsafeBindings.b3MotorJoint_SetMaxVelocityForce(Id, maxForce);
-        public float GetMaxVelocityForce() => UnsafeBindings.b3MotorJoint_GetMaxVelocityForce(Id);
-        public void SetMaxVelocityTorque(float maxTorque) => UnsafeBindings.b3MotorJoint_SetMaxVelocityTorque(Id, maxTorque);
-        public float GetMaxVelocityTorque() => UnsafeBindings.b3MotorJoint_GetMaxVelocityTorque(Id);
-        public void SetLinearHertz(float hertz) => UnsafeBindings.b3MotorJoint_SetLinearHertz(Id, hertz);
-        public float GetLinearHertz() => UnsafeBindings.b3MotorJoint_GetLinearHertz(Id);
-        public void SetLinearDampingRatio(float damping) => UnsafeBindings.b3MotorJoint_SetLinearDampingRatio(Id, damping);
-        public float GetLinearDampingRatio() => UnsafeBindings.b3MotorJoint_GetLinearDampingRatio(Id);
-        public void SetAngularHertz(float hertz) => UnsafeBindings.b3MotorJoint_SetAngularHertz(Id, hertz);
-        public float GetAngularHertz() => UnsafeBindings.b3MotorJoint_GetAngularHertz(Id);
-        public void SetAngularDampingRatio(float damping) => UnsafeBindings.b3MotorJoint_SetAngularDampingRatio(Id, damping);
-        public float GetAngularDampingRatio() => UnsafeBindings.b3MotorJoint_GetAngularDampingRatio(Id);
-        public void SetMaxSpringForce(float maxForce) => UnsafeBindings.b3MotorJoint_SetMaxSpringForce(Id, maxForce);
-        public float GetMaxSpringForce() => UnsafeBindings.b3MotorJoint_GetMaxSpringForce(Id);
-        public void SetMaxSpringTorque(float maxTorque) => UnsafeBindings.b3MotorJoint_SetMaxSpringTorque(Id, maxTorque);
-        public float GetMaxSpringTorque() => UnsafeBindings.b3MotorJoint_GetMaxSpringTorque(Id);
+        public void SetLinearVelocity(Unity.Mathematics.float3 velocity) => Ffi.b3MotorJoint_SetLinearVelocity(Id, velocity);
+        public Unity.Mathematics.float3 GetLinearVelocity() => Ffi.b3MotorJoint_GetLinearVelocity(Id);
+        public void SetAngularVelocity(Unity.Mathematics.float3 velocity) => Ffi.b3MotorJoint_SetAngularVelocity(Id, velocity);
+        public Unity.Mathematics.float3 GetAngularVelocity() => Ffi.b3MotorJoint_GetAngularVelocity(Id);
+        public void SetMaxVelocityForce(float maxForce) => Ffi.b3MotorJoint_SetMaxVelocityForce(Id, maxForce);
+        public float GetMaxVelocityForce() => Ffi.b3MotorJoint_GetMaxVelocityForce(Id);
+        public void SetMaxVelocityTorque(float maxTorque) => Ffi.b3MotorJoint_SetMaxVelocityTorque(Id, maxTorque);
+        public float GetMaxVelocityTorque() => Ffi.b3MotorJoint_GetMaxVelocityTorque(Id);
+        public void SetLinearHertz(float hertz) => Ffi.b3MotorJoint_SetLinearHertz(Id, hertz);
+        public float GetLinearHertz() => Ffi.b3MotorJoint_GetLinearHertz(Id);
+        public void SetLinearDampingRatio(float damping) => Ffi.b3MotorJoint_SetLinearDampingRatio(Id, damping);
+        public float GetLinearDampingRatio() => Ffi.b3MotorJoint_GetLinearDampingRatio(Id);
+        public void SetAngularHertz(float hertz) => Ffi.b3MotorJoint_SetAngularHertz(Id, hertz);
+        public float GetAngularHertz() => Ffi.b3MotorJoint_GetAngularHertz(Id);
+        public void SetAngularDampingRatio(float damping) => Ffi.b3MotorJoint_SetAngularDampingRatio(Id, damping);
+        public float GetAngularDampingRatio() => Ffi.b3MotorJoint_GetAngularDampingRatio(Id);
+        public void SetMaxSpringForce(float maxForce) => Ffi.b3MotorJoint_SetMaxSpringForce(Id, maxForce);
+        public float GetMaxSpringForce() => Ffi.b3MotorJoint_GetMaxSpringForce(Id);
+        public void SetMaxSpringTorque(float maxTorque) => Ffi.b3MotorJoint_SetMaxSpringTorque(Id, maxTorque);
+        public float GetMaxSpringTorque() => Ffi.b3MotorJoint_GetMaxSpringTorque(Id);
     }
 }

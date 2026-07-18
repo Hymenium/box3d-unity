@@ -3,6 +3,8 @@ using System.Text;
 
 namespace Box3d
 {
+    using Sys;
+
     /// <summary>A capture of a world's simulation for deterministic replay and validation. Record with
     /// <see cref="World.StartRecording"/> / <see cref="World.StopRecording"/>, then
     /// <see cref="ValidateReplay"/> to confirm the sim reproduces bit-identical state (the core check
@@ -21,7 +23,7 @@ namespace Box3d
         /// won't grow past it, so size it for the run length (a few MB per few thousand steps).</summary>
         public static unsafe Recording Create(int byteCapacity = 8 << 20)
         {
-            return new Recording { _handle = (IntPtr)UnsafeBindings.b3CreateRecording(byteCapacity) };
+            return new Recording { _handle = (IntPtr)Ffi.b3CreateRecording(byteCapacity) };
         }
 
         /// <summary>Loads a recording previously written with <see cref="SaveToFile"/>.</summary>
@@ -30,7 +32,7 @@ namespace Box3d
             byte[] p = NullTerminated(path);
             fixed (byte* pp = p)
             {
-                return new Recording { _handle = (IntPtr)UnsafeBindings.b3LoadRecordingFromFile((sbyte*)pp) };
+                return new Recording { _handle = (IntPtr)Ffi.b3LoadRecordingFromFile((sbyte*)pp) };
             }
         }
 
@@ -38,19 +40,19 @@ namespace Box3d
         public unsafe void Destroy()
         {
             if (_handle == IntPtr.Zero) return;
-            UnsafeBindings.b3DestroyRecording((b3Recording*)_handle);
+            Ffi.b3DestroyRecording((b3Recording*)_handle);
             _handle = IntPtr.Zero;
         }
 
         /// <summary>Serialized size in bytes.</summary>
-        public unsafe int Size => _handle != IntPtr.Zero ? UnsafeBindings.b3Recording_GetSize((b3Recording*)_handle) : 0;
+        public unsafe int Size => _handle != IntPtr.Zero ? Ffi.b3Recording_GetSize((b3Recording*)_handle) : 0;
 
         /// <summary>The raw serialized bytes — valid only until <see cref="Destroy"/>. Copy them if you
         /// need to keep them.</summary>
         public unsafe ReadOnlySpan<byte> GetData()
         {
             if (_handle == IntPtr.Zero) return default;
-            return new ReadOnlySpan<byte>(UnsafeBindings.b3Recording_GetData((b3Recording*)_handle), Size);
+            return new ReadOnlySpan<byte>(Ffi.b3Recording_GetData((b3Recording*)_handle), Size);
         }
 
         /// <summary>Writes the recording to a file.</summary>
@@ -60,7 +62,7 @@ namespace Box3d
             byte[] p = NullTerminated(path);
             fixed (byte* pp = p)
             {
-                return UnsafeBindings.b3SaveRecordingToFile((b3Recording*)_handle, (sbyte*)pp);
+                return Ffi.b3SaveRecordingToFile((b3Recording*)_handle, (sbyte*)pp);
             }
         }
 
@@ -70,8 +72,8 @@ namespace Box3d
         public unsafe bool ValidateReplay(int workerCount = 1)
         {
             if (_handle == IntPtr.Zero) return false;
-            byte* data = UnsafeBindings.b3Recording_GetData((b3Recording*)_handle);
-            return UnsafeBindings.b3ValidateReplay(data, Size, workerCount);
+            byte* data = Ffi.b3Recording_GetData((b3Recording*)_handle);
+            return Ffi.b3ValidateReplay(data, Size, workerCount);
         }
 
         // The native handle, for World.StartRecording.

@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace Box3d
 {
+    using Sys;
+
     /// <summary>Metadata about a replay. Mirrors native b3RecPlayerInfo.</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ReplayInfo
@@ -31,7 +33,7 @@ namespace Box3d
         {
             fixed (byte* p = data)
             {
-                return new ReplayPlayer { _handle = (IntPtr)UnsafeBindings.b3RecPlayer_Create(p, data.Length, workerCount) };
+                return new ReplayPlayer { _handle = (IntPtr)Ffi.b3RecPlayer_Create(p, data.Length, workerCount) };
             }
         }
 
@@ -39,7 +41,7 @@ namespace Box3d
         {
             if (_handle == IntPtr.Zero) return;
             NativeDebugDrawBridge.SetBridgeOwned(World.Id, false); // clear the flag before the world goes away
-            UnsafeBindings.b3RecPlayer_Destroy((b3RecPlayer*)_handle);
+            Ffi.b3RecPlayer_Destroy((b3RecPlayer*)_handle);
             _handle = IntPtr.Zero;
         }
 
@@ -55,42 +57,42 @@ namespace Box3d
 
         /// <summary>The replayed world at the current frame — pass to debug draw / <c>Body.GetContacts</c>
         /// / transform reads to inspect the replay. (Do not destroy it; the player owns it.)</summary>
-        public unsafe World World => new World { Id = UnsafeBindings.b3RecPlayer_GetWorldId((b3RecPlayer*)_handle) };
+        public unsafe World World => new World { Id = Ffi.b3RecPlayer_GetWorldId((b3RecPlayer*)_handle) };
 
         /// <summary>Advances one frame. Returns false once at the end.</summary>
-        public unsafe bool StepFrame() => UnsafeBindings.b3RecPlayer_StepFrame((b3RecPlayer*)_handle);
+        public unsafe bool StepFrame() => Ffi.b3RecPlayer_StepFrame((b3RecPlayer*)_handle);
 
         /// <summary>Jumps to <paramref name="frame"/> (re-simulated from the nearest keyframe).</summary>
-        public unsafe void SeekFrame(int frame) => UnsafeBindings.b3RecPlayer_SeekFrame((b3RecPlayer*)_handle, frame);
+        public unsafe void SeekFrame(int frame) => Ffi.b3RecPlayer_SeekFrame((b3RecPlayer*)_handle, frame);
 
         /// <summary>Rewinds to the first frame.</summary>
-        public unsafe void Restart() => UnsafeBindings.b3RecPlayer_Restart((b3RecPlayer*)_handle);
+        public unsafe void Restart() => Ffi.b3RecPlayer_Restart((b3RecPlayer*)_handle);
 
-        public unsafe int Frame => UnsafeBindings.b3RecPlayer_GetFrame((b3RecPlayer*)_handle);
-        public unsafe int FrameCount => UnsafeBindings.b3RecPlayer_GetFrameCount((b3RecPlayer*)_handle);
-        public unsafe bool IsAtEnd => UnsafeBindings.b3RecPlayer_IsAtEnd((b3RecPlayer*)_handle);
+        public unsafe int Frame => Ffi.b3RecPlayer_GetFrame((b3RecPlayer*)_handle);
+        public unsafe int FrameCount => Ffi.b3RecPlayer_GetFrameCount((b3RecPlayer*)_handle);
+        public unsafe bool IsAtEnd => Ffi.b3RecPlayer_IsAtEnd((b3RecPlayer*)_handle);
 
         /// <summary>Whether the replay has diverged from the recorded state (non-determinism detected).</summary>
-        public unsafe bool HasDiverged => UnsafeBindings.b3RecPlayer_HasDiverged((b3RecPlayer*)_handle);
+        public unsafe bool HasDiverged => Ffi.b3RecPlayer_HasDiverged((b3RecPlayer*)_handle);
 
         /// <summary>The first frame that diverged, or -1 if it hasn't.</summary>
-        public unsafe int DivergeFrame => UnsafeBindings.b3RecPlayer_GetDivergeFrame((b3RecPlayer*)_handle);
+        public unsafe int DivergeFrame => Ffi.b3RecPlayer_GetDivergeFrame((b3RecPlayer*)_handle);
 
         /// <summary>Replay metadata (frame count, timestep, sub-steps, worker count, bounds).</summary>
         public unsafe ReplayInfo GetInfo()
         {
             // b3RecPlayerInfo is layout-identical to ReplayInfo — reinterpret the copy.
-            b3RecPlayerInfo i = UnsafeBindings.b3RecPlayer_GetInfo((b3RecPlayer*)_handle);
+            b3RecPlayerInfo i = Ffi.b3RecPlayer_GetInfo((b3RecPlayer*)_handle);
             return *(ReplayInfo*)&i;
         }
 
         /// <summary>Re-runs the replay at a different worker count — a cross-thread determinism test.</summary>
-        public unsafe void SetWorkerCount(int count) => UnsafeBindings.b3RecPlayer_SetWorkerCount((b3RecPlayer*)_handle, count);
+        public unsafe void SetWorkerCount(int count) => Ffi.b3RecPlayer_SetWorkerCount((b3RecPlayer*)_handle, count);
 
         /// <summary>Number of tracked bodies in the replay.</summary>
-        public unsafe int BodyCount => UnsafeBindings.b3RecPlayer_GetBodyCount((b3RecPlayer*)_handle);
+        public unsafe int BodyCount => Ffi.b3RecPlayer_GetBodyCount((b3RecPlayer*)_handle);
 
         /// <summary>A tracked body at the current frame (index in [0, <see cref="BodyCount"/>)).</summary>
-        public unsafe Body GetBody(int index) => Body.WrapUnchecked(UnsafeBindings.b3RecPlayer_GetBodyId((b3RecPlayer*)_handle, index));
+        public unsafe Body GetBody(int index) => Body.WrapUnchecked(Ffi.b3RecPlayer_GetBodyId((b3RecPlayer*)_handle, index));
     }
 }

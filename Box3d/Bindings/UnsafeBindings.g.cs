@@ -1,28 +1,28 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Box3d
+namespace Box3d.Sys
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void* b3AllocFcn([NativeTypeName("int32_t")] int size, [NativeTypeName("int32_t")] int alignment);
+    public unsafe delegate void* b3AllocFcn([NativeTypeName("int32_t")] int size, [NativeTypeName("int32_t")] int alignment);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void b3FreeFcn(void* mem);
+    public unsafe delegate void b3FreeFcn(void* mem);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate int b3AssertFcn([NativeTypeName("const char *")] sbyte* condition, [NativeTypeName("const char *")] sbyte* fileName, int lineNumber);
+    public unsafe delegate int b3AssertFcn([NativeTypeName("const char *")] sbyte* condition, [NativeTypeName("const char *")] sbyte* fileName, int lineNumber);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void b3LogFcn([NativeTypeName("const char *")] sbyte* message);
+    public unsafe delegate void b3LogFcn([NativeTypeName("const char *")] sbyte* message);
 
-    internal partial struct b3CosSin
+    public partial struct b3CosSin
     {
         public float cosine;
 
         public float sine;
     }
 
-    internal partial struct b3SegmentDistanceResult
+    public partial struct b3SegmentDistanceResult
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 point1;
@@ -36,42 +36,42 @@ namespace Box3d
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void b3TaskCallback(void* taskContext);
+    public unsafe delegate void b3TaskCallback(void* taskContext);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void* b3EnqueueTaskCallback([NativeTypeName("b3TaskCallback *")] IntPtr task, void* taskContext, void* userContext, [NativeTypeName("const char *")] sbyte* taskName);
+    public unsafe delegate void* b3EnqueueTaskCallback([NativeTypeName("b3TaskCallback *")] IntPtr task, void* taskContext, void* userContext, [NativeTypeName("const char *")] sbyte* taskName);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void b3FinishTaskCallback(void* userTask, void* userContext);
+    public unsafe delegate void b3FinishTaskCallback(void* userTask, void* userContext);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void* b3CreateDebugShapeCallback([NativeTypeName("const b3DebugShape *")] b3DebugShape* debugShape, void* userContext);
+    public unsafe delegate void* b3CreateDebugShapeCallback([NativeTypeName("const b3DebugShape *")] b3DebugShape* debugShape, void* userContext);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate void b3DestroyDebugShapeCallback(void* userShape, void* userContext);
+    public unsafe delegate void b3DestroyDebugShapeCallback(void* userShape, void* userContext);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate float b3FrictionCallback(float frictionA, [NativeTypeName("uint64_t")] ulong userMaterialIdA, float frictionB, [NativeTypeName("uint64_t")] ulong userMaterialIdB);
+    public delegate float b3FrictionCallback(float frictionA, [NativeTypeName("uint64_t")] ulong userMaterialIdA, float frictionB, [NativeTypeName("uint64_t")] ulong userMaterialIdB);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate float b3RestitutionCallback(float restitutionA, [NativeTypeName("uint64_t")] ulong userMaterialIdA, float restitutionB, [NativeTypeName("uint64_t")] ulong userMaterialIdB);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3CustomFilterFcn([NativeTypeName("b3ShapeId")] ShapeId shapeIdA, [NativeTypeName("b3ShapeId")] ShapeId shapeIdB, void* context);
+    public delegate float b3RestitutionCallback(float restitutionA, [NativeTypeName("uint64_t")] ulong userMaterialIdA, float restitutionB, [NativeTypeName("uint64_t")] ulong userMaterialIdB);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3PreSolveFcn([NativeTypeName("b3ShapeId")] ShapeId shapeIdA, [NativeTypeName("b3ShapeId")] ShapeId shapeIdB, [NativeTypeName("b3Pos")] Unity.Mathematics.float3 point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, void* context);
+    public unsafe delegate NativeBool b3CustomFilterFcn([NativeTypeName("b3ShapeId")] ShapeId shapeIdA, [NativeTypeName("b3ShapeId")] ShapeId shapeIdB, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3OverlapResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, void* context);
+    public unsafe delegate NativeBool b3PreSolveFcn([NativeTypeName("b3ShapeId")] ShapeId shapeIdA, [NativeTypeName("b3ShapeId")] ShapeId shapeIdB, [NativeTypeName("b3Pos")] Unity.Mathematics.float3 point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate float b3CastResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("b3Pos")] Unity.Mathematics.float3 point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, float fraction, [NativeTypeName("uint64_t")] ulong userMaterialId, int triangleIndex, int childIndex, void* context);
+    [return: NativeTypeName("_Bool")]
+    public unsafe delegate NativeBool b3OverlapResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, void* context);
 
-    internal partial struct b3Profile
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate float b3CastResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("b3Pos")] Unity.Mathematics.float3 point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, float fraction, [NativeTypeName("uint64_t")] ulong userMaterialId, int triangleIndex, int childIndex, void* context);
+
+    public partial struct b3Profile
     {
         public float step;
 
@@ -120,7 +120,7 @@ namespace Box3d
         public float sensors;
     }
 
-    internal unsafe partial struct b3Counters
+    public unsafe partial struct b3Counters
     {
         public int bodyCount;
 
@@ -166,7 +166,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3JointType : uint
+    public enum b3JointType : uint
     {
         b3_parallelJoint,
         b3_distanceJoint,
@@ -179,7 +179,7 @@ namespace Box3d
         b3_wheelJoint,
     }
 
-    internal unsafe partial struct b3ContactData
+    public unsafe partial struct b3ContactData
     {
         [NativeTypeName("b3ContactId")]
         public ContactId contactId;
@@ -196,7 +196,7 @@ namespace Box3d
         public int manifoldCount;
     }
 
-    internal partial struct b3RayCastInput
+    public partial struct b3RayCastInput
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 origin;
@@ -207,7 +207,7 @@ namespace Box3d
         public float maxFraction;
     }
 
-    internal unsafe partial struct b3ShapeProxy
+    public unsafe partial struct b3ShapeProxy
     {
         [NativeTypeName("const b3Vec3 *")]
         public Unity.Mathematics.float3* points;
@@ -217,7 +217,7 @@ namespace Box3d
         public float radius;
     }
 
-    internal partial struct b3ShapeCastInput
+    public partial struct b3ShapeCastInput
     {
         public b3ShapeProxy proxy;
 
@@ -230,7 +230,7 @@ namespace Box3d
         public NativeBool canEncroach;
     }
 
-    internal partial struct b3BoxCastInput
+    public partial struct b3BoxCastInput
     {
         public B3Aabb box;
 
@@ -240,7 +240,7 @@ namespace Box3d
         public float maxFraction;
     }
 
-    internal partial struct b3CastOutput
+    public partial struct b3CastOutput
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 normal;
@@ -262,7 +262,7 @@ namespace Box3d
         public NativeBool hit;
     }
 
-    internal partial struct b3BodyCastResult
+    public partial struct b3BodyCastResult
     {
         [NativeTypeName("b3ShapeId")]
         public ShapeId shapeId;
@@ -286,7 +286,7 @@ namespace Box3d
         public NativeBool hit;
     }
 
-    internal unsafe partial struct b3SimplexCache
+    public unsafe partial struct b3SimplexCache
     {
         public float metric;
 
@@ -300,7 +300,7 @@ namespace Box3d
         public fixed byte indexB[4];
     }
 
-    internal partial struct b3ShapeCastPairInput
+    public partial struct b3ShapeCastPairInput
     {
         public b3ShapeProxy proxyA;
 
@@ -317,7 +317,7 @@ namespace Box3d
         public NativeBool canEncroach;
     }
 
-    internal partial struct b3DistanceInput
+    public partial struct b3DistanceInput
     {
         public b3ShapeProxy proxyA;
 
@@ -329,7 +329,7 @@ namespace Box3d
         public NativeBool useRadii;
     }
 
-    internal partial struct b3DistanceOutput
+    public partial struct b3DistanceOutput
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 pointA;
@@ -347,7 +347,7 @@ namespace Box3d
         public int simplexCount;
     }
 
-    internal partial struct b3SimplexVertex
+    public partial struct b3SimplexVertex
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 wA;
@@ -365,7 +365,7 @@ namespace Box3d
         public int indexB;
     }
 
-    internal partial struct b3Simplex
+    public partial struct b3Simplex
     {
         [NativeTypeName("b3SimplexVertex[4]")]
         public _vertices_e__FixedBuffer vertices;
@@ -392,7 +392,7 @@ namespace Box3d
         }
     }
 
-    internal partial struct b3Sweep
+    public partial struct b3Sweep
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 localCenter;
@@ -410,7 +410,7 @@ namespace Box3d
         public Unity.Mathematics.quaternion q2;
     }
 
-    internal partial struct b3TOIInput
+    public partial struct b3TOIInput
     {
         public b3ShapeProxy proxyA;
 
@@ -424,7 +424,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3TOIState : uint
+    public enum b3TOIState : uint
     {
         b3_toiStateUnknown,
         b3_toiStateFailed,
@@ -433,7 +433,7 @@ namespace Box3d
         b3_toiStateSeparated,
     }
 
-    internal partial struct b3TOIOutput
+    public partial struct b3TOIOutput
     {
         public b3TOIState state;
 
@@ -458,21 +458,21 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3TreeNodeFlags : uint
+    public enum b3TreeNodeFlags : uint
     {
         b3_allocatedNode = 0x0001,
         b3_enlargedNode = 0x0002,
         b3_leafNode = 0x0004,
     }
 
-    internal partial struct b3TreeNodeChildren
+    public partial struct b3TreeNodeChildren
     {
         public int child1;
 
         public int child2;
     }
 
-    internal unsafe partial struct b3TreeNode
+    public unsafe partial struct b3TreeNode
     {
         public B3Aabb aabb;
 
@@ -491,7 +491,7 @@ namespace Box3d
         [NativeTypeName("uint16_t")]
         public ushort flags;
 
-        internal ref b3TreeNodeChildren children
+        public ref b3TreeNodeChildren children
         {
             get
             {
@@ -502,7 +502,7 @@ namespace Box3d
             }
         }
 
-        internal ref ulong userData
+        public ref ulong userData
         {
             get
             {
@@ -513,7 +513,7 @@ namespace Box3d
             }
         }
 
-        internal ref int parent
+        public ref int parent
         {
             get
             {
@@ -524,7 +524,7 @@ namespace Box3d
             }
         }
 
-        internal ref int next
+        public ref int next
         {
             get
             {
@@ -536,7 +536,7 @@ namespace Box3d
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        internal partial struct _Anonymous1_e__Union
+        public partial struct _Anonymous1_e__Union
         {
             [FieldOffset(0)]
             public b3TreeNodeChildren children;
@@ -547,7 +547,7 @@ namespace Box3d
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        internal partial struct _Anonymous2_e__Union
+        public partial struct _Anonymous2_e__Union
         {
             [FieldOffset(0)]
             public int parent;
@@ -557,7 +557,7 @@ namespace Box3d
         }
     }
 
-    internal unsafe partial struct b3DynamicTree
+    public unsafe partial struct b3DynamicTree
     {
         [NativeTypeName("uint64_t")]
         public ulong version;
@@ -586,7 +586,7 @@ namespace Box3d
         public int rebuildCapacity;
     }
 
-    internal partial struct b3TreeStats
+    public partial struct b3TreeStats
     {
         public int nodeVisits;
 
@@ -595,18 +595,18 @@ namespace Box3d
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3TreeQueryCallbackFcn(int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
+    public unsafe delegate NativeBool b3TreeQueryCallbackFcn(int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate float b3TreeQueryClosestCallbackFcn(float distanceSqrMin, int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
+    public unsafe delegate float b3TreeQueryClosestCallbackFcn(float distanceSqrMin, int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate float b3TreeBoxCastCallbackFcn([NativeTypeName("const b3BoxCastInput *")] b3BoxCastInput* input, int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
+    public unsafe delegate float b3TreeBoxCastCallbackFcn([NativeTypeName("const b3BoxCastInput *")] b3BoxCastInput* input, int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate float b3TreeRayCastCallbackFcn([NativeTypeName("const b3RayCastInput *")] b3RayCastInput* input, int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
+    public unsafe delegate float b3TreeRayCastCallbackFcn([NativeTypeName("const b3RayCastInput *")] b3RayCastInput* input, int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
 
-    internal partial struct b3BodyPlaneResult
+    public partial struct b3BodyPlaneResult
     {
         [NativeTypeName("b3ShapeId")]
         public ShapeId shapeId;
@@ -617,19 +617,19 @@ namespace Box3d
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3PlaneResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("const b3PlaneResult *")] PlaneResult* plane, int planeCount, void* context);
+    public unsafe delegate NativeBool b3PlaneResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("const b3PlaneResult *")] PlaneResult* plane, int planeCount, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3MoverFilterFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, void* context);
+    public unsafe delegate NativeBool b3MoverFilterFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, void* context);
 
-    internal partial struct b3HullVertex
+    public partial struct b3HullVertex
     {
         [NativeTypeName("uint8_t")]
         public byte edge;
     }
 
-    internal partial struct b3HullHalfEdge
+    public partial struct b3HullHalfEdge
     {
         [NativeTypeName("uint8_t")]
         public byte next;
@@ -644,13 +644,13 @@ namespace Box3d
         public byte face;
     }
 
-    internal partial struct b3HullFace
+    public partial struct b3HullFace
     {
         [NativeTypeName("uint8_t")]
         public byte edge;
     }
 
-    internal unsafe partial struct b3MeshDef
+    public unsafe partial struct b3MeshDef
     {
         [NativeTypeName("b3Vec3 *")]
         public Unity.Mathematics.float3* vertices;
@@ -678,7 +678,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3MeshEdgeFlags : uint
+    public enum b3MeshEdgeFlags : uint
     {
         b3_concaveEdge1 = 0x01,
         b3_concaveEdge2 = 0x02,
@@ -693,7 +693,7 @@ namespace Box3d
         b3_allFlatEdges = b3_flatEdge1 | b3_flatEdge2 | b3_flatEdge3,
     }
 
-    internal partial struct b3MeshTriangle
+    public partial struct b3MeshTriangle
     {
         [NativeTypeName("int32_t")]
         public int index1;
@@ -705,7 +705,7 @@ namespace Box3d
         public int index3;
     }
 
-    internal partial struct b3MeshNode
+    public partial struct b3MeshNode
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 lowerBound;
@@ -720,7 +720,7 @@ namespace Box3d
         public uint triangleOffset;
 
         [StructLayout(LayoutKind.Explicit)]
-        internal partial struct _data_e__Union
+        public partial struct _data_e__Union
         {
             [FieldOffset(0)]
             [NativeTypeName("__AnonymousRecord_types_L2118_C3")]
@@ -730,7 +730,7 @@ namespace Box3d
             [NativeTypeName("__AnonymousRecord_types_L2127_C3")]
             public _asLeaf_e__Struct asLeaf;
 
-            internal partial struct _asNode_e__Struct
+            public partial struct _asNode_e__Struct
             {
                 public uint _bitfield;
 
@@ -763,7 +763,7 @@ namespace Box3d
                 }
             }
 
-            internal partial struct _asLeaf_e__Struct
+            public partial struct _asLeaf_e__Struct
             {
                 public uint _bitfield;
 
@@ -798,7 +798,7 @@ namespace Box3d
         }
     }
 
-    internal partial struct b3MeshData
+    public partial struct b3MeshData
     {
         [NativeTypeName("uint64_t")]
         public ulong version;
@@ -835,7 +835,7 @@ namespace Box3d
         public int flagsOffset;
     }
 
-    internal unsafe partial struct b3Mesh
+    public unsafe partial struct b3Mesh
     {
         [NativeTypeName("const b3MeshData *")]
         public b3MeshData* data;
@@ -844,7 +844,7 @@ namespace Box3d
         public Unity.Mathematics.float3 scale;
     }
 
-    internal unsafe partial struct b3HeightFieldDef
+    public unsafe partial struct b3HeightFieldDef
     {
         public float* heights;
 
@@ -866,7 +866,7 @@ namespace Box3d
         public NativeBool clockwiseWinding;
     }
 
-    internal unsafe partial struct b3HeightFieldData
+    public unsafe partial struct b3HeightFieldData
     {
         [NativeTypeName("uint64_t")]
         public ulong version;
@@ -904,7 +904,7 @@ namespace Box3d
         public fixed byte padding[3];
     }
 
-    internal partial struct b3CompoundCapsuleDef
+    public partial struct b3CompoundCapsuleDef
     {
         [NativeTypeName("b3Capsule")]
         public Capsule capsule;
@@ -913,7 +913,7 @@ namespace Box3d
         public SurfaceMaterial material;
     }
 
-    internal unsafe partial struct b3CompoundHullDef
+    public unsafe partial struct b3CompoundHullDef
     {
         [NativeTypeName("const b3HullData *")]
         public HullData* hull;
@@ -924,7 +924,7 @@ namespace Box3d
         public SurfaceMaterial material;
     }
 
-    internal unsafe partial struct b3CompoundMeshDef
+    public unsafe partial struct b3CompoundMeshDef
     {
         [NativeTypeName("const b3MeshData *")]
         public b3MeshData* meshData;
@@ -940,7 +940,7 @@ namespace Box3d
         public int materialCount;
     }
 
-    internal partial struct b3CompoundSphereDef
+    public partial struct b3CompoundSphereDef
     {
         [NativeTypeName("b3Sphere")]
         public Sphere sphere;
@@ -949,7 +949,7 @@ namespace Box3d
         public SurfaceMaterial material;
     }
 
-    internal unsafe partial struct b3CompoundDef
+    public unsafe partial struct b3CompoundDef
     {
         public b3CompoundCapsuleDef* capsules;
 
@@ -968,7 +968,7 @@ namespace Box3d
         public int sphereCount;
     }
 
-    internal partial struct b3CompoundData
+    public partial struct b3CompoundData
     {
         [NativeTypeName("uint64_t")]
         public ulong version;
@@ -1004,7 +1004,7 @@ namespace Box3d
         public int sphereCount;
     }
 
-    internal partial struct b3CompoundCapsule
+    public partial struct b3CompoundCapsule
     {
         [NativeTypeName("b3Capsule")]
         public Capsule capsule;
@@ -1012,7 +1012,7 @@ namespace Box3d
         public int materialIndex;
     }
 
-    internal unsafe partial struct b3CompoundHull
+    public unsafe partial struct b3CompoundHull
     {
         [NativeTypeName("const b3HullData *")]
         public HullData* hull;
@@ -1022,7 +1022,7 @@ namespace Box3d
         public int materialIndex;
     }
 
-    internal unsafe partial struct b3CompoundMesh
+    public unsafe partial struct b3CompoundMesh
     {
         [NativeTypeName("const b3MeshData *")]
         public b3MeshData* meshData;
@@ -1036,7 +1036,7 @@ namespace Box3d
         public fixed int materialIndices[4];
     }
 
-    internal partial struct b3CompoundSphere
+    public partial struct b3CompoundSphere
     {
         [NativeTypeName("b3Sphere")]
         public Sphere sphere;
@@ -1044,7 +1044,7 @@ namespace Box3d
         public int materialIndex;
     }
 
-    internal unsafe partial struct b3ChildShape
+    public unsafe partial struct b3ChildShape
     {
         [NativeTypeName("__AnonymousRecord_types_L2520_C2")]
         public _Anonymous_e__Union Anonymous;
@@ -1057,7 +1057,7 @@ namespace Box3d
         [NativeTypeName("b3ShapeType")]
         public ShapeType type;
 
-        internal ref Capsule capsule
+        public unsafe ref Capsule capsule
         {
             get
             {
@@ -1068,7 +1068,7 @@ namespace Box3d
             }
         }
 
-        internal ref HullData* hull
+        public unsafe ref HullData* hull
         {
             get
             {
@@ -1079,7 +1079,7 @@ namespace Box3d
             }
         }
 
-        internal ref b3Mesh mesh
+        public unsafe ref b3Mesh mesh
         {
             get
             {
@@ -1090,7 +1090,7 @@ namespace Box3d
             }
         }
 
-        internal ref Sphere sphere
+        public unsafe ref Sphere sphere
         {
             get
             {
@@ -1102,7 +1102,7 @@ namespace Box3d
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        internal unsafe partial struct _Anonymous_e__Union
+        public unsafe partial struct _Anonymous_e__Union
         {
             [FieldOffset(0)]
             [NativeTypeName("b3Capsule")]
@@ -1123,9 +1123,9 @@ namespace Box3d
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3CompoundQueryFcn([NativeTypeName("const b3CompoundData *")] b3CompoundData* compound, int childIndex, void* context);
+    public unsafe delegate NativeBool b3CompoundQueryFcn([NativeTypeName("const b3CompoundData *")] b3CompoundData* compound, int childIndex, void* context);
 
-    internal partial struct b3ManifoldPoint
+    public partial struct b3ManifoldPoint
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 anchorA;
@@ -1152,7 +1152,7 @@ namespace Box3d
         public NativeBool persisted;
     }
 
-    internal partial struct b3Manifold
+    public partial struct b3Manifold
     {
         [NativeTypeName("b3ManifoldPoint[4]")]
         public _points_e__FixedBuffer points;
@@ -1191,7 +1191,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3SeparatingFeature : uint
+    public enum b3SeparatingFeature : uint
     {
         b3_invalidAxis = 0,
         b3_backsideAxis,
@@ -1205,7 +1205,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3TriangleFeature : uint
+    public enum b3TriangleFeature : uint
     {
         b3_featureNone = 0,
         b3_featureTriangleFace,
@@ -1218,7 +1218,7 @@ namespace Box3d
         b3_featureVertex3,
     }
 
-    internal partial struct b3SATCache
+    public partial struct b3SATCache
     {
         public float separation;
 
@@ -1235,7 +1235,7 @@ namespace Box3d
         public byte hit;
     }
 
-    internal partial struct b3FeaturePair
+    public partial struct b3FeaturePair
     {
         [NativeTypeName("uint8_t")]
         public byte owner1;
@@ -1250,7 +1250,7 @@ namespace Box3d
         public byte index2;
     }
 
-    internal partial struct b3LocalManifoldPoint
+    public partial struct b3LocalManifoldPoint
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 point;
@@ -1262,7 +1262,7 @@ namespace Box3d
         public int triangleIndex;
     }
 
-    internal unsafe partial struct b3LocalManifold
+    public unsafe partial struct b3LocalManifold
     {
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 normal;
@@ -1290,7 +1290,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3HexColor : uint
+    public enum b3HexColor : uint
     {
         b3_colorAliceBlue = 0xF0F8FF,
         b3_colorAntiqueWhite = 0xFAEBD7,
@@ -1440,7 +1440,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3DebugMaterial : uint
+    public enum b3DebugMaterial : uint
     {
         b3_debugMaterialDefault = 0,
         b3_debugMaterialMatte,
@@ -1450,7 +1450,7 @@ namespace Box3d
         b3_debugMaterialMetallic,
     }
 
-    internal unsafe partial struct b3DebugShape
+    public unsafe partial struct b3DebugShape
     {
         [NativeTypeName("b3ShapeId")]
         public ShapeId shapeId;
@@ -1461,7 +1461,7 @@ namespace Box3d
         [NativeTypeName("__AnonymousRecord_types_L2933_C2")]
         public _Anonymous_e__Union Anonymous;
 
-        internal ref Capsule* capsule
+        public unsafe ref Capsule* capsule
         {
             get
             {
@@ -1472,7 +1472,7 @@ namespace Box3d
             }
         }
 
-        internal ref b3CompoundData* compound
+        public unsafe ref b3CompoundData* compound
         {
             get
             {
@@ -1483,7 +1483,7 @@ namespace Box3d
             }
         }
 
-        internal ref b3HeightFieldData* heightField
+        public unsafe ref b3HeightFieldData* heightField
         {
             get
             {
@@ -1494,7 +1494,7 @@ namespace Box3d
             }
         }
 
-        internal ref HullData* hull
+        public unsafe ref HullData* hull
         {
             get
             {
@@ -1505,7 +1505,7 @@ namespace Box3d
             }
         }
 
-        internal ref b3Mesh* mesh
+        public unsafe ref b3Mesh* mesh
         {
             get
             {
@@ -1516,7 +1516,7 @@ namespace Box3d
             }
         }
 
-        internal ref Sphere* sphere
+        public unsafe ref Sphere* sphere
         {
             get
             {
@@ -1528,7 +1528,7 @@ namespace Box3d
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        internal unsafe partial struct _Anonymous_e__Union
+        public unsafe partial struct _Anonymous_e__Union
         {
             [FieldOffset(0)]
             [NativeTypeName("const b3Capsule *")]
@@ -1556,7 +1556,7 @@ namespace Box3d
         }
     }
 
-    internal unsafe partial struct b3DebugDraw
+    public unsafe partial struct b3DebugDraw
     {
         [NativeTypeName("_Bool (*)(void *, b3WorldTransform, b3HexColor, void *)")]
         public IntPtr DrawShapeFcn;
@@ -1635,15 +1635,15 @@ namespace Box3d
         public void* context;
     }
 
-    internal partial struct b3Recording
+    public partial struct b3Recording
     {
     }
 
-    internal partial struct b3RecPlayer
+    public partial struct b3RecPlayer
     {
     }
 
-    internal partial struct b3RecPlayerInfo
+    public partial struct b3RecPlayerInfo
     {
         public int frameCount;
 
@@ -1659,7 +1659,7 @@ namespace Box3d
     }
 
     [NativeTypeName("unsigned int")]
-    internal enum b3RecQueryType : uint
+    public enum b3RecQueryType : uint
     {
         b3_recQueryOverlapAABB,
         b3_recQueryOverlapShape,
@@ -1670,7 +1670,7 @@ namespace Box3d
         b3_recQueryCollideMover,
     }
 
-    internal unsafe partial struct b3RecQueryInfo
+    public unsafe partial struct b3RecQueryInfo
     {
         public b3RecQueryType type;
 
@@ -1697,7 +1697,7 @@ namespace Box3d
         public sbyte* name;
     }
 
-    internal partial struct b3RecQueryHit
+    public partial struct b3RecQueryHit
     {
         [NativeTypeName("b3ShapeId")]
         public ShapeId shape;
@@ -1713,9 +1713,13 @@ namespace Box3d
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3MeshQueryFcn([NativeTypeName("b3Vec3")] Unity.Mathematics.float3 a, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 b, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 c, int triangleIndex, void* context);
+    public unsafe delegate NativeBool b3MeshQueryFcn([NativeTypeName("b3Vec3")] Unity.Mathematics.float3 a, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 b, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 c, int triangleIndex, void* context);
+}
 
-    internal static unsafe partial class UnsafeBindings
+namespace Box3d
+{
+    using Sys;
+    public static unsafe partial class Ffi
     {
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void b3SetAllocator([NativeTypeName("b3AllocFcn *")] IntPtr allocFcn, [NativeTypeName("b3FreeFcn *")] IntPtr freeFcn);
@@ -1726,7 +1730,6 @@ namespace Box3d
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void b3SetAssertFcn([NativeTypeName("b3AssertFcn *")] IntPtr assertFcn);
-
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void b3SetLogFcn([NativeTypeName("b3LogFcn *")] IntPtr logFcn);
@@ -1888,7 +1891,6 @@ namespace Box3d
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern b3SegmentDistanceResult b3SegmentDistance([NativeTypeName("b3Vec3")] Unity.Mathematics.float3 p1, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 q1, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 p2, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 q2);
-
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("_Bool")]

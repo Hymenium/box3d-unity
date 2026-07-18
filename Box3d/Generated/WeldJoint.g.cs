@@ -7,13 +7,13 @@ namespace Box3d
 {
     public partial struct WeldJoint
     {
-        public void SetLinearHertz(float hertz) => UnsafeBindings.b3WeldJoint_SetLinearHertz(Id, hertz);
-        public float GetLinearHertz() => UnsafeBindings.b3WeldJoint_GetLinearHertz(Id);
-        public void SetLinearDampingRatio(float dampingRatio) => UnsafeBindings.b3WeldJoint_SetLinearDampingRatio(Id, dampingRatio);
-        public float GetLinearDampingRatio() => UnsafeBindings.b3WeldJoint_GetLinearDampingRatio(Id);
-        public void SetAngularHertz(float hertz) => UnsafeBindings.b3WeldJoint_SetAngularHertz(Id, hertz);
-        public float GetAngularHertz() => UnsafeBindings.b3WeldJoint_GetAngularHertz(Id);
-        public void SetAngularDampingRatio(float dampingRatio) => UnsafeBindings.b3WeldJoint_SetAngularDampingRatio(Id, dampingRatio);
-        public float GetAngularDampingRatio() => UnsafeBindings.b3WeldJoint_GetAngularDampingRatio(Id);
+        public void SetLinearHertz(float hertz) => Ffi.b3WeldJoint_SetLinearHertz(Id, hertz);
+        public float GetLinearHertz() => Ffi.b3WeldJoint_GetLinearHertz(Id);
+        public void SetLinearDampingRatio(float dampingRatio) => Ffi.b3WeldJoint_SetLinearDampingRatio(Id, dampingRatio);
+        public float GetLinearDampingRatio() => Ffi.b3WeldJoint_GetLinearDampingRatio(Id);
+        public void SetAngularHertz(float hertz) => Ffi.b3WeldJoint_SetAngularHertz(Id, hertz);
+        public float GetAngularHertz() => Ffi.b3WeldJoint_GetAngularHertz(Id);
+        public void SetAngularDampingRatio(float dampingRatio) => Ffi.b3WeldJoint_SetAngularDampingRatio(Id, dampingRatio);
+        public float GetAngularDampingRatio() => Ffi.b3WeldJoint_GetAngularDampingRatio(Id);
     }
 }

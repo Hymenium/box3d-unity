@@ -47,8 +47,8 @@ namespace Box3d
                                "this wrapper requires a single-precision build. Struct layouts will not match.");
             }
 
-            UnsafeBindings.b3SetLogFcn(Marshal.GetFunctionPointerForDelegate(LogHandler));
-            UnsafeBindings.b3SetAssertFcn(Marshal.GetFunctionPointerForDelegate(AssertHandler));
+            Ffi.b3SetLogFcn(Marshal.GetFunctionPointerForDelegate(LogHandler));
+            Ffi.b3SetAssertFcn(Marshal.GetFunctionPointerForDelegate(AssertHandler));
         }
 
         [MonoPInvokeCallback(typeof(LogDelegate))]

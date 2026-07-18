@@ -7,6 +7,8 @@ using Debug = UnityEngine.Debug;
 
 namespace Box3d
 {
+    using Sys;
+
     public interface IDebugShape { }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -357,7 +359,7 @@ namespace Box3d
             draw.drawGraphColors = (flags & DebugDrawFlags.GraphColors) != 0;
 
             // DebugDrawBridge.DrawCallCount = 0;
-            UnsafeBindings.b3World_Draw(Id, &draw, ulong.MaxValue);
+            Ffi.b3World_Draw(Id, &draw, ulong.MaxValue);
         }
     }
 
@@ -468,7 +470,7 @@ namespace Box3d
         // managed object
         private static IDebugDrawBackend _backend;
         private static GCHandle _backendHandle;
-        private static readonly bool[] BridgeOwned = new bool[UnsafeBindings.B3_MAX_WORLDS + 1];
+        private static readonly bool[] BridgeOwned = new bool[Ffi.B3_MAX_WORLDS + 1];
 
         internal static b3DebugDraw NativeDraw;
 
@@ -496,7 +498,7 @@ namespace Box3d
             _backend = backend ?? throw new ArgumentNullException(nameof(backend));
             _backendHandle = GCHandle.Alloc(_backend);
 
-            NativeDraw = UnsafeBindings.b3DefaultDebugDraw();
+            NativeDraw = Ffi.b3DefaultDebugDraw();
             NativeDraw.context =
                 (void*)GCHandle.ToIntPtr(_backendHandle);
 
@@ -520,7 +522,7 @@ namespace Box3d
 
         internal static void ConfigureRecPlayer(b3RecPlayer* recPlayer)
         {
-            UnsafeBindings.b3RecPlayer_SetDebugShapeCallbacks(recPlayer,
+            Ffi.b3RecPlayer_SetDebugShapeCallbacks(recPlayer,
                 CREATE_SHAPE_PTR,
                 DESTROY_SHAPE_PTR,
                 (void*)GCHandle.ToIntPtr(_backendHandle));

@@ -8,20 +8,20 @@ namespace Box3d
     {
         public JointId Id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         /// <summary>Application-specific data attached to the joint. Delivered back in
         /// <see cref="JointEvent.UserData"/>.</summary>
         public unsafe IntPtr UserData
         {
-            get => (IntPtr)UnsafeBindings.b3Joint_GetUserData(Id);
-            set => UnsafeBindings.b3Joint_SetUserData(Id, (void*)value);
+            get => (IntPtr)Ffi.b3Joint_GetUserData(Id);
+            set => Ffi.b3Joint_SetUserData(Id, (void*)value);
         }
 
         public void Destroy(bool wakeAttached = true)
         {
             if (Id.IsNull) return; // double-destroy would pass a null id into unvalidated native paths
-            UnsafeBindings.b3DestroyJoint(Id, wakeAttached);
+            Ffi.b3DestroyJoint(Id, wakeAttached);
             Id = default;
         }
 

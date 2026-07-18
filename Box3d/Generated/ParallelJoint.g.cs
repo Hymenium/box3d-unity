@@ -7,11 +7,11 @@ namespace Box3d
 {
     public partial struct ParallelJoint
     {
-        public void SetSpringHertz(float hertz) => UnsafeBindings.b3ParallelJoint_SetSpringHertz(Id, hertz);
-        public void SetSpringDampingRatio(float dampingRatio) => UnsafeBindings.b3ParallelJoint_SetSpringDampingRatio(Id, dampingRatio);
-        public float GetSpringHertz() => UnsafeBindings.b3ParallelJoint_GetSpringHertz(Id);
-        public float GetSpringDampingRatio() => UnsafeBindings.b3ParallelJoint_GetSpringDampingRatio(Id);
-        public void SetMaxTorque(float force) => UnsafeBindings.b3ParallelJoint_SetMaxTorque(Id, force);
-        public float GetMaxTorque() => UnsafeBindings.b3ParallelJoint_GetMaxTorque(Id);
+        public void SetSpringHertz(float hertz) => Ffi.b3ParallelJoint_SetSpringHertz(Id, hertz);
+        public void SetSpringDampingRatio(float dampingRatio) => Ffi.b3ParallelJoint_SetSpringDampingRatio(Id, dampingRatio);
+        public float GetSpringHertz() => Ffi.b3ParallelJoint_GetSpringHertz(Id);
+        public float GetSpringDampingRatio() => Ffi.b3ParallelJoint_GetSpringDampingRatio(Id);
+        public void SetMaxTorque(float force) => Ffi.b3ParallelJoint_SetMaxTorque(Id, force);
+        public float GetMaxTorque() => Ffi.b3ParallelJoint_GetMaxTorque(Id);
     }
 }
