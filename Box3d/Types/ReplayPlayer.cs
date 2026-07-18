@@ -38,7 +38,7 @@ namespace Box3d
         public unsafe void Destroy()
         {
             if (_handle == IntPtr.Zero) return;
-            DebugDrawBridge.SetBridgeOwned(World.Id, false); // clear the flag before the world goes away
+            NativeDebugDrawBridge.SetBridgeOwned(World.Id, false); // clear the flag before the world goes away
             UnsafeBindings.b3RecPlayer_Destroy((b3RecPlayer*)_handle);
             _handle = IntPtr.Zero;
         }
@@ -49,9 +49,8 @@ namespace Box3d
         public unsafe void EnableShapeDrawing()
         {
             if (_handle == IntPtr.Zero) return;
-            UnsafeBindings.b3RecPlayer_SetDebugShapeCallbacks((b3RecPlayer*)_handle,
-                DebugDrawBridge.CreateShapePtr, DebugDrawBridge.DestroyShapePtr, null);
-            DebugDrawBridge.SetBridgeOwned(World.Id, true);
+            NativeDebugDrawBridge.ConfigureRecPlayer((b3RecPlayer*)_handle);
+            NativeDebugDrawBridge.SetBridgeOwned(World.Id, true);
         }
 
         /// <summary>The replayed world at the current frame — pass to debug draw / <c>Body.GetContacts</c>
@@ -92,6 +91,6 @@ namespace Box3d
         public unsafe int BodyCount => UnsafeBindings.b3RecPlayer_GetBodyCount((b3RecPlayer*)_handle);
 
         /// <summary>A tracked body at the current frame (index in [0, <see cref="BodyCount"/>)).</summary>
-        public unsafe Body GetBody(int index) => new Body { Id = UnsafeBindings.b3RecPlayer_GetBodyId((b3RecPlayer*)_handle, index) };
+        public unsafe Body GetBody(int index) => Body.WrapUnchecked(UnsafeBindings.b3RecPlayer_GetBodyId((b3RecPlayer*)_handle, index));
     }
 }
