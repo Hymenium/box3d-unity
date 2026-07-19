@@ -86,9 +86,15 @@ namespace Box3d
     /// <summary>Broadphase-tree work done by a spatial query — how many internal and leaf nodes it
     /// visited. Lower is a tighter query. Filled by the <c>out TreeStats</c> query overloads.</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct TreeStats
+    public readonly struct TreeStats
     {
-        public int NodeVisits;
-        public int LeafVisits;
+        public readonly int NodeVisits;
+        public readonly int LeafVisits;
+
+        public TreeStats(int nodeVisits, int leafVisits)
+        {
+            NodeVisits = nodeVisits;
+            LeafVisits = leafVisits;
+        }
     }
 }

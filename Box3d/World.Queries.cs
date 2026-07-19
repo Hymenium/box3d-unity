@@ -9,6 +9,164 @@ namespace Box3d
 
     public unsafe partial struct World
     {
+        // public sealed class ShapeCollector : IOverlapCallback
+        // {
+        //     private readonly List<ShapeId> _results;
+
+        //     public ShapeCollector(List<ShapeId> results)
+        //     {
+        //         _results = results;
+        //     }
+
+        //     public bool ReportShape(ShapeId shape_id)
+        //     {
+        //         _results.Add(shape_id);
+        //         return true;
+        //     }
+        // }
+
+        public interface IOverlapCallback
+        {
+            // return true to continue, false to stop
+            bool ReportShape(ShapeId shape_id);
+        }
+
+        private static readonly b3OverlapResultFcn OverlapTrampolineDelegate = ManagedOverlapTrampoline;
+        private static readonly IntPtr OVERLAP_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(OverlapCollectorDelegate);
+
+        [MonoPInvokeCallback(typeof(b3OverlapResultFcn))]
+        private static unsafe NativeBool ManagedOverlapTrampoline(ShapeId shape_id, void* raw_context)
+        {
+            var callback = (IOverlapCallback)GCHandle.FromIntPtr((IntPtr)raw_context).Target!;
+            return callback.ReportShape(shape_id);
+        }
+
+        public interface ICastCallback
+        {
+            // Return the new fraction to continue, or negative to stop
+            float OnHit(
+                ShapeId shape_id,
+                float3 point, float3 normal, float fraction,
+                ulong user_material_id,
+                int triangle_index,
+                int child_index);
+        }
+
+        private static readonly b3CastResultFcn CastTrampolineDelegate = ManagedCastTrampoline;
+        private static readonly IntPtr CAST_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(CastCollectorDelegate);
+
+        [MonoPInvokeCallback(typeof(b3CastResultFcn))]
+        private static unsafe float ManagedCastTrampoline(
+            ShapeId shape_id,
+            float3 point, float3 normal, float fraction,
+            ulong user_material_id,
+            int triangle_index,
+            int child_index,
+            void* raw_context)
+        {
+            var callback = (ICastCallback)GCHandle.FromIntPtr((IntPtr)raw_context).Target!;
+            return callback.OnHit(
+                shape_id, point, normal, fraction,
+                user_material_id, triangle_index, child_index);
+        }
+
+        public unsafe TreeStats OverlapAABB(B3Aabb aabb, QueryFilter filter, IOverlapCallback callback)
+        {
+            GCHandle handle = GCHandle.Alloc(callback);
+            try
+            {
+                void* context = (void*)GCHandle.ToIntPtr(handle);
+                b3TreeStats s = Ffi.b3World_OverlapAABB(
+                    Id,
+                    aabb,
+                    filter,
+                    OVERLAP_TRAMPOLINE_PTR,
+                    context);
+
+                return new(s.nodeVisits, s.leafVisits);
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        public unsafe TreeStats OverlapShape(float3 origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
+            QueryFilter filter, IOverlapCallback callback, void* context)
+        {
+            if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
+            GCHandle handle = GCHandle.Alloc(callback);
+            try
+            {
+                fixed (float3* points = proxyPoints)
+                {
+                    var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
+                    void* ctx = (void*)GCHandle.ToIntPtr(handle);
+                    b3TreeStats s = Ffi.b3World_OverlapShape(
+                        Id,
+                        origin,
+                        &proxy,
+                        filter,
+                        OVERLAP_TRAMPOLINE_PTR,
+                        ctx);
+                    return new(s.nodeVisits, s.leafVisits);
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        public unsafe TreeStats CastRay(float3 origin, float3 translation, QueryFilter filter, ICastCallback callback)
+        {
+            GCHandle handle = GCHandle.Alloc(callback);
+            try
+            {
+                void* ctx = (void*)GCHandle.ToIntPtr(handle);
+                b3TreeStats s = Ffi.b3World_CastRay(
+                    Id,
+                    origin,
+                    translation,
+                    filter,
+                    CAST_TRAMPOLINE_PTR,
+                    ctx);
+                return new(s.nodeVisits, s.leafVisits);
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        public unsafe TreeStats CastShape(float3 origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
+            float3 translation, QueryFilter filter, ICastCallback callback, void* context)
+        {
+            if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
+            GCHandle handle = GCHandle.Alloc(callback);
+            try
+            {
+                fixed (float3* points = proxyPoints)
+                {
+                    var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
+                    void* ctx = (void*)GCHandle.ToIntPtr(handle);
+                    b3TreeStats s = Ffi.b3World_CastShape(
+                        Id,
+                        origin,
+                        &proxy,
+                        translation,
+                        filter,
+                        CAST_TRAMPOLINE_PTR,
+                        ctx);
+                    return new(s.nodeVisits, s.leafVisits);
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
         // Collector trampolines: static, rooted for the process lifetime, IL2CPP-safe via
         // MonoPInvokeCallback. Per-call state travels through the native context pointer as a
         // stack-allocated context struct — no allocation per query.
@@ -75,7 +233,7 @@ namespace Box3d
             {
                 var ctx = new ShapeCollectorContext { Buffer = buffer, Capacity = results.Length };
                 b3TreeStats s = Ffi.b3World_OverlapAABB(Id, aabb, filter, OverlapCollectorPtr, &ctx);
-                stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
+                stats = new(s.nodeVisits, s.leafVisits);
                 return ctx.Count;
             }
         }
@@ -97,7 +255,7 @@ namespace Box3d
                 var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
                 var ctx = new ShapeCollectorContext { Buffer = buffer, Capacity = results.Length };
                 b3TreeStats s = Ffi.b3World_OverlapShape(Id, origin, &proxy, filter, OverlapCollectorPtr, &ctx);
-                stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
+                stats = new(s.nodeVisits, s.leafVisits);
                 return ctx.Count;
             }
         }
@@ -114,7 +272,7 @@ namespace Box3d
             {
                 var ctx = new RayCollectorContext { Buffer = buffer, Capacity = hits.Length };
                 b3TreeStats s = Ffi.b3World_CastRay(Id, origin, translation, filter, CastCollectorPtr, &ctx);
-                stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
+                stats = new(s.nodeVisits, s.leafVisits);
                 return ctx.Count;
             }
         }
@@ -136,7 +294,7 @@ namespace Box3d
                 var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
                 var ctx = new RayCollectorContext { Buffer = buffer, Capacity = hits.Length };
                 b3TreeStats s = Ffi.b3World_CastShape(Id, origin, &proxy, translation, filter, CastCollectorPtr, &ctx);
-                stats = new TreeStats { NodeVisits = s.nodeVisits, LeafVisits = s.leafVisits };
+                stats = new(s.nodeVisits, s.leafVisits);
                 return ctx.Count;
             }
         }
