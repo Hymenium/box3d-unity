@@ -49,7 +49,7 @@ namespace Box3d
         public unsafe void Destroy()
         {
             if (Data == IntPtr.Zero) return;
-            Ffi.b3DestroyHull((HullData*)Data);
+            Ffi.b3DestroyHull((b3HullData*)Data);
             Data = IntPtr.Zero;
         }
     }

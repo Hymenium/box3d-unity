@@ -216,7 +216,7 @@ namespace Box3d
         {
             if (!hull.IsCreated) throw new ArgumentException("Hull is not created (default or already destroyed)", nameof(hull));
             ShapeDef localDef = def;
-            return Shape.WrapUnchecked(Ffi.b3CreateHullShape(Id, &localDef, (HullData*)hull.Data));
+            return Shape.WrapUnchecked(Ffi.b3CreateHullShape(Id, &localDef, (b3HullData*)hull.Data));
         }
 
         /// <summary>Attaches a triangle mesh shape (static bodies only). The mesh data is

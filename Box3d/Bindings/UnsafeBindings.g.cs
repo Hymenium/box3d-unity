@@ -650,6 +650,32 @@ namespace Box3d.Sys
         public byte edge;
     }
 
+    /// <summary>Header of native b3HullData (136 bytes). Real hull data hangs off the end of this
+    /// struct in native memory — never copy a b3HullData you don't own; pass by reference only.
+    /// Fields are engine-internal; exposed read-only where useful.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct b3HullData
+    {
+        public ulong Version;
+        public int ByteCount;
+        public uint Hash;
+        public B3Aabb Aabb;
+        public float SurfaceArea;
+        public float Volume;
+        public float InnerRadius;
+        public Unity.Mathematics.float3 Center;
+        public B3Matrix3 CentralInertia;
+        public int VertexCount;
+        public int VertexOffset;
+        public int PointOffset;
+        public int EdgeCount;
+        public int EdgeOffset;
+        public int FaceCount;
+        public int FaceOffset;
+        public int PlaneOffset;
+        public int Padding;
+    }
+
     public unsafe partial struct b3MeshDef
     {
         [NativeTypeName("b3Vec3 *")]
@@ -916,7 +942,7 @@ namespace Box3d.Sys
     public unsafe partial struct b3CompoundHullDef
     {
         [NativeTypeName("const b3HullData *")]
-        public HullData* hull;
+        public b3HullData* hull;
 
         public B3Transform transform;
 
@@ -1015,7 +1041,7 @@ namespace Box3d.Sys
     public unsafe partial struct b3CompoundHull
     {
         [NativeTypeName("const b3HullData *")]
-        public HullData* hull;
+        public b3HullData* hull;
 
         public B3Transform transform;
 
@@ -1068,7 +1094,7 @@ namespace Box3d.Sys
             }
         }
 
-        public unsafe ref HullData* hull
+        public unsafe ref b3HullData* hull
         {
             get
             {
@@ -1110,7 +1136,7 @@ namespace Box3d.Sys
 
             [FieldOffset(0)]
             [NativeTypeName("const b3HullData *")]
-            public HullData* hull;
+            public b3HullData* hull;
 
             [FieldOffset(0)]
             public b3Mesh mesh;
@@ -1494,7 +1520,7 @@ namespace Box3d.Sys
             }
         }
 
-        public unsafe ref HullData* hull
+        public unsafe ref b3HullData* hull
         {
             get
             {
@@ -1544,7 +1570,7 @@ namespace Box3d.Sys
 
             [FieldOffset(0)]
             [NativeTypeName("const b3HullData *")]
-            public HullData* hull;
+            public b3HullData* hull;
 
             [FieldOffset(0)]
             [NativeTypeName("const b3Mesh *")]
@@ -2594,11 +2620,11 @@ namespace Box3d
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3ShapeId")]
-        public static extern ShapeId b3CreateHullShape([NativeTypeName("b3BodyId")] BodyId bodyId, [NativeTypeName("const b3ShapeDef *")] ShapeDef* def, [NativeTypeName("const b3HullData *")] HullData* hull);
+        public static extern ShapeId b3CreateHullShape([NativeTypeName("b3BodyId")] BodyId bodyId, [NativeTypeName("const b3ShapeDef *")] ShapeDef* def, [NativeTypeName("const b3HullData *")] b3HullData* hull);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3ShapeId")]
-        public static extern ShapeId b3CreateTransformedHullShape([NativeTypeName("b3BodyId")] BodyId bodyId, [NativeTypeName("const b3ShapeDef *")] ShapeDef* def, [NativeTypeName("const b3HullData *")] HullData* hull, B3Transform transform, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 scale);
+        public static extern ShapeId b3CreateTransformedHullShape([NativeTypeName("b3BodyId")] BodyId bodyId, [NativeTypeName("const b3ShapeDef *")] ShapeDef* def, [NativeTypeName("const b3HullData *")] b3HullData* hull, B3Transform transform, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 scale);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3ShapeId")]
@@ -2724,14 +2750,12 @@ namespace Box3d
         public static extern Capsule b3Shape_GetCapsule([NativeTypeName("b3ShapeId")] ShapeId shapeId);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("const b3HullData *")]
-        public static extern HullData* b3Shape_GetHull([NativeTypeName("b3ShapeId")] ShapeId shapeId);
+        public static extern b3HullData* b3Shape_GetHull([NativeTypeName("b3ShapeId")] ShapeId shapeId);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern b3Mesh b3Shape_GetMesh([NativeTypeName("b3ShapeId")] ShapeId shapeId);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("const b3HeightFieldData *")]
         public static extern b3HeightFieldData* b3Shape_GetHeightField([NativeTypeName("b3ShapeId")] ShapeId shapeId);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -2741,7 +2765,7 @@ namespace Box3d
         public static extern void b3Shape_SetCapsule([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("const b3Capsule *")] Capsule* capsule);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3Shape_SetHull([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("const b3HullData *")] HullData* hull);
+        public static extern void b3Shape_SetHull([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("const b3HullData *")] b3HullData* hull);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void b3Shape_SetMesh([NativeTypeName("b3ShapeId")] ShapeId shapeId, [NativeTypeName("const b3MeshData *")] b3MeshData* meshData, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 scale);
@@ -3475,31 +3499,25 @@ namespace Box3d
         public static extern b3DynamicTree b3DynamicTree_Load([NativeTypeName("const char *")] sbyte* fileName, float scale);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("b3HullData *")]
-        public static extern HullData* b3CreateCylinder(float height, float radius, float yOffset, int sides);
+        public static extern b3HullData* b3CreateCylinder(float height, float radius, float yOffset, int sides);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("b3HullData *")]
-        public static extern HullData* b3CreateCone(float height, float radius1, float radius2, int slices);
+        public static extern b3HullData* b3CreateCone(float height, float radius1, float radius2, int slices);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("b3HullData *")]
-        public static extern HullData* b3CreateRock(float radius);
+        public static extern b3HullData* b3CreateRock(float radius);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("b3HullData *")]
-        public static extern HullData* b3CreateHull([NativeTypeName("const b3Vec3 *")] Unity.Mathematics.float3* points, int pointCount, int maxVertexCount);
+        public static extern b3HullData* b3CreateHull([NativeTypeName("const b3Vec3 *")] Unity.Mathematics.float3* points, int pointCount, int maxVertexCount);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("b3HullData *")]
-        public static extern HullData* b3CloneHull([NativeTypeName("const b3HullData *")] HullData* hull);
+        public static extern b3HullData* b3CloneHull([NativeTypeName("const b3HullData *")] b3HullData* hull);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("b3HullData *")]
-        public static extern HullData* b3CloneAndTransformHull([NativeTypeName("const b3HullData *")] HullData* original, B3Transform transform, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 scale);
+        public static extern b3HullData* b3CloneAndTransformHull([NativeTypeName("const b3HullData *")] b3HullData* original, B3Transform transform, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 scale);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3DestroyHull([NativeTypeName("b3HullData *")] HullData* hull);
+        public static extern void b3DestroyHull(b3HullData* hull);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3BoxHull")]
@@ -3614,7 +3632,7 @@ namespace Box3d
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3MassData")]
-        public static extern MassData b3ComputeHullMass([NativeTypeName("const b3HullData *")] HullData* shape, float density);
+        public static extern MassData b3ComputeHullMass([NativeTypeName("const b3HullData *")] b3HullData* shape, float density);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern B3Aabb b3ComputeSphereAABB([NativeTypeName("const b3Sphere *")] Sphere* shape, B3Transform transform);
@@ -3623,7 +3641,7 @@ namespace Box3d
         public static extern B3Aabb b3ComputeCapsuleAABB([NativeTypeName("const b3Capsule *")] Capsule* shape, B3Transform transform);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern B3Aabb b3ComputeHullAABB([NativeTypeName("const b3HullData *")] HullData* shape, B3Transform transform);
+        public static extern B3Aabb b3ComputeHullAABB([NativeTypeName("const b3HullData *")] b3HullData* shape, B3Transform transform);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern B3Aabb b3ComputeMeshAABB([NativeTypeName("const b3MeshData *")] b3MeshData* shape, B3Transform transform, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 scale);
@@ -3652,7 +3670,7 @@ namespace Box3d
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("_Bool")]
-        public static extern NativeBool b3OverlapHull([NativeTypeName("const b3HullData *")] HullData* shape, B3Transform shapeTransform, [NativeTypeName("const b3ShapeProxy *")] b3ShapeProxy* proxy);
+        public static extern NativeBool b3OverlapHull([NativeTypeName("const b3HullData *")] b3HullData* shape, B3Transform shapeTransform, [NativeTypeName("const b3ShapeProxy *")] b3ShapeProxy* proxy);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("_Bool")]
@@ -3675,7 +3693,7 @@ namespace Box3d
         public static extern b3CastOutput b3RayCastCompound([NativeTypeName("const b3CompoundData *")] b3CompoundData* shape, [NativeTypeName("const b3RayCastInput *")] b3RayCastInput* input);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern b3CastOutput b3RayCastHull([NativeTypeName("const b3HullData *")] HullData* shape, [NativeTypeName("const b3RayCastInput *")] b3RayCastInput* input);
+        public static extern b3CastOutput b3RayCastHull([NativeTypeName("const b3HullData *")] b3HullData* shape, [NativeTypeName("const b3RayCastInput *")] b3RayCastInput* input);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern b3CastOutput b3RayCastMesh([NativeTypeName("const b3Mesh *")] b3Mesh* shape, [NativeTypeName("const b3RayCastInput *")] b3RayCastInput* input);
@@ -3693,7 +3711,7 @@ namespace Box3d
         public static extern b3CastOutput b3ShapeCastCompound([NativeTypeName("const b3CompoundData *")] b3CompoundData* shape, [NativeTypeName("const b3ShapeCastInput *")] b3ShapeCastInput* input);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern b3CastOutput b3ShapeCastHull([NativeTypeName("const b3HullData *")] HullData* shape, [NativeTypeName("const b3ShapeCastInput *")] b3ShapeCastInput* input);
+        public static extern b3CastOutput b3ShapeCastHull([NativeTypeName("const b3HullData *")] b3HullData* shape, [NativeTypeName("const b3ShapeCastInput *")] b3ShapeCastInput* input);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern b3CastOutput b3ShapeCastMesh([NativeTypeName("const b3Mesh *")] b3Mesh* shape, [NativeTypeName("const b3ShapeCastInput *")] b3ShapeCastInput* input);
@@ -3726,22 +3744,22 @@ namespace Box3d
         public static extern void b3CollideCapsuleAndSphere(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3Capsule *")] Capsule* capsuleA, [NativeTypeName("const b3Sphere *")] Sphere* sphereB, B3Transform transformBtoA);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3CollideHullAndSphere(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] HullData* hullA, [NativeTypeName("const b3Sphere *")] Sphere* sphereB, B3Transform transformBtoA, b3SimplexCache* cache);
+        public static extern void b3CollideHullAndSphere(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] b3HullData* hullA, [NativeTypeName("const b3Sphere *")] Sphere* sphereB, B3Transform transformBtoA, b3SimplexCache* cache);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void b3CollideCapsules(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3Capsule *")] Capsule* capsuleA, [NativeTypeName("const b3Capsule *")] Capsule* capsuleB, B3Transform transformBtoA);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3CollideHullAndCapsule(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] HullData* hullA, [NativeTypeName("const b3Capsule *")] Capsule* capsuleB, B3Transform transformBtoA, b3SimplexCache* cache);
+        public static extern void b3CollideHullAndCapsule(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] b3HullData* hullA, [NativeTypeName("const b3Capsule *")] Capsule* capsuleB, B3Transform transformBtoA, b3SimplexCache* cache);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3CollideHulls(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] HullData* hullA, [NativeTypeName("const b3HullData *")] HullData* hullB, B3Transform transformBtoA, b3SATCache* cache);
+        public static extern void b3CollideHulls(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] b3HullData* hullA, [NativeTypeName("const b3HullData *")] b3HullData* hullB, B3Transform transformBtoA, b3SATCache* cache);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void b3CollideCapsuleAndTriangle(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3Capsule *")] Capsule* capsuleA, [NativeTypeName("const b3Vec3 *")] Unity.Mathematics.float3* triangleB, b3SimplexCache* cache);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3CollideHullAndTriangle(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] HullData* hullA, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 v1, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 v2, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 v3, int triangleFlags, b3SATCache* cache);
+        public static extern void b3CollideHullAndTriangle(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3HullData *")] b3HullData* hullA, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 v1, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 v2, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 v3, int triangleFlags, b3SATCache* cache);
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void b3CollideSphereAndTriangle(b3LocalManifold* manifold, int capacity, [NativeTypeName("const b3Sphere *")] Sphere* sphereA, [NativeTypeName("const b3Vec3 *")] Unity.Mathematics.float3* triangleB);

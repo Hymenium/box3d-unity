@@ -39,9 +39,9 @@ namespace Box3d
     // }
     public readonly unsafe ref struct HullView
     {
-        private readonly HullData* _data;
+        private readonly b3HullData* _data;
 
-        internal HullView(HullData* data)
+        public HullView(b3HullData* data)
         {
             _data = data;
         }

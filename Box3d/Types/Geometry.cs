@@ -37,39 +37,13 @@ namespace Box3d
         public float3 Cz;
     }
 
-    /// <summary>Header of native b3HullData (136 bytes). Real hull data hangs off the end of this
-    /// struct in native memory — never copy a b3HullData you don't own; pass by reference only.
-    /// Fields are engine-internal; exposed read-only where useful.</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public struct HullData
-    {
-        internal ulong Version;
-        internal int ByteCount;
-        internal uint Hash;
-        internal B3Aabb Aabb;
-        internal float SurfaceArea;
-        internal float Volume;
-        internal float InnerRadius;
-        internal float3 Center;
-        internal B3Matrix3 CentralInertia;
-        internal int VertexCount;
-        internal int VertexOffset;
-        internal int PointOffset;
-        internal int EdgeCount;
-        internal int EdgeOffset;
-        internal int FaceCount;
-        internal int FaceOffset;
-        internal int PlaneOffset;
-        internal int Padding;
-    }
-
     /// <summary>Mirrors native b3BoxHull (440 bytes): a self-contained box hull returned by value
     /// from b3MakeBoxHull. Safe to keep on the stack — hull shape creation clones the data.
     /// The trailing blob holds the vertex/point/edge/face/plane arrays the header offsets index into.</summary>
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct BoxHull
     {
-        internal HullData Base;
+        internal Sys.b3HullData Base;
         internal fixed byte Data[304];
 
         /// <summary>A box hull with the given half-extents, centered at the local origin.</summary>
