@@ -31,19 +31,12 @@ namespace Box3d
             bool ReportShape(ShapeId shape_id);
         }
 
-        private static readonly b3OverlapResultFcn OverlapTrampolineDelegate = ManagedOverlapTrampoline;
-        private static readonly IntPtr OVERLAP_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(OverlapCollectorDelegate);
-
-        [MonoPInvokeCallback(typeof(b3OverlapResultFcn))]
-        private static unsafe NativeBool ManagedOverlapTrampoline(ShapeId shape_id, void* raw_context)
-        {
-            var callback = (IOverlapCallback)GCHandle.FromIntPtr((IntPtr)raw_context).Target!;
-            return callback.ReportShape(shape_id);
-        }
-
         public interface ICastCallback
         {
-            // Return the new fraction to continue, or negative to stop
+            // return -1: ignore this shape and continue
+            // return 0: terminate the ray cast
+            // return fraction: clip the ray to this point
+            // return 1: don't clip the ray and continue
             float OnHit(
                 ShapeId shape_id,
                 float3 point, float3 normal, float fraction,
@@ -52,8 +45,17 @@ namespace Box3d
                 int child_index);
         }
 
+        private static readonly b3OverlapResultFcn OverlapTrampolineDelegate = ManagedOverlapTrampoline;
         private static readonly b3CastResultFcn CastTrampolineDelegate = ManagedCastTrampoline;
+        private static readonly IntPtr OVERLAP_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(OverlapCollectorDelegate);
         private static readonly IntPtr CAST_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(CastCollectorDelegate);
+
+        [MonoPInvokeCallback(typeof(b3OverlapResultFcn))]
+        private static unsafe NativeBool ManagedOverlapTrampoline(ShapeId shape_id, void* raw_context)
+        {
+            var callback = (IOverlapCallback)GCHandle.FromIntPtr((IntPtr)raw_context).Target!;
+            return callback.ReportShape(shape_id);
+        }
 
         [MonoPInvokeCallback(typeof(b3CastResultFcn))]
         private static unsafe float ManagedCastTrampoline(

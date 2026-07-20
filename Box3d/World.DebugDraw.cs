@@ -112,10 +112,7 @@ namespace Box3d
             Scale = scale;
         }
 
-        internal MeshView(b3Mesh* mesh)
-            : this(mesh->data, mesh->scale)
-        {
-        }
+        internal MeshView(b3Mesh* mesh) : this(mesh->data, mesh->scale) { }
 
         public ReadOnlySpan<float3> Vertices
         {

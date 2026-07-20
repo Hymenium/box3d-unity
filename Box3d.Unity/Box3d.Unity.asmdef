@@ -1,0 +1,17 @@
+{
+    "name": "Box3d.Unity",
+    "rootNamespace": "Box3d.Unity",
+    "references": [
+        "Box3d.Runtime",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
