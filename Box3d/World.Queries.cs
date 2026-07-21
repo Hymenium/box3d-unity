@@ -47,8 +47,8 @@ namespace Box3d
 
         private static readonly b3OverlapResultFcn OverlapTrampolineDelegate = ManagedOverlapTrampoline;
         private static readonly b3CastResultFcn CastTrampolineDelegate = ManagedCastTrampoline;
-        private static readonly IntPtr OVERLAP_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(OverlapCollectorDelegate);
-        private static readonly IntPtr CAST_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(CastCollectorDelegate);
+        private static readonly IntPtr OVERLAP_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(OverlapTrampolineDelegate);
+        private static readonly IntPtr CAST_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(CastTrampolineDelegate);
 
         [MonoPInvokeCallback(typeof(b3OverlapResultFcn))]
         private static unsafe NativeBool ManagedOverlapTrampoline(ShapeId shape_id, void* raw_context)
