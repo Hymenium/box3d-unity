@@ -3,7 +3,8 @@
     "rootNamespace": "Box3d.Unity",
     "references": [
         "Box3d.Runtime",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "DCFApixels.DebugX"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -11,6 +11,49 @@ namespace Box3d
 
     public interface IDebugShape { }
 
+    public readonly struct DebugShapeSource
+    {
+        public readonly Shape Owner;
+        public readonly int ChildIndex;
+
+        public DebugShapeSource(Shape owner, int childIndex = -1)
+        {
+            Owner = owner;
+            ChildIndex = childIndex;
+        }
+
+        public bool IsCompoundChild => ChildIndex >= 0;
+    }
+
+    // Backends that return a non-null shape from any Create method
+    // must also implement DrawShape and DestroyShape.
+    public interface IDebugDrawBackend
+    {
+        // Buffered geometry
+        IDebugShape CreateSphere(in Sphere sphere, in DebugShapeSource source);
+        IDebugShape CreateCapsule(in Capsule shape, in DebugShapeSource source);
+
+        // View are valid only during the call (data must be copied)
+        IDebugShape CreateHull(HullView hull, in DebugShapeSource source);
+        IDebugShape CreateMesh(MeshView mesh, in DebugShapeSource source);
+        IDebugShape CreateHeightField(HeightFieldView heightField, in DebugShapeSource source);
+
+        void DestroyShape(IDebugShape shape);
+
+        // Return true if drawing should continue
+        bool DrawShape(IDebugShape shape, in B3Transform transform, uint color);
+
+        // Immediate geometry
+        void DrawSegment(float3 start, float3 end, uint color);
+        void DrawTransform(in B3Transform transform);
+        void DrawPoint(float3 position, float size, uint color);
+        void DrawSphere(float3 position, float radius, uint color, float alpha);
+        void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha);
+        void DrawBounds(in B3Aabb bounds, uint color);
+        void DrawBox(float3 extents, in B3Transform transform, uint color);
+        void DrawString(float3 p, string str, uint color);
+    }
+
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public readonly struct HullHalfEdge
     {
@@ -106,13 +149,13 @@ namespace Box3d
         private readonly b3MeshData* _data;
         public float3 Scale { get; }
 
-        internal MeshView(b3MeshData* data, float3 scale)
+        public MeshView(b3MeshData* data, float3 scale)
         {
             _data = data;
             Scale = scale;
         }
 
-        internal MeshView(b3Mesh* mesh) : this(mesh->data, mesh->scale) { }
+        public MeshView(b3Mesh* mesh) : this(mesh->data, mesh->scale) { }
 
         public ReadOnlySpan<float3> Vertices
         {
@@ -145,7 +188,7 @@ namespace Box3d
     {
         private readonly b3HeightFieldData* _data;
 
-        internal HeightFieldView(b3HeightFieldData* data)
+        public HeightFieldView(b3HeightFieldData* data)
         {
             _data = data;
         }
@@ -264,49 +307,6 @@ namespace Box3d
             if ((uint)row >= (uint)(RowCount - 1))
                 throw new ArgumentOutOfRangeException(nameof(row));
         }
-    }
-
-    public readonly struct DebugShapeSource
-    {
-        public readonly Shape Owner;
-        public readonly int ChildIndex;
-
-        public DebugShapeSource(Shape owner, int childIndex = -1)
-        {
-            Owner = owner;
-            ChildIndex = childIndex;
-        }
-
-        public bool IsCompoundChild => ChildIndex >= 0;
-    }
-
-    // Backends that return a non-null shape from any Create method
-    // must also implement DrawShape and DestroyShape.
-    public interface IDebugDrawBackend
-    {
-        // Buffered geometry
-        IDebugShape CreateSphere(in Sphere sphere, in DebugShapeSource source);
-        IDebugShape CreateCapsule(in Capsule shape, in DebugShapeSource source);
-
-        // View are valid only during the call (data must be copied)
-        IDebugShape CreateHull(HullView hull, in DebugShapeSource source);
-        IDebugShape CreateMesh(MeshView mesh, in DebugShapeSource source);
-        IDebugShape CreateHeightField(HeightFieldView heightField, in DebugShapeSource source);
-
-        void DestroyShape(IDebugShape shape);
-
-        // Return true if drawing should continue
-        bool DrawShape(IDebugShape shape, in B3Transform transform, uint color);
-
-        // Immediate geometry
-        void DrawSegment(float3 start, float3 end, uint color);
-        void DrawTransform(in B3Transform transform);
-        void DrawPoint(float3 position, float size, uint color);
-        void DrawSphere(float3 position, float radius, uint color, float alpha);
-        void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha);
-        void DrawBounds(in B3Aabb bounds, uint color);
-        void DrawBox(float3 extents, in B3Transform transform, uint color);
-        void DrawString(float3 p, string str, uint color);
     }
 
     /// <summary>What <see cref="World.DrawDebug"/> visualizes.</summary>
