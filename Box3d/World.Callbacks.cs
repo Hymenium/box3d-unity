@@ -150,7 +150,6 @@ namespace Box3d
         {
             CustomFilters[Id.Index1] = null;
             PreSolves[Id.Index1] = null;
-            NativeDebugDrawBridge.SetBridgeOwned(Id, false);
             // The mixers are global (see SetFrictionCallback) — clearing on any world destroy
             // prevents the last registered delegate (and its closure) from being rooted forever.
             _frictionMix = null;

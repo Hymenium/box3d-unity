@@ -26,6 +26,8 @@ namespace Box3d
     {
         private IntPtr _handle; // b3RecPlayer*
 
+        private GCHandle _shapeFactoryHandle;
+
         public bool IsCreated => _handle != IntPtr.Zero;
 
         /// <summary>Creates a player from recording bytes (e.g. <c>recording.GetData()</c> or file bytes).</summary>
@@ -40,19 +42,32 @@ namespace Box3d
         public unsafe void Destroy()
         {
             if (_handle == IntPtr.Zero) return;
-            NativeDebugDrawBridge.SetBridgeOwned(World.Id, false); // clear the flag before the world goes away
             Ffi.b3RecPlayer_Destroy((b3RecPlayer*)_handle);
             _handle = IntPtr.Zero;
+            if (_shapeFactoryHandle.IsAllocated) _shapeFactoryHandle.Free();
         }
 
         /// <summary>Wires box3d's debug-shape callbacks so the replayed world draws shape <em>interiors</em>
         /// (not just contacts/bounds) via <c>World.DrawDebug</c>. Call once after <see cref="Create"/>, on
         /// the main thread. Not needed for headless validation.</summary>
-        public unsafe void EnableShapeDrawing()
+        public unsafe void EnableShapeDrawing(IDebugShapeFactory shapeFactory)
         {
-            if (_handle == IntPtr.Zero) return;
-            NativeDebugDrawBridge.ConfigureRecPlayer((b3RecPlayer*)_handle);
-            NativeDebugDrawBridge.SetBridgeOwned(World.Id, true);
+            if (_handle == IntPtr.Zero)
+            {
+                throw new ObjectDisposedException(nameof(ReplayPlayer));
+            }
+
+            if (_shapeFactoryHandle.IsAllocated)
+            {
+                throw new InvalidOperationException("A debug-shape factory is already registered.");
+            }
+
+            _shapeFactoryHandle = GCHandle.Alloc(shapeFactory);
+
+            Ffi.b3RecPlayer_SetDebugShapeCallbacks((b3RecPlayer*)_handle,
+                NativeDebugDrawBridge.CREATE_SHAPE_PTR,
+                NativeDebugDrawBridge.DESTROY_SHAPE_PTR,
+                (void*)GCHandle.ToIntPtr(_shapeFactoryHandle));
         }
 
         /// <summary>The replayed world at the current frame — pass to debug draw / <c>Body.GetContacts</c>

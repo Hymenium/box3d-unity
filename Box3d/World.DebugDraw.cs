@@ -41,22 +41,6 @@ namespace Box3d
         void DestroyShape(IDebugShape shape);
     }
 
-    public interface IDebugDrawTarget
-    {
-        // Return true if drawing should continue
-        bool DrawShape(IDebugShape shape, in B3Transform transform, uint color);
-
-        // Immediate geometry
-        void DrawSegment(float3 start, float3 end, uint color);
-        void DrawTransform(in B3Transform transform);
-        void DrawPoint(float3 position, float size, uint color);
-        void DrawSphere(float3 position, float radius, uint color, float alpha);
-        void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha);
-        void DrawBounds(in B3Aabb bounds, uint color);
-        void DrawBox(float3 extents, in B3Transform transform, uint color);
-        void DrawString(float3 p, string str, uint color);
-    }
-
     /// <summary>What <see cref="World.DrawDebug"/> visualizes.</summary>
     [Flags]
     public enum DebugDrawFlags
@@ -76,16 +60,38 @@ namespace Box3d
         Default = Shapes | Joints,
     }
 
+    public interface IDebugDrawTarget
+    {
+        // Return true if drawing should continue
+        bool DrawShape(IDebugShape shape, in B3Transform transform, uint color);
+
+        // Immediate geometry
+        void DrawSegment(float3 start, float3 end, uint color);
+        void DrawTransform(in B3Transform transform);
+        void DrawPoint(float3 position, float size, uint color);
+        void DrawSphere(float3 position, float radius, uint color, float alpha);
+        void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha);
+        void DrawBounds(in B3Aabb bounds, uint color);
+        void DrawBox(float3 extents, in B3Transform transform, uint color);
+        void DrawString(float3 p, string str, uint color);
+    }
+
     public unsafe partial struct World
     {
-        /// <summary>Draws the world's debug visualization if IDebugDrawBackend 
-        /// was loaded using <see cref="DebugDraw.SetBackend"/> before calling 
-        /// <see cref="World.Create"/>. </summary>
-        public void DrawDebug(DebugDrawFlags flags = DebugDrawFlags.Default, float drawRadius = 100f)
+        // TODO: Add documentation
+        public void DrawDebug(IDebugDrawTarget target, DebugDrawFlags flags = DebugDrawFlags.Default, float drawRadius = 100f)
         {
-            if (!NativeDebugDrawBridge.IsBridgeOwned(Id)) return;
+            if (target == null)
+            {
+                Debug.LogError("No IDebugDrawTarget provided.");
+                return;
+            }
 
-            b3DebugDraw draw = NativeDebugDrawBridge.NativeDraw;
+            b3DebugDraw draw = NativeDebugDrawBridge.CreateNativeDraw();
+
+            var handle = GCHandle.Alloc(target);
+            draw.context = (void*)GCHandle.ToIntPtr(handle);
+
             draw.drawingBounds = new B3Aabb
             {
                 LowerBound = new float3(-drawRadius, -drawRadius, -drawRadius),
@@ -105,14 +111,8 @@ namespace Box3d
 
             // DebugDrawBridge.DrawCallCount = 0;
             Ffi.b3World_Draw(Id, &draw, ulong.MaxValue);
-        }
-    }
 
-    public static class DebugDraw
-    {
-        public static void SetBackend(IDebugShapeBackend backend)
-        {
-            NativeDebugDrawBridge.SetBackend(backend);
+            handle.Free();
         }
     }
 
@@ -200,8 +200,8 @@ namespace Box3d
         private static readonly DrawBoxDelegate DRAW_BOX_INSTANCE = DrawBox;
         private static readonly DrawStringDelegate DRAW_STRING_INSTANCE = DrawString;
 
-        private static readonly IntPtr CREATE_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(CREATE_SHAPE_INSTANCE);
-        private static readonly IntPtr DESTROY_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(DESTROY_SHAPE_INSTANCE);
+        internal static readonly IntPtr CREATE_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(CREATE_SHAPE_INSTANCE);
+        internal static readonly IntPtr DESTROY_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(DESTROY_SHAPE_INSTANCE);
         private static readonly IntPtr DRAW_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_SHAPE_INSTANCE);
         private static readonly IntPtr DRAW_SEGMENT_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_SEGMENT_INSTANCE);
         private static readonly IntPtr DRAW_TRANSFORM_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_TRANSFORM_INSTANCE);
@@ -212,68 +212,44 @@ namespace Box3d
         private static readonly IntPtr DRAW_BOX_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_BOX_INSTANCE);
         private static readonly IntPtr DRAW_STRING_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_STRING_INSTANCE);
 
-        // managed object
-        private static IDebugShapeBackend _backend;
-        private static GCHandle _backendHandle;
-        private static readonly bool[] BridgeOwned = new bool[Ffi.B3_MAX_WORLDS + 1];
-
-        internal static b3DebugDraw NativeDraw;
-
-
-        internal static bool IsConfigured => _backend is not null;
-
-        internal static void SetBridgeOwned(WorldId id, bool owned)
+        internal static b3DebugDraw CreateNativeDraw()
         {
-            BridgeOwned[id.Index1] = owned;
+            var native_draw = Ffi.b3DefaultDebugDraw();
+
+            native_draw.DrawShapeFcn = DRAW_SHAPE_PTR;
+            native_draw.DrawSegmentFcn = DRAW_SEGMENT_PTR;
+            native_draw.DrawTransformFcn = DRAW_TRANSFORM_PTR;
+            native_draw.DrawPointFcn = DRAW_POINT_PTR;
+            native_draw.DrawSphereFcn = DRAW_SPHERE_PTR;
+            native_draw.DrawCapsuleFcn = DRAW_CAPSULE_PTR;
+            native_draw.DrawBoundsFcn = DRAW_BOUNDS_PTR;
+            native_draw.DrawBoxFcn = DRAW_BOX_PTR;
+            native_draw.DrawStringFcn = DRAW_STRING_PTR;
+
+            return native_draw;
         }
 
-        internal static bool IsBridgeOwned(WorldId id)
+        private static IDebugShape GetShape(void* userShape)
         {
-            return BridgeOwned[id.Index1];
-        }
-
-        internal static void SetBackend(IDebugDrawBackend backend)
-        {
-            if (_backendHandle.IsAllocated)
+            if (userShape == null)
             {
                 throw new InvalidOperationException(
-                    "The debug-draw backend has already been configured.");
+                    "The buffered debug shape pointer is null.");
             }
 
-            _backend = backend ?? throw new ArgumentNullException(nameof(backend));
-            _backendHandle = GCHandle.Alloc(_backend);
+            GCHandle handle =
+                GCHandle.FromIntPtr((IntPtr)userShape);
 
-            NativeDraw = Ffi.b3DefaultDebugDraw();
-            NativeDraw.context =
-                (void*)GCHandle.ToIntPtr(_backendHandle);
+            if (handle.Target is not IDebugShape shape)
+            {
+                throw new InvalidOperationException(
+                    "The buffered debug shape has already been released.");
+            }
 
-            NativeDraw.DrawShapeFcn = DRAW_SHAPE_PTR;
-            NativeDraw.DrawSegmentFcn = DRAW_SEGMENT_PTR;
-            NativeDraw.DrawTransformFcn = DRAW_TRANSFORM_PTR;
-            NativeDraw.DrawPointFcn = DRAW_POINT_PTR;
-            NativeDraw.DrawSphereFcn = DRAW_SPHERE_PTR;
-            NativeDraw.DrawCapsuleFcn = DRAW_CAPSULE_PTR;
-            NativeDraw.DrawBoundsFcn = DRAW_BOUNDS_PTR;
-            NativeDraw.DrawBoxFcn = DRAW_BOX_PTR;
-            NativeDraw.DrawStringFcn = DRAW_STRING_PTR;
+            return shape;
         }
 
-        internal static void ConfigureWorldDef(ref WorldDef def)
-        {
-            def.CreateDebugShape = CREATE_SHAPE_PTR;
-            def.DestroyDebugShape = DESTROY_SHAPE_PTR;
-            def.UserDebugShapeContext = GCHandle.ToIntPtr(_backendHandle);
-        }
-
-        internal static void ConfigureRecPlayer(b3RecPlayer* recPlayer)
-        {
-            Ffi.b3RecPlayer_SetDebugShapeCallbacks(recPlayer,
-                CREATE_SHAPE_PTR,
-                DESTROY_SHAPE_PTR,
-                (void*)GCHandle.ToIntPtr(_backendHandle));
-        }
-
-        private static IDebugShapeBackend GetBackend(void* context)
+        private static IDebugShapeFactory GetFactory(void* context)
         {
             if (context == null)
             {
@@ -284,13 +260,33 @@ namespace Box3d
             GCHandle handle =
                 GCHandle.FromIntPtr((IntPtr)context);
 
-            if (handle.Target is not IDebugShapeBackend backend)
+            if (handle.Target is not IDebugShapeFactory factory)
             {
                 throw new InvalidOperationException(
-                    "The debug-draw context does not contain an IDebugDrawBackend.");
+                    "The debug-draw context does not contain an IDebugShapeFactory.");
             }
 
-            return backend;
+            return factory;
+        }
+
+        private static IDebugDrawTarget GetDrawTarget(void* context)
+        {
+            if (context == null)
+            {
+                throw new InvalidOperationException(
+                    "The debug-draw context pointer is null.");
+            }
+
+            GCHandle handle =
+                GCHandle.FromIntPtr((IntPtr)context);
+
+            if (handle.Target is not IDebugDrawTarget target)
+            {
+                throw new InvalidOperationException(
+                    "The debug-draw context does not contain an IDebugDrawTarget.");
+            }
+
+            return target;
         }
 
         private sealed class CompoundDebugShape : IDebugShape
@@ -325,7 +321,7 @@ namespace Box3d
         }
 
         private static unsafe void AddSpheres(
-            IDebugDrawBackend backend, b3CompoundData* compound,
+            IDebugShapeFactory factory, b3CompoundData* compound,
             List<CompoundChild> children, in Shape owner)
         {
             byte* base_ptr = (byte*)compound;
@@ -337,7 +333,7 @@ namespace Box3d
             {
                 DebugShapeSource source = new(owner, i);
                 b3CompoundSphere* instance = spheres + i;
-                IDebugShape debug_shape = backend.CreateSphere(in instance->sphere, source);
+                IDebugShape debug_shape = factory.CreateSphere(in instance->sphere, source);
 
                 if (debug_shape == null) continue;
 
@@ -346,7 +342,7 @@ namespace Box3d
         }
 
         private static unsafe void AddCapsules(
-            IDebugDrawBackend backend, b3CompoundData* compound,
+            IDebugShapeFactory factory, b3CompoundData* compound,
             List<CompoundChild> children, in Shape owner)
         {
             byte* base_ptr = (byte*)compound;
@@ -358,7 +354,7 @@ namespace Box3d
             {
                 DebugShapeSource source = new(owner, i);
                 b3CompoundCapsule* instance = capsules + i;
-                IDebugShape debug_shape = backend.CreateCapsule(in instance->capsule, source);
+                IDebugShape debug_shape = factory.CreateCapsule(in instance->capsule, source);
 
                 if (debug_shape == null) continue;
 
@@ -367,7 +363,7 @@ namespace Box3d
         }
 
         private static unsafe void AddHulls(
-            IDebugDrawBackend backend, b3CompoundData* compound,
+            IDebugShapeFactory factory, b3CompoundData* compound,
             List<CompoundChild> children, in Shape owner)
         {
             byte* base_ptr = (byte*)compound;
@@ -379,7 +375,7 @@ namespace Box3d
             {
                 DebugShapeSource source = new(owner, i);
                 b3CompoundHull* instance = hulls + i;
-                IDebugShape debug_shape = backend.CreateHull(new HullView(instance->hull), source);
+                IDebugShape debug_shape = factory.CreateHull(new HullView(instance->hull), source);
 
                 if (debug_shape == null) continue;
 
@@ -388,7 +384,7 @@ namespace Box3d
         }
 
         private static unsafe void AddMeshes(
-            IDebugDrawBackend backend, b3CompoundData* compound,
+            IDebugShapeFactory factory, b3CompoundData* compound,
             List<CompoundChild> children, in Shape owner)
         {
             byte* base_ptr = (byte*)compound;
@@ -401,7 +397,7 @@ namespace Box3d
                 b3CompoundMesh* instance = meshes + i;
 
                 IDebugShape debug_shape =
-                    backend.CreateMesh(new MeshView(instance->meshData, instance->scale), source);
+                    factory.CreateMesh(new MeshView(instance->meshData, instance->scale), source);
 
                 if (debug_shape == null) continue;
 
@@ -411,13 +407,13 @@ namespace Box3d
             }
         }
 
-        private static void DestroyCompoundChildren(IDebugDrawBackend backend, List<CompoundChild> children)
+        private static void DestroyCompoundChildren(IDebugShapeFactory factory, List<CompoundChild> children)
         {
             foreach (var child in children)
             {
                 try
                 {
-                    backend.DestroyShape(child.Shape);
+                    factory.DestroyShape(child.Shape);
                 }
                 catch (Exception destroyException)
                 {
@@ -426,7 +422,7 @@ namespace Box3d
             }
         }
 
-        private static IDebugShape CreateCompound(IDebugDrawBackend backend, b3CompoundData* compound, in Shape owner)
+        private static IDebugShape CreateCompound(IDebugShapeFactory factory, b3CompoundData* compound, in Shape owner)
         {
             var children = new List<CompoundChild>(
                 compound->sphereCount +
@@ -436,10 +432,10 @@ namespace Box3d
 
             try
             {
-                AddSpheres(backend, compound, children, owner);
-                AddCapsules(backend, compound, children, owner);
-                AddHulls(backend, compound, children, owner);
-                AddMeshes(backend, compound, children, owner);
+                AddSpheres(factory, compound, children, owner);
+                AddCapsules(factory, compound, children, owner);
+                AddHulls(factory, compound, children, owner);
+                AddMeshes(factory, compound, children, owner);
 
                 return children.Count == 0
                     ? null
@@ -447,39 +443,24 @@ namespace Box3d
             }
             catch
             {
-                DestroyCompoundChildren(backend, children);
+                DestroyCompoundChildren(factory, children);
                 throw;
             }
         }
 
-        private static void DestroyCompound(IDebugDrawBackend backend, CompoundDebugShape compound)
+        private static void DestroyCompound(IDebugShapeFactory factory, CompoundDebugShape compound)
         {
             foreach (var child in compound.Children)
             {
                 try
                 {
-                    backend.DestroyShape(child.Shape);
+                    factory.DestroyShape(child.Shape);
                 }
                 catch (Exception destroyException)
                 {
                     Debug.LogException(destroyException);
                 }
             }
-        }
-
-        private static bool DrawCompound(IDebugDrawBackend backend, CompoundDebugShape compound,
-            B3Transform compound_transform, uint color)
-        {
-            foreach (var child in compound.Children)
-            {
-                B3Transform child_transform = Multiply(compound_transform, child.Transform);
-
-                if (!backend.DrawShape(child.Shape, in child_transform, color))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         [MonoPInvokeCallback(typeof(CreateShapeDelegate))]
@@ -489,17 +470,17 @@ namespace Box3d
             {
                 if (debugShape == null) return null;
 
-                IDebugDrawBackend backend = GetBackend(userContext);
+                IDebugShapeFactory factory = GetFactory(userContext);
                 Shape owner = Shape.WrapUnchecked(debugShape->shapeId);
                 DebugShapeSource source = new(owner);
                 IDebugShape u_shape = debugShape->type switch
                 {
-                    ShapeType.Sphere => backend.CreateSphere(*debugShape->sphere, source),
-                    ShapeType.Capsule => backend.CreateCapsule(*debugShape->capsule, source),
-                    ShapeType.Hull => backend.CreateHull(new HullView(debugShape->hull), source),
-                    ShapeType.Compound => CreateCompound(backend, debugShape->compound, owner),
-                    ShapeType.Mesh => backend.CreateMesh(new MeshView(debugShape->mesh), source),
-                    ShapeType.HeightField => backend.CreateHeightField(
+                    ShapeType.Sphere => factory.CreateSphere(*debugShape->sphere, source),
+                    ShapeType.Capsule => factory.CreateCapsule(*debugShape->capsule, source),
+                    ShapeType.Hull => factory.CreateHull(new HullView(debugShape->hull), source),
+                    ShapeType.Compound => CreateCompound(factory, debugShape->compound, owner),
+                    ShapeType.Mesh => factory.CreateMesh(new MeshView(debugShape->mesh), source),
+                    ShapeType.HeightField => factory.CreateHeightField(
                             new HeightFieldView(debugShape->heightField), source
                         ),
                     _ => throw new InvalidOperationException($"Unknown debug shape type: {debugShape->type}"),
@@ -518,26 +499,6 @@ namespace Box3d
             }
         }
 
-        private static IDebugShape GetShape(void* userShape)
-        {
-            if (userShape == null)
-            {
-                throw new InvalidOperationException(
-                    "The buffered debug shape pointer is null.");
-            }
-
-            GCHandle handle =
-                GCHandle.FromIntPtr((IntPtr)userShape);
-
-            if (handle.Target is not IDebugShape shape)
-            {
-                throw new InvalidOperationException(
-                    "The buffered debug shape has already been released.");
-            }
-
-            return shape;
-        }
-
         [MonoPInvokeCallback(typeof(DestroyShapeDelegate))]
         private static void DestroyShape(void* userShape, void* userContext)
         {
@@ -550,16 +511,16 @@ namespace Box3d
 
                 try
                 {
-                    IDebugDrawBackend backend = GetBackend(userContext);
+                    IDebugShapeFactory factory = GetFactory(userContext);
                     IDebugShape shape = GetShape(userShape);
 
                     if (shape is CompoundDebugShape compound)
                     {
-                        DestroyCompound(backend, compound);
+                        DestroyCompound(factory, compound);
                     }
                     else
                     {
-                        backend.DestroyShape(shape);
+                        factory.DestroyShape(shape);
                     }
                 }
                 finally
@@ -573,6 +534,21 @@ namespace Box3d
             }
         }
 
+        private static bool DrawCompound(IDebugDrawTarget target, CompoundDebugShape compound,
+            B3Transform compound_transform, uint color)
+        {
+            foreach (var child in compound.Children)
+            {
+                B3Transform child_transform = Multiply(compound_transform, child.Transform);
+
+                if (!target.DrawShape(child.Shape, in child_transform, color))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         [MonoPInvokeCallback(typeof(DrawShapeDelegate))]
         private static NativeBool DrawShape(
             void* userShape,
@@ -580,24 +556,26 @@ namespace Box3d
             uint color,
             void* context)
         {
+            if (userShape == null) return true;
+
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
+                IDebugDrawTarget target = GetDrawTarget(context);
                 IDebugShape shape = GetShape(userShape);
 
                 if (shape is CompoundDebugShape compound)
                 {
-                    return DrawCompound(backend, compound, transform, color);
+                    return DrawCompound(target, compound, transform, color);
                 }
                 else
                 {
-                    return backend.DrawShape(shape, transform, color);
+                    return target.DrawShape(shape, transform, color);
                 }
             }
             catch (Exception exception)
             {
                 Debug.LogException(exception);
-                return false;
+                return true;
             }
         }
 
@@ -610,9 +588,9 @@ namespace Box3d
         {
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
+                IDebugDrawTarget target = GetDrawTarget(context);
 
-                backend.DrawSegment(start, end, color);
+                target.DrawSegment(start, end, color);
             }
             catch (Exception exception)
             {
@@ -627,9 +605,9 @@ namespace Box3d
         {
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
+                IDebugDrawTarget target = GetDrawTarget(context);
 
-                backend.DrawTransform(transform);
+                target.DrawTransform(transform);
             }
             catch (Exception exception)
             {
@@ -646,9 +624,9 @@ namespace Box3d
         {
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
+                IDebugDrawTarget target = GetDrawTarget(context);
 
-                backend.DrawPoint(p, size, color);
+                target.DrawPoint(p, size, color);
             }
             catch (Exception exception)
             {
@@ -661,12 +639,12 @@ namespace Box3d
         {
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
-                backend.DrawSphere(p, radius, color, alpha);
+                IDebugDrawTarget target = GetDrawTarget(context);
+                target.DrawSphere(p, radius, color, alpha);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogException(e);
+                Debug.LogException(exception);
             }
         }
 
@@ -675,12 +653,12 @@ namespace Box3d
         {
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
-                backend.DrawCapsule(p1, p2, radius, color, alpha);
+                IDebugDrawTarget target = GetDrawTarget(context);
+                target.DrawCapsule(p1, p2, radius, color, alpha);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogException(e);
+                Debug.LogException(exception);
             }
         }
 
@@ -689,12 +667,12 @@ namespace Box3d
         {
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
-                backend.DrawBounds(aabb, color);
+                IDebugDrawTarget target = GetDrawTarget(context);
+                target.DrawBounds(aabb, color);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogException(e);
+                Debug.LogException(exception);
             }
         }
 
@@ -703,12 +681,12 @@ namespace Box3d
         {
             try
             {
-                IDebugDrawBackend backend = GetBackend(context);
-                backend.DrawBox(extents, in transform, color);
+                IDebugDrawTarget target = GetDrawTarget(context);
+                target.DrawBox(extents, transform, color);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogException(e);
+                Debug.LogException(exception);
             }
         }
 
@@ -718,12 +696,12 @@ namespace Box3d
             try
             {
                 string str = Marshal.PtrToStringUTF8((IntPtr)s) ?? string.Empty;
-                IDebugDrawBackend backend = GetBackend(context);
-                backend.DrawString(p, str, color);
+                IDebugDrawTarget target = GetDrawTarget(context);
+                target.DrawString(p, str, color);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogException(e);
+                Debug.LogException(exception);
             }
         }
 

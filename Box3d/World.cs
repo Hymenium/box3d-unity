@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Box3d
@@ -9,20 +10,29 @@ namespace Box3d
     public partial struct World : IEquatable<World>
     {
         public WorldId Id;
+        private GCHandle _debug_shape_factory_handle;
 
-        public static unsafe World Create(in WorldDef def)
+        public static unsafe World Create(in WorldDef def, IDebugShapeFactory shape_factory = null)
         {
             WorldDef local = def;
-            bool isDebugEnabled = NativeDebugDrawBridge.IsConfigured;
-            if (isDebugEnabled)
+            GCHandle handle = default;
+
+            if (shape_factory != null)
             {
-                NativeDebugDrawBridge.ConfigureWorldDef(ref local);
+                local.CreateDebugShape = NativeDebugDrawBridge.CREATE_SHAPE_PTR;
+                local.DestroyDebugShape = NativeDebugDrawBridge.DESTROY_SHAPE_PTR;
+                handle = GCHandle.Alloc(shape_factory);
+                local.UserDebugShapeContext = GCHandle.ToIntPtr(handle);
             }
+
 #if UNITY_WEBGL && !UNITY_EDITOR
             local.WorkerCount = 1; // WebGL players are single-threaded
 #endif
-            var world = new World { Id = Ffi.b3CreateWorld(&local) };
-            NativeDebugDrawBridge.SetBridgeOwned(world.Id, isDebugEnabled);
+            var world = new World
+            {
+                Id = Ffi.b3CreateWorld(&local),
+                _debug_shape_factory_handle = handle,
+            };
             return world;
         }
 
@@ -32,6 +42,7 @@ namespace Box3d
             if (Id.IsNull) return; // double-destroy would pass a null id into unvalidated native paths
             ClearCallbackSlots();
             Ffi.b3DestroyWorld(Id);
+            if (_debug_shape_factory_handle.IsAllocated) _debug_shape_factory_handle.Free();
             Id = default;
         }
 
