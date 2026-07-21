@@ -1,4 +1,5 @@
 using System;
+using Box3d.Unity;
 using UnityEngine;
 
 namespace Box3d.Hybrid
@@ -33,6 +34,9 @@ namespace Box3d.Hybrid
         private bool _isPlaying;
         private float _timeStep;
         private float _accum;
+
+        private readonly GizmoDebugShapeFactory _debugDrawShapeFactory = new();
+        private readonly GizmoDebugDrawTarget _debugDrawTarget = new();
 
         public bool IsCreated => _player.IsCreated;
         public bool IsPlaying => _isPlaying;
@@ -70,7 +74,7 @@ namespace Box3d.Hybrid
                 Debug.LogError("[Box3dReplayer] the recording data was not a valid replay.", this);
                 return;
             }
-            _player.EnableShapeDrawing();
+            _player.EnableShapeDrawing(_debugDrawShapeFactory);
             ReplayInfo info = _player.GetInfo();
             _timeStep = info.TimeStep;
             _accum = 0f;
@@ -93,7 +97,7 @@ namespace Box3d.Hybrid
                 }
             }
 
-            _player.World.DrawDebug(DebugDraw, DrawRadius);
+            _player.World.DrawDebug(_debugDrawTarget, DebugDraw, DrawRadius);
         }
 
         [ContextMenu("Play")] public void Play() => _isPlaying = _player.IsCreated;

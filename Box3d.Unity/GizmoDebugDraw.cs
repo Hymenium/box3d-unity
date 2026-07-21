@@ -10,19 +10,8 @@ namespace Box3d.Unity
         public float3[] lines;
     }
 
-    public class GizmoDebugDrawBackend : IDebugDrawBackend
+    public class GizmoDebugShapeFactory : IDebugShapeFactory
     {
-        public int drawCallCount;
-        private static Color ToColor(uint hex)
-        {
-            return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
-        }
-
-        private static void Line(float3 a, float3 b, Color color)
-        {
-            Debug.DrawLine(a, b, color);
-        }
-
         private static void AddLine(LineList lines, float3 a, float3 b)
         {
             lines.Add(a);
@@ -38,45 +27,6 @@ namespace Box3d.Unity
                 float angle = i * (2f * math.PI / segments);
                 float3 next = center + (axisA * math.cos(angle) + axisB * math.sin(angle)) * radius;
                 AddLine(lines, previous, next);
-                previous = next;
-            }
-        }
-
-        private static float3[] Corners(B3Aabb aabb)
-        {
-            var corners = new float3[8];
-            for (int i = 0; i < 8; i++)
-            {
-                corners[i] = new float3(
-                    (i & 1) == 0 ? aabb.LowerBound.x : aabb.UpperBound.x,
-                    (i & 2) == 0 ? aabb.LowerBound.y : aabb.UpperBound.y,
-                    (i & 4) == 0 ? aabb.LowerBound.z : aabb.UpperBound.z);
-            }
-            return corners;
-        }
-
-        private static void DrawEdges(float3[] corners, Color color)
-        {
-            // Connect corners differing in exactly one bit (12 box edges).
-            for (int i = 0; i < 8; i++)
-            {
-                for (int bit = 1; bit <= 4; bit <<= 1)
-                {
-                    int j = i | bit;
-                    if (j != i) Line(corners[i], corners[j], color);
-                }
-            }
-        }
-
-        private static void DrawCircleLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
-        {
-            const int segments = 16;
-            float3 previous = center + axisA * radius;
-            for (int i = 1; i <= segments; i++)
-            {
-                float angle = i * (2f * math.PI / segments);
-                float3 next = center + (axisA * math.cos(angle) + axisB * math.sin(angle)) * radius;
-                Line(previous, next, color);
                 previous = next;
             }
         }
@@ -142,6 +92,59 @@ namespace Box3d.Unity
             if (shape is GizmoDebugDrawShape gizmoShape)
             {
                 gizmoShape.lines = null;
+            }
+        }
+    }
+
+    public class GizmoDebugDrawTarget : IDebugDrawTarget
+    {
+        public int drawCallCount;
+        private static Color ToColor(uint hex)
+        {
+            return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
+        }
+
+        private static void Line(float3 a, float3 b, Color color)
+        {
+            Debug.DrawLine(a, b, color);
+        }
+
+        private static float3[] Corners(B3Aabb aabb)
+        {
+            var corners = new float3[8];
+            for (int i = 0; i < 8; i++)
+            {
+                corners[i] = new float3(
+                    (i & 1) == 0 ? aabb.LowerBound.x : aabb.UpperBound.x,
+                    (i & 2) == 0 ? aabb.LowerBound.y : aabb.UpperBound.y,
+                    (i & 4) == 0 ? aabb.LowerBound.z : aabb.UpperBound.z);
+            }
+            return corners;
+        }
+
+        private static void DrawEdges(float3[] corners, Color color)
+        {
+            // Connect corners differing in exactly one bit (12 box edges).
+            for (int i = 0; i < 8; i++)
+            {
+                for (int bit = 1; bit <= 4; bit <<= 1)
+                {
+                    int j = i | bit;
+                    if (j != i) Line(corners[i], corners[j], color);
+                }
+            }
+        }
+
+        private static void DrawCircleLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
+        {
+            const int segments = 16;
+            float3 previous = center + axisA * radius;
+            for (int i = 1; i <= segments; i++)
+            {
+                float angle = i * (2f * math.PI / segments);
+                float3 next = center + (axisA * math.cos(angle) + axisB * math.sin(angle)) * radius;
+                Line(previous, next, color);
+                previous = next;
             }
         }
 

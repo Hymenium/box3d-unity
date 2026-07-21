@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Box3d.Unity;
 using UnityEngine;
 
 namespace Box3d.Hybrid
@@ -29,6 +30,10 @@ namespace Box3d.Hybrid
 
         [SerializeField, Min(1f), Tooltip("Half-size of the box around the origin that debug drawing covers.")]
         private float DebugDrawRadius = 200f;
+
+        // Debug drawing backend
+        private readonly GizmoDebugShapeFactory _debugDrawShapeFactory = new();
+        private readonly GizmoDebugDrawTarget _debugDrawTarget = new();
 
         // Only kinematic bodies need per-frame attention (they follow their Transform). Dynamic
         // bodies sync back through move events — which report only bodies that actually moved — so
@@ -96,7 +101,7 @@ namespace Box3d.Hybrid
             WorldDef def = WorldDef.Default;
             def.Gravity = Gravity;
             def.WorkerCount = (uint)(WorkerCount > 0 ? WorkerCount : Mathf.Max(1, SystemInfo.processorCount / 2));
-            _world = World.Create(def);
+            _world = World.Create(def, _debugDrawShapeFactory);
         }
 
         internal void AddKinematic(Box3dBody body)
@@ -138,7 +143,7 @@ namespace Box3d.Hybrid
             // Drawn after the step + transform sync so it reflects the current pose.
             if (DebugDraw != DebugDrawFlags.None && _world.IsValid)
             {
-                _world.DrawDebug(DebugDraw, DebugDrawRadius);
+                _world.DrawDebug(_debugDrawTarget, DebugDraw, DebugDrawRadius);
             }
         }
 

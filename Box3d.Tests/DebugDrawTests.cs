@@ -3,7 +3,7 @@ using Unity.Mathematics;
 
 namespace Box3d.Tests
 {
-    public sealed class TestingDebugDrawBackend : IDebugDrawBackend
+    public sealed class TestingDebugShapeFactory : IDebugShapeFactory
     {
         public bool WasCalled { get; private set; }
 
@@ -18,7 +18,16 @@ namespace Box3d.Tests
         public IDebugShape CreateMesh(MeshView mesh, in DebugShapeSource source) => null;
         public IDebugShape CreateHeightField(HeightFieldView heightField, in DebugShapeSource source) => null;
         public void DestroyShape(IDebugShape shape) { }
-        public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color) => true;
+    }
+    public sealed class TestingDebugDrawTarget : IDebugDrawTarget
+    {
+        public bool WasCalled { get; private set; }
+
+        public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
+        {
+            WasCalled = true;
+            return true;
+        }
         public void DrawSegment(float3 start, float3 end, uint color) { }
         public void DrawTransform(in B3Transform transform) { }
         public void DrawPoint(float3 position, float size, uint color) { }
@@ -35,9 +44,9 @@ namespace Box3d.Tests
         [Test]
         public void DrawDebug_InvokesBridgeCallbacks()
         {
-            TestingDebugDrawBackend backend = new();
-            DebugDraw.SetBackend(backend);
-            World world = World.Create(WorldDef.Default);
+            var shapeFactory = new TestingDebugShapeFactory();
+            var drawTarget = new TestingDebugDrawTarget();
+            World world = World.Create(WorldDef.Default, shapeFactory);
 
             BodyDef bodyDef = BodyDef.Default;
             bodyDef.Type = BodyType.Dynamic;
@@ -52,9 +61,10 @@ namespace Box3d.Tests
             });
             world.Step(1f / 60f);
 
-            world.DrawDebug(DebugDrawFlags.Shapes | DebugDrawFlags.Bounds | DebugDrawFlags.Mass);
+            DebugDrawFlags flags = DebugDrawFlags.Shapes | DebugDrawFlags.Bounds;
+            world.DrawDebug(drawTarget, flags);
 
-            Assert.IsTrue(backend.WasCalled, "drawing a world with shapes should invoke the managed draw trampolines");
+            Assert.IsTrue(shapeFactory.WasCalled, "drawing a world with shapes should invoke the managed draw trampolines");
 
             world.Destroy();
         }
