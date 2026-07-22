@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DCFApixels;
 using Unity.Mathematics;
 using UnityEngine;
@@ -49,31 +50,31 @@ namespace Box3d.Unity
         }
     }
 
-    // public class DebugXHeightField : DebugXDrawShape
-    // {
-    //     public readonly Mesh mesh;
-    // }
-
-    public class DebugXDrawBackend : IDebugDrawBackend
+    public class DebugXHeightField : DebugXDrawShape
     {
-        private static Color ToColor(uint hex)
-        {
-            return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
-        }
+        public readonly Mesh mesh;
 
+        public DebugXHeightField(Mesh mesh)
+        {
+            this.mesh = mesh;
+        }
+    }
+
+    public class DebugXShapeFactory : IDebugShapeFactory
+    {
         // Buffered geometry
-        public IDebugShape CreateSphere(in Sphere sphere, in DebugShapeSource source)
+        public IDebugShape CreateSphere(in Sphere sphere, in Shape source)
         {
             return new DebugXSphere(sphere);
         }
 
-        public IDebugShape CreateCapsule(in Capsule capsule, in DebugShapeSource source)
+        public IDebugShape CreateCapsule(in Capsule capsule, in Shape source)
         {
             return new DebugXCapsule(capsule);
         }
 
         // View are valid only during the call
-        public IDebugShape CreateHull(HullView hull, in DebugShapeSource source)
+        public IDebugShape CreateHull(HullView hull, in Shape source)
         {
             Vector3[] vertices = new Vector3[hull.PointCount];
 
@@ -114,7 +115,7 @@ namespace Box3d.Unity
             return new DebugXHull(mesh);
         }
 
-        public IDebugShape CreateMesh(MeshView mesh, in DebugShapeSource source)
+        public IDebugShape CreateMesh(MeshView mesh, in Shape source)
         {
             Mesh unity_mesh = new() { name = "Box3D Debug Mesh" };
 
@@ -151,7 +152,99 @@ namespace Box3d.Unity
             return new DebugXMesh(unity_mesh, mesh.Scale);
         }
 
-        public IDebugShape CreateHeightField(HeightFieldView heightField, in DebugShapeSource source) => null;
+        public IDebugShape CreateHeightField(HeightFieldView height_field, in Shape source)
+        {
+            int column_count = height_field.ColumnCount;
+            int row_count = height_field.RowCount;
+
+            if (column_count < 2 || row_count < 2)
+                return null;
+
+            int vertex_count = column_count * row_count;
+
+            var vertices = new Vector3[vertex_count];
+
+            for (int row = 0; row < row_count; ++row)
+            {
+                for (int column = 0; column < column_count; ++column)
+                {
+                    int index = row * column_count + column;
+                    float3 point = height_field.GetPoint(column, row);
+
+                    vertices[index] =
+                        new Vector3(point.x, point.y, point.z);
+                }
+            }
+
+            // Some cells may be holes, so the final index count may be
+            // smaller than height_field.TriangleCount * 3.
+            var indices = new List<int>(height_field.TriangleCount * 3);
+
+            for (int row = 0; row < row_count - 1; ++row)
+            {
+                for (int column = 0; column < column_count - 1; ++column)
+                {
+                    byte material =
+                        height_field.GetMaterial(column, row);
+
+                    if (material == Consts.B3_HEIGHT_FIELD_HOLE)
+                        continue;
+
+                    int i00 = row * column_count + column;
+                    int i10 = i00 + 1;
+                    int i01 = i00 + column_count;
+                    int i11 = i01 + 1;
+
+                    if (height_field.Clockwise)
+                    {
+                        // tri0: p00, p10, p01
+                        indices.Add(i00);
+                        indices.Add(i10);
+                        indices.Add(i01);
+
+                        // tri1: p11, p01, p10
+                        indices.Add(i11);
+                        indices.Add(i01);
+                        indices.Add(i10);
+                    }
+                    else
+                    {
+                        // tri0: p00, p01, p10
+                        indices.Add(i00);
+                        indices.Add(i01);
+                        indices.Add(i10);
+
+                        // tri1: p11, p10, p01
+                        indices.Add(i11);
+                        indices.Add(i10);
+                        indices.Add(i01);
+                    }
+                }
+            }
+
+            if (indices.Count == 0)
+                return null;
+
+            var mesh = new UnityEngine.Mesh
+            {
+                name = "Box3D Debug HeightField"
+            };
+
+            if (vertex_count > ushort.MaxValue)
+            {
+                mesh.indexFormat =
+                    UnityEngine.Rendering.IndexFormat.UInt32;
+            }
+
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(indices, 0, calculateBounds: false);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            return new DebugXHeightField(mesh);
+        }
+
+        public IDebugShape CreateCompound(CompoundView compoundView, in Shape source) => null;
 
         public void DestroyShape(IDebugShape shape)
         {
@@ -163,14 +256,23 @@ namespace Box3d.Unity
                 case DebugXMesh mesh:
                     UnityEngine.Object.Destroy(mesh.mesh);
                     break;
-                case DebugXCapsule:
+                case DebugXHeightField heightField:
+                    UnityEngine.Object.Destroy(heightField.mesh);
                     break;
+                case DebugXCapsule:
                 case DebugXSphere:
                     break;
             }
         }
+    }
 
-        // Return true if drawing should continue
+    internal class DebugDrawTarget : IDebugDrawTarget
+    {
+        private static Color ToColor(uint hex)
+        {
+            return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
+        }
+
         public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
         {
             if (shape is not DebugXDrawShape)
