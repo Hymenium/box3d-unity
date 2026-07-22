@@ -1058,8 +1058,8 @@ namespace Box3d.Sys
         [NativeTypeName("b3Vec3")]
         public Unity.Mathematics.float3 scale;
 
-        [NativeTypeName("int[4]")]
-        public fixed int materialIndices[4];
+        [NativeTypeName("int[B3_MAX_COMPOUND_MESH_MATERIALS]")]
+        public fixed int materialIndices[Consts.B3_MAX_COMPOUND_MESH_MATERIALS];
     }
 
     public partial struct b3CompoundSphere
@@ -1736,63 +1736,17 @@ namespace Box3d.Sys
 
         public float fraction;
     }
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    [return: NativeTypeName("_Bool")]
-    public unsafe delegate NativeBool b3MeshQueryFcn([NativeTypeName("b3Vec3")] Unity.Mathematics.float3 a, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 b, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 c, int triangleIndex, void* context);
 }
 
 namespace Box3d
 {
     using Sys;
-    public static unsafe partial class Ffi
+    using static Ffi;
+    public unsafe partial class Consts
     {
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3SetAllocator([NativeTypeName("b3AllocFcn *")] IntPtr allocFcn, [NativeTypeName("b3FreeFcn *")] IntPtr freeFcn);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("int32_t")]
-        public static extern int b3GetByteCount();
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3SetAssertFcn([NativeTypeName("b3AssertFcn *")] IntPtr assertFcn);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3SetLogFcn([NativeTypeName("b3LogFcn *")] IntPtr logFcn);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("b3Version")]
-        public static extern Box3dVersion b3GetVersion();
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         [return: NativeTypeName("_Bool")]
-        public static extern NativeBool b3IsDoublePrecision();
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("uint64_t")]
-        public static extern ulong b3GetTicks();
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern float b3GetMilliseconds([NativeTypeName("uint64_t")] ulong ticks);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern float b3GetMillisecondsAndReset([NativeTypeName("uint64_t *")] ulong* ticks);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3Yield();
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3Sleep(int milliseconds);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: NativeTypeName("uint32_t")]
-        public static extern uint b3Hash([NativeTypeName("uint32_t")] uint hash, [NativeTypeName("const uint8_t *")] byte* data, int count);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3WriteBinaryFile(void* data, int size, [NativeTypeName("const char *")] sbyte* fileName);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void* b3ReadBinaryFile([NativeTypeName("const char *")] sbyte* prefix, [NativeTypeName("const char *")] sbyte* fileName, int* memSize);
+        public unsafe delegate NativeBool b3MeshQueryFcn([NativeTypeName("b3Vec3")] Unity.Mathematics.float3 a, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 b, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 c, int triangleIndex, void* context);
 
         [NativeTypeName("#define B3_ENABLE_VALIDATION 0")]
         public const int B3_ENABLE_VALIDATION = 0;
@@ -1802,18 +1756,6 @@ namespace Box3d
 
         [NativeTypeName("#define B3_HASH_INIT 5381")]
         public const int B3_HASH_INIT = 5381;
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3SetLengthUnitsPerMeter(float lengthUnits);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern float b3GetLengthUnitsPerMeter();
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void b3SetStallThreshold(float seconds);
-
-        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern float b3GetStallThreshold();
 
         [NativeTypeName("#define B3_HUGE ( 1.0e5f * b3GetLengthUnitsPerMeter() )")]
         public static readonly float B3_HUGE = (1.0e5f * b3GetLengthUnitsPerMeter());
@@ -1887,6 +1829,107 @@ namespace Box3d
         [NativeTypeName("#define B3_MAX_CHILD_SHAPES ( 1 << B3_CHILD_POWER )")]
         public const int B3_MAX_CHILD_SHAPES = (1 << (64 - 2 * 22));
 
+        [NativeTypeName("#define B3_PI 3.14159265359f")]
+        public const float B3_PI = 3.14159265359f;
+
+        [NativeTypeName("#define B3_DEG_TO_RAD 0.01745329251f")]
+        public const float B3_DEG_TO_RAD = 0.01745329251f;
+
+        [NativeTypeName("#define B3_RAD_TO_DEG 57.2957795131f")]
+        public const float B3_RAD_TO_DEG = 57.2957795131f;
+
+        [NativeTypeName("#define B3_MIN_SCALE 0.01f")]
+        public const float B3_MIN_SCALE = 0.01f;
+
+        [NativeTypeName("#define B3_DEFAULT_CATEGORY_BITS UINT64_MAX")]
+        public const ulong B3_DEFAULT_CATEGORY_BITS = (18446744073709551615U);
+
+        [NativeTypeName("#define B3_DEFAULT_MASK_BITS UINT64_MAX")]
+        public const ulong B3_DEFAULT_MASK_BITS = (18446744073709551615U);
+
+        [NativeTypeName("#define B3_DYNAMIC_TREE_VERSION 0x93EDAF889FD30B4Aull")]
+        public const ulong B3_DYNAMIC_TREE_VERSION = 0x93EDAF889FD30B4AUL;
+
+        [NativeTypeName("#define B3_HULL_VERSION 0x9D4716CE3793900Eull")]
+        public const ulong B3_HULL_VERSION = 0x9D4716CE3793900EUL;
+
+        [NativeTypeName("#define B3_MESH_VERSION 0xABD11AB62A6E886Dull")]
+        public const ulong B3_MESH_VERSION = 0xABD11AB62A6E886DUL;
+
+        [NativeTypeName("#define B3_HEIGHT_FIELD_HOLE 0xFF")]
+        public const int B3_HEIGHT_FIELD_HOLE = 0xFF;
+
+        [NativeTypeName("#define B3_HEIGHT_FIELD_VERSION 0x8B18CBD138A6BC84ull")]
+        public const ulong B3_HEIGHT_FIELD_VERSION = 0x8B18CBD138A6BC84UL;
+
+        [NativeTypeName("#define B3_COMPOUND_VERSION ( 0x830778DB07086EB4ull ^ B3_DYNAMIC_TREE_VERSION ^ B3_MESH_VERSION ^ B3_HULL_VERSION )")]
+        public const ulong B3_COMPOUND_VERSION = (0x830778DB07086EB4UL ^ 0x93EDAF889FD30B4AUL ^ 0xABD11AB62A6E886DUL ^ 0x9D4716CE3793900EUL);
+
+        [NativeTypeName("#define B3_MAX_COMPOUND_MESH_MATERIALS 4")]
+        public const int B3_MAX_COMPOUND_MESH_MATERIALS = 4;
+    }
+
+    public static unsafe partial class Ffi
+    {
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3SetAllocator([NativeTypeName("b3AllocFcn *")] IntPtr allocFcn, [NativeTypeName("b3FreeFcn *")] IntPtr freeFcn);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: NativeTypeName("int32_t")]
+        public static extern int b3GetByteCount();
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3SetAssertFcn([NativeTypeName("b3AssertFcn *")] IntPtr assertFcn);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3SetLogFcn([NativeTypeName("b3LogFcn *")] IntPtr logFcn);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: NativeTypeName("b3Version")]
+        public static extern Box3dVersion b3GetVersion();
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: NativeTypeName("_Bool")]
+        public static extern NativeBool b3IsDoublePrecision();
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: NativeTypeName("uint64_t")]
+        public static extern ulong b3GetTicks();
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern float b3GetMilliseconds([NativeTypeName("uint64_t")] ulong ticks);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern float b3GetMillisecondsAndReset([NativeTypeName("uint64_t *")] ulong* ticks);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3Yield();
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3Sleep(int milliseconds);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: NativeTypeName("uint32_t")]
+        public static extern uint b3Hash([NativeTypeName("uint32_t")] uint hash, [NativeTypeName("const uint8_t *")] byte* data, int count);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3WriteBinaryFile(void* data, int size, [NativeTypeName("const char *")] sbyte* fileName);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void* b3ReadBinaryFile([NativeTypeName("const char *")] sbyte* prefix, [NativeTypeName("const char *")] sbyte* fileName, int* memSize);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3SetLengthUnitsPerMeter(float lengthUnits);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern float b3GetLengthUnitsPerMeter();
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void b3SetStallThreshold(float seconds);
+
+        [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern float b3GetStallThreshold();
+
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("_Bool")]
         public static extern NativeBool b3IsValidFloat(float a);
@@ -1957,18 +2000,6 @@ namespace Box3d
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("_Bool")]
         public static extern NativeBool b3IsValidWorldTransform([NativeTypeName("b3WorldTransform")] B3Transform t);
-
-        [NativeTypeName("#define B3_PI 3.14159265359f")]
-        public const float B3_PI = 3.14159265359f;
-
-        [NativeTypeName("#define B3_DEG_TO_RAD 0.01745329251f")]
-        public const float B3_DEG_TO_RAD = 0.01745329251f;
-
-        [NativeTypeName("#define B3_RAD_TO_DEG 57.2957795131f")]
-        public const float B3_RAD_TO_DEG = 57.2957795131f;
-
-        [NativeTypeName("#define B3_MIN_SCALE 0.01f")]
-        public const float B3_MIN_SCALE = 0.01f;
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3WorldDef")]
@@ -2045,33 +2076,6 @@ namespace Box3d
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern b3DebugDraw b3DefaultDebugDraw();
-
-        [NativeTypeName("#define B3_DEFAULT_CATEGORY_BITS UINT64_MAX")]
-        public const ulong B3_DEFAULT_CATEGORY_BITS = (18446744073709551615U);
-
-        [NativeTypeName("#define B3_DEFAULT_MASK_BITS UINT64_MAX")]
-        public const ulong B3_DEFAULT_MASK_BITS = (18446744073709551615U);
-
-        [NativeTypeName("#define B3_DYNAMIC_TREE_VERSION 0x93EDAF889FD30B4Aull")]
-        public const ulong B3_DYNAMIC_TREE_VERSION = 0x93EDAF889FD30B4AUL;
-
-        [NativeTypeName("#define B3_HULL_VERSION 0x9D4716CE3793900Eull")]
-        public const ulong B3_HULL_VERSION = 0x9D4716CE3793900EUL;
-
-        [NativeTypeName("#define B3_MESH_VERSION 0xABD11AB62A6E886Dull")]
-        public const ulong B3_MESH_VERSION = 0xABD11AB62A6E886DUL;
-
-        [NativeTypeName("#define B3_HEIGHT_FIELD_HOLE 0xFF")]
-        public const int B3_HEIGHT_FIELD_HOLE = 0xFF;
-
-        [NativeTypeName("#define B3_HEIGHT_FIELD_VERSION 0x8B18CBD138A6BC84ull")]
-        public const ulong B3_HEIGHT_FIELD_VERSION = 0x8B18CBD138A6BC84UL;
-
-        [NativeTypeName("#define B3_COMPOUND_VERSION ( 0x830778DB07086EB4ull ^ B3_DYNAMIC_TREE_VERSION ^ B3_MESH_VERSION ^ B3_HULL_VERSION )")]
-        public const ulong B3_COMPOUND_VERSION = (0x830778DB07086EB4UL ^ 0x93EDAF889FD30B4AUL ^ 0xABD11AB62A6E886DUL ^ 0x9D4716CE3793900EUL);
-
-        [NativeTypeName("#define B3_MAX_COMPOUND_MESH_MATERIALS 4")]
-        public const int B3_MAX_COMPOUND_MESH_MATERIALS = 4;
 
         [DllImport(Box3dLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3WorldId")]

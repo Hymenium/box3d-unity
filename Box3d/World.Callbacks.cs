@@ -28,8 +28,8 @@ namespace Box3d
         // context from box3d, so the wrapper can only hold one GLOBAL managed mixer of each kind —
         // setting one on any world replaces it for all worlds that registered one.
 
-        private static readonly CustomFilterCallback[] CustomFilters = new CustomFilterCallback[Ffi.B3_MAX_WORLDS + 1];
-        private static readonly PreSolveCallback[] PreSolves = new PreSolveCallback[Ffi.B3_MAX_WORLDS + 1];
+        private static readonly CustomFilterCallback[] CustomFilters = new CustomFilterCallback[Consts.B3_MAX_WORLDS + 1];
+        private static readonly PreSolveCallback[] PreSolves = new PreSolveCallback[Consts.B3_MAX_WORLDS + 1];
         private static MaterialMixCallback _frictionMix;
         private static MaterialMixCallback _restitutionMix;
 
