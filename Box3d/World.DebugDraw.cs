@@ -9,38 +9,6 @@ namespace Box3d
 {
     using Sys;
 
-    public interface IDebugShape { }
-
-    public readonly struct DebugShapeSource
-    {
-        public readonly Shape Owner;
-        public readonly int ChildIndex;
-
-        public DebugShapeSource(Shape owner, int childIndex = -1)
-        {
-            Owner = owner;
-            ChildIndex = childIndex;
-        }
-
-        public bool IsCompoundChild => ChildIndex >= 0;
-    }
-
-    // Backends that return a non-null shape from any Create method
-    // must also implement DrawShape and DestroyShape.
-    public interface IDebugShapeFactory
-    {
-        // Buffered geometry
-        IDebugShape CreateSphere(in Sphere sphere, in DebugShapeSource source);
-        IDebugShape CreateCapsule(in Capsule shape, in DebugShapeSource source);
-
-        // View are valid only during the call (data must be copied)
-        IDebugShape CreateHull(HullView hull, in DebugShapeSource source);
-        IDebugShape CreateMesh(MeshView mesh, in DebugShapeSource source);
-        IDebugShape CreateHeightField(HeightFieldView heightField, in DebugShapeSource source);
-
-        void DestroyShape(IDebugShape shape);
-    }
-
     /// <summary>What <see cref="World.DrawDebug"/> visualizes.</summary>
     [Flags]
     public enum DebugDrawFlags
@@ -58,6 +26,26 @@ namespace Box3d
         Islands = 1 << 9,
         GraphColors = 1 << 10,
         Default = Shapes | Joints,
+    }
+
+    public interface IDebugShape { }
+
+    // Backends that return a non-null shape from any Create method
+    // must also implement DrawShape and DestroyShape.
+    public interface IDebugShapeFactory
+    {
+        // Buffered geometry
+        IDebugShape CreateSphere(in Sphere sphere, in Shape source);
+        IDebugShape CreateCapsule(in Capsule shape, in Shape source);
+
+        // View are valid only during the call (data must be copied)
+        IDebugShape CreateHull(HullView hull, in Shape source);
+        IDebugShape CreateMesh(MeshView mesh, in Shape source);
+        IDebugShape CreateHeightField(HeightFieldView heightField, in Shape source);
+
+        IDebugShape CreateCompound(CompoundView compound, in Shape source);
+
+        void DestroyShape(IDebugShape shape);
     }
 
     public interface IDebugDrawTarget
@@ -289,180 +277,6 @@ namespace Box3d
             return target;
         }
 
-        private sealed class CompoundDebugShape : IDebugShape
-        {
-            public CompoundDebugShape(CompoundChild[] children)
-            {
-                Children = children;
-            }
-
-            public CompoundChild[] Children { get; }
-        }
-
-        private readonly struct CompoundChild
-        {
-            public readonly IDebugShape Shape;
-            public readonly B3Transform Transform;
-
-            public CompoundChild(IDebugShape shape, B3Transform transform)
-            {
-                Shape = shape;
-                Transform = transform;
-            }
-        }
-
-        private static B3Transform Multiply(in B3Transform a, in B3Transform b)
-        {
-            return new B3Transform
-            {
-                Position = a.Position + math.rotate(a.Rotation, b.Position),
-                Rotation = math.mul(a.Rotation, b.Rotation),
-            };
-        }
-
-        private static unsafe void AddSpheres(
-            IDebugShapeFactory factory, b3CompoundData* compound,
-            List<CompoundChild> children, in Shape owner)
-        {
-            byte* base_ptr = (byte*)compound;
-
-            b3CompoundSphere* spheres =
-                (b3CompoundSphere*)(base_ptr + compound->sphereOffset);
-
-            for (int i = 0; i < compound->sphereCount; ++i)
-            {
-                DebugShapeSource source = new(owner, i);
-                b3CompoundSphere* instance = spheres + i;
-                IDebugShape debug_shape = factory.CreateSphere(in instance->sphere, source);
-
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild(debug_shape, B3Transform.Identity));
-            }
-        }
-
-        private static unsafe void AddCapsules(
-            IDebugShapeFactory factory, b3CompoundData* compound,
-            List<CompoundChild> children, in Shape owner)
-        {
-            byte* base_ptr = (byte*)compound;
-
-            b3CompoundCapsule* capsules =
-                (b3CompoundCapsule*)(base_ptr + compound->capsuleOffset);
-
-            for (int i = 0; i < compound->capsuleCount; ++i)
-            {
-                DebugShapeSource source = new(owner, i);
-                b3CompoundCapsule* instance = capsules + i;
-                IDebugShape debug_shape = factory.CreateCapsule(in instance->capsule, source);
-
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild(debug_shape, B3Transform.Identity));
-            }
-        }
-
-        private static unsafe void AddHulls(
-            IDebugShapeFactory factory, b3CompoundData* compound,
-            List<CompoundChild> children, in Shape owner)
-        {
-            byte* base_ptr = (byte*)compound;
-
-            b3CompoundHull* hulls =
-                (b3CompoundHull*)(base_ptr + compound->hullOffset);
-
-            for (int i = 0; i < compound->hullCount; ++i)
-            {
-                DebugShapeSource source = new(owner, i);
-                b3CompoundHull* instance = hulls + i;
-                IDebugShape debug_shape = factory.CreateHull(new HullView(instance->hull), source);
-
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild(debug_shape, B3Transform.Identity));
-            }
-        }
-
-        private static unsafe void AddMeshes(
-            IDebugShapeFactory factory, b3CompoundData* compound,
-            List<CompoundChild> children, in Shape owner)
-        {
-            byte* base_ptr = (byte*)compound;
-
-            b3CompoundMesh* meshes = (b3CompoundMesh*)(base_ptr + compound->meshOffset);
-
-            for (int i = 0; i < compound->meshCount; ++i)
-            {
-                DebugShapeSource source = new(owner, i);
-                b3CompoundMesh* instance = meshes + i;
-
-                IDebugShape debug_shape =
-                    factory.CreateMesh(new MeshView(instance->meshData, instance->scale), source);
-
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild(
-                    debug_shape,
-                    instance->transform));
-            }
-        }
-
-        private static void DestroyCompoundChildren(IDebugShapeFactory factory, List<CompoundChild> children)
-        {
-            foreach (var child in children)
-            {
-                try
-                {
-                    factory.DestroyShape(child.Shape);
-                }
-                catch (Exception destroyException)
-                {
-                    Debug.LogException(destroyException);
-                }
-            }
-        }
-
-        private static IDebugShape CreateCompound(IDebugShapeFactory factory, b3CompoundData* compound, in Shape owner)
-        {
-            var children = new List<CompoundChild>(
-                compound->sphereCount +
-                compound->capsuleCount +
-                compound->hullCount +
-                compound->meshCount);
-
-            try
-            {
-                AddSpheres(factory, compound, children, owner);
-                AddCapsules(factory, compound, children, owner);
-                AddHulls(factory, compound, children, owner);
-                AddMeshes(factory, compound, children, owner);
-
-                return children.Count == 0
-                    ? null
-                    : new CompoundDebugShape(children.ToArray());
-            }
-            catch
-            {
-                DestroyCompoundChildren(factory, children);
-                throw;
-            }
-        }
-
-        private static void DestroyCompound(IDebugShapeFactory factory, CompoundDebugShape compound)
-        {
-            foreach (var child in compound.Children)
-            {
-                try
-                {
-                    factory.DestroyShape(child.Shape);
-                }
-                catch (Exception destroyException)
-                {
-                    Debug.LogException(destroyException);
-                }
-            }
-        }
-
         [MonoPInvokeCallback(typeof(CreateShapeDelegate))]
         private static void* CreateShape(b3DebugShape* debugShape, void* userContext)
         {
@@ -472,16 +286,15 @@ namespace Box3d
 
                 IDebugShapeFactory factory = GetFactory(userContext);
                 Shape owner = Shape.WrapUnchecked(debugShape->shapeId);
-                DebugShapeSource source = new(owner);
                 IDebugShape u_shape = debugShape->type switch
                 {
-                    ShapeType.Sphere => factory.CreateSphere(*debugShape->sphere, source),
-                    ShapeType.Capsule => factory.CreateCapsule(*debugShape->capsule, source),
-                    ShapeType.Hull => factory.CreateHull(new HullView(debugShape->hull), source),
-                    ShapeType.Compound => CreateCompound(factory, debugShape->compound, owner),
-                    ShapeType.Mesh => factory.CreateMesh(new MeshView(debugShape->mesh), source),
+                    ShapeType.Sphere => factory.CreateSphere(*debugShape->sphere, owner),
+                    ShapeType.Capsule => factory.CreateCapsule(*debugShape->capsule, owner),
+                    ShapeType.Hull => factory.CreateHull(new HullView(debugShape->hull), owner),
+                    ShapeType.Compound => factory.CreateCompound(new CompoundView(debugShape->compound), owner),
+                    ShapeType.Mesh => factory.CreateMesh(new MeshView(debugShape->mesh->data, debugShape->mesh->scale), owner),
                     ShapeType.HeightField => factory.CreateHeightField(
-                            new HeightFieldView(debugShape->heightField), source
+                            new HeightFieldView(debugShape->heightField), owner
                         ),
                     _ => throw new InvalidOperationException($"Unknown debug shape type: {debugShape->type}"),
                 };
@@ -514,14 +327,7 @@ namespace Box3d
                     IDebugShapeFactory factory = GetFactory(userContext);
                     IDebugShape shape = GetShape(userShape);
 
-                    if (shape is CompoundDebugShape compound)
-                    {
-                        DestroyCompound(factory, compound);
-                    }
-                    else
-                    {
-                        factory.DestroyShape(shape);
-                    }
+                    factory.DestroyShape(shape);
                 }
                 finally
                 {
@@ -532,21 +338,6 @@ namespace Box3d
             {
                 Debug.LogException(exception);
             }
-        }
-
-        private static bool DrawCompound(IDebugDrawTarget target, CompoundDebugShape compound,
-            B3Transform compound_transform, uint color)
-        {
-            foreach (var child in compound.Children)
-            {
-                B3Transform child_transform = Multiply(compound_transform, child.Transform);
-
-                if (!target.DrawShape(child.Shape, in child_transform, color))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         [MonoPInvokeCallback(typeof(DrawShapeDelegate))]
@@ -563,14 +354,8 @@ namespace Box3d
                 IDebugDrawTarget target = GetDrawTarget(context);
                 IDebugShape shape = GetShape(userShape);
 
-                if (shape is CompoundDebugShape compound)
-                {
-                    return DrawCompound(target, compound, transform, color);
-                }
-                else
-                {
-                    return target.DrawShape(shape, transform, color);
-                }
+                target.DrawShape(shape, transform, color);
+                return true;
             }
             catch (Exception exception)
             {

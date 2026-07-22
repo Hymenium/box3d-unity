@@ -7,18 +7,20 @@ namespace Box3d.Tests
     {
         public bool WasCalled { get; private set; }
 
-        public IDebugShape CreateSphere(in Sphere shape, in DebugShapeSource source)
+        public IDebugShape CreateSphere(in Sphere shape, in Shape source)
         {
             WasCalled = true;
             return null;
         }
 
-        public IDebugShape CreateCapsule(in Capsule shape, in DebugShapeSource source) => null;
-        public IDebugShape CreateHull(HullView hull, in DebugShapeSource source) => null;
-        public IDebugShape CreateMesh(MeshView mesh, in DebugShapeSource source) => null;
-        public IDebugShape CreateHeightField(HeightFieldView heightField, in DebugShapeSource source) => null;
+        public IDebugShape CreateCapsule(in Capsule shape, in Shape source) => null;
+        public IDebugShape CreateHull(HullView hull, in Shape source) => null;
+        public IDebugShape CreateMesh(MeshView mesh, in Shape source) => null;
+        public IDebugShape CreateHeightField(HeightFieldView heightField, in Shape source) => null;
+        public IDebugShape CreateCompound(CompoundView compoundView, in Shape source) => null;
         public void DestroyShape(IDebugShape shape) { }
     }
+
     public sealed class TestingDebugDrawTarget : IDebugDrawTarget
     {
         public bool WasCalled { get; private set; }
