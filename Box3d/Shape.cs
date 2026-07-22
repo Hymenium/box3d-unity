@@ -30,7 +30,7 @@ namespace Box3d
             return shape;
         }
 
-        internal static Shape WrapUnchecked(ShapeId id) => new() { Id = id };
+        public static Shape WrapUnchecked(ShapeId id) => new() { Id = id };
 
         public Body GetBodyWrapper() => Body.WrapUnchecked(GetBody());
 
