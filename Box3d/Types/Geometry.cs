@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Unity.Mathematics;
+using Assert = UnityEngine.Assertions.Assert;
 
 namespace Box3d
 {
@@ -177,6 +178,7 @@ namespace Box3d
 
         public int VertexCount => _data->vertexCount;
         public int TriangleCount => _data->triangleCount;
+        public int MaterialCount => _data->materialCount;
 
         public ReadOnlySpan<float3> Vertices
         {
@@ -213,7 +215,7 @@ namespace Box3d
 
                 return new ReadOnlySpan<int>(
                     (int*)(base_ptr + _data->materialOffset),
-                    _data->materialCount);
+                    _data->triangleCount);
             }
         }
     }
@@ -387,12 +389,10 @@ namespace Box3d
 
         public readonly int GetMaterialIndex(int triangle_index)
         {
-            ReadOnlySpan<int> indices = Mesh.MaterialIndices;
-            if ((uint)triangle_index >= (uint)indices.Length)
-                throw new ArgumentOutOfRangeException(nameof(triangle_index));
-            if (indices.Length == 0)
-                return MaterialIndices[0];
-            return MaterialIndices[indices[triangle_index]];
+            int local_index = Mesh.MaterialIndices[triangle_index];
+            Assert.IsTrue((uint)local_index < math.max(1, (uint)Mesh.MaterialCount),
+                $"Native mesh data invalid material index: {local_index}");
+            return MaterialIndices[local_index];
         }
     }
 
