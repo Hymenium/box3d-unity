@@ -167,7 +167,7 @@ namespace Box3d
     public readonly unsafe ref struct MeshView
     {
         private readonly b3MeshData* _data;
-        public float3 Scale { get; }
+        public readonly float3 Scale;
 
         public MeshView(b3MeshData* data, float3 scale)
         {
@@ -175,18 +175,18 @@ namespace Box3d
             Scale = scale;
         }
 
-        public MeshView(b3Mesh* mesh) : this(mesh->data, mesh->scale) { }
+        public int VertexCount => _data->vertexCount;
+        public int TriangleCount => _data->triangleCount;
 
         public ReadOnlySpan<float3> Vertices
         {
             get
             {
-                b3MeshData* data = _data;
-                byte* base_ptr = (byte*)data;
+                byte* base_ptr = (byte*)_data;
 
                 return new ReadOnlySpan<float3>(
-                    (float3*)(base_ptr + data->vertexOffset),
-                    data->vertexCount);
+                    (float3*)(base_ptr + _data->vertexOffset),
+                    _data->vertexCount);
             }
         }
 
@@ -194,12 +194,26 @@ namespace Box3d
         {
             get
             {
-                b3MeshData* data = _data;
-                byte* base_ptr = (byte*)data;
+                byte* base_ptr = (byte*)_data;
 
                 return new ReadOnlySpan<MeshTriangle>(
-                    (MeshTriangle*)(base_ptr + data->triangleOffset),
-                    data->triangleCount);
+                    (MeshTriangle*)(base_ptr + _data->triangleOffset),
+                    _data->triangleCount);
+            }
+        }
+
+        public ReadOnlySpan<int> MaterialIndices
+        {
+            get
+            {
+                if (_data->materialCount == 0)
+                    return ReadOnlySpan<int>.Empty;
+
+                byte* base_ptr = (byte*)_data;
+
+                return new ReadOnlySpan<int>(
+                    (int*)(base_ptr + _data->materialOffset),
+                    _data->materialCount);
             }
         }
     }
@@ -326,6 +340,122 @@ namespace Box3d
 
             if ((uint)row >= (uint)(RowCount - 1))
                 throw new ArgumentOutOfRangeException(nameof(row));
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct CompoundSphere
+    {
+        public readonly int materialId;
+        public readonly Sphere sphere;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct CompoundCapsule
+    {
+        public readonly int materialId;
+        public readonly Capsule capsule;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly unsafe ref struct CompoundHullView
+    {
+        private readonly b3CompoundHull* _child;
+        public unsafe CompoundHullView(b3CompoundHull* child)
+        {
+            _child = child;
+        }
+
+        public readonly int MaterialIndex => _child->materialIndex;
+        public readonly B3Transform Transform => _child->transform;
+        public readonly HullView Hull => new(_child->hull);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly unsafe ref struct CompoundMeshView
+    {
+        private readonly b3CompoundMesh* _child;
+        public unsafe CompoundMeshView(b3CompoundMesh* child)
+        {
+            _child = child;
+        }
+
+        public ReadOnlySpan<int> MaterialIndices =>
+            new(_child->materialIndices, Consts.B3_MAX_COMPOUND_MESH_MATERIALS);
+        public readonly B3Transform Transform => _child->transform;
+        public readonly MeshView Mesh => new(_child->meshData, _child->scale);
+
+        public readonly int GetMaterialIndex(int triangle_index)
+        {
+            ReadOnlySpan<int> indices = Mesh.MaterialIndices;
+            if ((uint)triangle_index >= (uint)indices.Length)
+                throw new ArgumentOutOfRangeException(nameof(triangle_index));
+            if (indices.Length == 0)
+                return MaterialIndices[0];
+            return MaterialIndices[indices[triangle_index]];
+        }
+    }
+
+    public readonly unsafe ref struct CompoundView
+    {
+        private readonly b3CompoundData* _data;
+
+        public CompoundView(b3CompoundData* data)
+        {
+            _data = data;
+        }
+
+        public int SphereCount => _data->sphereCount;
+        public int CapsuleCount => _data->capsuleCount;
+        public int HullCount => _data->hullCount;
+        public int MeshCount => _data->meshCount;
+
+        public ReadOnlySpan<CompoundSphere> Spheres
+        {
+            get
+            {
+                byte* base_ptr = (byte*)_data;
+
+                return new ReadOnlySpan<CompoundSphere>(
+                    (CompoundSphere*)(base_ptr + _data->sphereOffset),
+                    SphereCount);
+            }
+        }
+
+        public ReadOnlySpan<CompoundCapsule> Capsules
+        {
+            get
+            {
+                byte* base_ptr = (byte*)_data;
+
+                return new ReadOnlySpan<CompoundCapsule>(
+                    (CompoundCapsule*)(base_ptr + _data->capsuleOffset),
+                    CapsuleCount);
+            }
+        }
+
+        public CompoundHullView GetHull(int index)
+        {
+            if ((uint)index >= (uint)HullCount)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            byte* base_ptr = (byte*)_data;
+            b3CompoundHull* hulls =
+                (b3CompoundHull*)(base_ptr + _data->hullOffset);
+
+            return new CompoundHullView(hulls + index);
+        }
+
+        public CompoundMeshView GetMesh(int index)
+        {
+            if ((uint)index >= (uint)MeshCount)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            byte* base_ptr = (byte*)_data;
+            b3CompoundMesh* meshes =
+                (b3CompoundMesh*)(base_ptr + _data->meshOffset);
+
+            return new CompoundMeshView(meshes + index);
         }
     }
 }
