@@ -32,7 +32,7 @@ namespace Box3D
 
         public static Shape WrapUnchecked(ShapeId id) => new() { Id = id };
 
-        public Body GetBodyWrapper() => Body.WrapUnchecked(GetBody());
+        // public Body GetBodyWrapper() => Body.WrapUnchecked(GetBody());
 
         public void Destroy(bool updateBodyMass = true)
         {
