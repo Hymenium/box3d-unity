@@ -414,6 +414,18 @@ namespace Box3d
         public readonly int HullCount => _data->hullCount;
         public readonly int MeshCount => _data->meshCount;
 
+        public ReadOnlySpan<SurfaceMaterial> Materials
+        {
+            get
+            {
+                byte* base_ptr = (byte*)_data;
+
+                return new ReadOnlySpan<SurfaceMaterial>(
+                    (SurfaceMaterial*)(base_ptr + _data->materialOffset),
+                    _data->materialCount);
+            }
+        }
+
         public ReadOnlySpan<CompoundSphere> Spheres
         {
             get
