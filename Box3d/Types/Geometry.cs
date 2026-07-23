@@ -362,30 +362,32 @@ namespace Box3d
     [StructLayout(LayoutKind.Sequential)]
     public readonly unsafe ref struct CompoundHullView
     {
-        private readonly b3CompoundHull* _child;
-        public unsafe CompoundHullView(b3CompoundHull* child)
+        private readonly b3CompoundHull* _data;
+        public unsafe CompoundHullView(b3CompoundHull* data)
         {
-            _child = child;
+            _data = data;
         }
 
-        public readonly int MaterialIndex => _child->materialIndex;
-        public readonly B3Transform Transform => _child->transform;
-        public readonly HullView Hull => new(_child->hull);
+        public readonly b3CompoundHull* NativeData => _data;
+        public readonly int MaterialIndex => _data->materialIndex;
+        public readonly B3Transform Transform => _data->transform;
+        public readonly HullView Hull => new(_data->hull);
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public readonly unsafe ref struct CompoundMeshView
     {
-        private readonly b3CompoundMesh* _child;
-        public unsafe CompoundMeshView(b3CompoundMesh* child)
+        private readonly b3CompoundMesh* _data;
+        public unsafe CompoundMeshView(b3CompoundMesh* data)
         {
-            _child = child;
+            _data = data;
         }
 
+        public readonly b3CompoundMesh* NativeData => _data;
         public ReadOnlySpan<int> MaterialIndices =>
-            new(_child->materialIndices, Consts.B3_MAX_COMPOUND_MESH_MATERIALS);
-        public readonly B3Transform Transform => _child->transform;
-        public readonly MeshView Mesh => new(_child->meshData, _child->scale);
+            new(_data->materialIndices, Consts.B3_MAX_COMPOUND_MESH_MATERIALS);
+        public readonly B3Transform Transform => _data->transform;
+        public readonly MeshView Mesh => new(_data->meshData, _data->scale);
 
         public readonly int GetMaterialIndex(int triangle_index)
         {
@@ -405,10 +407,12 @@ namespace Box3d
             _data = data;
         }
 
-        public int SphereCount => _data->sphereCount;
-        public int CapsuleCount => _data->capsuleCount;
-        public int HullCount => _data->hullCount;
-        public int MeshCount => _data->meshCount;
+        public readonly b3CompoundData* NativeData => _data;
+
+        public readonly int SphereCount => _data->sphereCount;
+        public readonly int CapsuleCount => _data->capsuleCount;
+        public readonly int HullCount => _data->hullCount;
+        public readonly int MeshCount => _data->meshCount;
 
         public ReadOnlySpan<CompoundSphere> Spheres
         {
@@ -456,6 +460,11 @@ namespace Box3d
                 (b3CompoundMesh*)(base_ptr + _data->meshOffset);
 
             return new CompoundMeshView(meshes + index);
+        }
+
+        public CompoundQueryResult QueryChildren(in B3Aabb bounds, Span<int> childIndices)
+        {
+            return CompoundQueries.Query(_data, bounds, childIndices);
         }
     }
 }
