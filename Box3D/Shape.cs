@@ -9,30 +9,13 @@ namespace Box3D
     {
         public ShapeId Id;
 
+        /// <summary>Wraps a shape id — the way back into the wrapper API from ids delivered by
+        /// events (e.g. <see cref="ContactBeginTouchEvent.ShapeIdA"/>) or query results. Cheap and
+        /// unchecked; test <see cref="IsValid"/>, or use <see cref="World.TryGetShape"/> for the
+        /// validated form.</summary>
+        public Shape(ShapeId id) => Id = id;
+
         public bool IsValid => Ffi.b3Shape_IsValid(Id);
-
-        public static Shape Wrap(ShapeId id)
-        {
-            if (id.IsNull)
-            {
-                throw new ArgumentException("Cannot wrap a null shape ID.", nameof(id));
-            }
-
-            Shape shape = new() { Id = id };
-
-            if (!shape.IsValid)
-            {
-                throw new ArgumentException(
-                    "Cannot wrap an invalid or stale shape ID.",
-                    nameof(id));
-            }
-
-            return shape;
-        }
-
-        public static Shape WrapUnchecked(ShapeId id) => new() { Id = id };
-
-        // public Body GetBodyWrapper() => Body.WrapUnchecked(GetBody());
 
         public void Destroy(bool updateBodyMass = true)
         {

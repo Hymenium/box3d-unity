@@ -29,6 +29,8 @@ namespace Box3D.Hybrid
         [SerializeField, Min(0f), Tooltip("Maximum motor force in newtons.")]
         private float MaxMotorForce = 100f;
 
+        private PrismaticJoint _slider;
+
         protected override Joint CreateJoint(BodyId bodyA, BodyId bodyB)
         {
             Vector3 worldAxis = transform.TransformDirection(Axis);
@@ -49,7 +51,24 @@ namespace Box3D.Hybrid
                 def.MaxMotorForce = MaxMotorForce;
             }
 
-            return World.World.CreatePrismaticJoint(def);
+            _slider = World.World.CreatePrismaticJoint(def);
+            return _slider;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. Axis, Anchor and Connected Body
+            // are baked into the joint frames at creation and stay fixed.
+            if (!Application.isPlaying || !_slider.IsValid) return;
+            _slider.EnableLimit(UseLimits);
+            _slider.SetLimits(Mathf.Min(MinTranslation, MaxTranslation),
+                              Mathf.Max(MinTranslation, MaxTranslation));
+            _slider.EnableMotor(UseMotor);
+            _slider.SetMotorSpeed(MotorSpeed);
+            _slider.SetMaxMotorForce(MaxMotorForce);
+            WakeBodies();
+        }
+#endif
     }
 }

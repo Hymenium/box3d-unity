@@ -25,6 +25,8 @@ namespace Box3D.Hybrid
         [SerializeField, Min(0f), Tooltip("Spring damping ratio.")]
         private float DampingRatio = 0.5f;
 
+        private DistanceJoint _distance;
+
         /// <summary>Sets the connected anchor (world space if no connected body). Before Start.</summary>
         public void SetConnectedAnchor(Vector3 anchor)
         {
@@ -67,8 +69,24 @@ namespace Box3D.Hybrid
                 def.DampingRatio = DampingRatio;
             }
 
-            return World.World.CreateDistanceJoint(def);
+            _distance = World.World.CreateDistanceJoint(def);
+            return _distance;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. Anchors and Connected Body are
+            // baked into the joint frames at creation and stay fixed; Length 0 keeps the rest
+            // length measured at creation.
+            if (!Application.isPlaying || !_distance.IsValid) return;
+            if (Length > 0f) _distance.SetLength(Length);
+            _distance.EnableSpring(UseSpring);
+            _distance.SetSpringHertz(Hertz);
+            _distance.SetSpringDampingRatio(DampingRatio);
+            WakeBodies();
+        }
+#endif
 
         private void OnDrawGizmosSelected()
         {

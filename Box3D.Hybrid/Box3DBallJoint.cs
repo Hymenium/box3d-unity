@@ -26,6 +26,8 @@ namespace Box3D.Hybrid
         [SerializeField, Tooltip("Upper twist limit in degrees.")]
         private float MaxTwist = 45f;
 
+        private SphericalJoint _ball;
+
         protected override Joint CreateJoint(BodyId bodyA, BodyId bodyB)
         {
             Vector3 worldAxis = transform.TransformDirection(Axis);
@@ -45,7 +47,23 @@ namespace Box3D.Hybrid
                 def.UpperTwistAngle = Mathf.Max(MinTwist, MaxTwist) * Mathf.Deg2Rad;
             }
 
-            return World.World.CreateSphericalJoint(def);
+            _ball = World.World.CreateSphericalJoint(def);
+            return _ball;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. Axis, Anchor and Connected Body
+            // are baked into the joint frames at creation and stay fixed.
+            if (!Application.isPlaying || !_ball.IsValid) return;
+            _ball.EnableConeLimit(UseConeLimit);
+            _ball.SetConeLimit(ConeAngle * Mathf.Deg2Rad);
+            _ball.EnableTwistLimit(UseTwistLimit);
+            _ball.SetTwistLimits(Mathf.Min(MinTwist, MaxTwist) * Mathf.Deg2Rad,
+                                 Mathf.Max(MinTwist, MaxTwist) * Mathf.Deg2Rad);
+            WakeBodies();
+        }
+#endif
     }
 }

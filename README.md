@@ -40,8 +40,9 @@ This project was inspired by, and owes its architecture to, two projects:
 - **Callbacks** — custom collision filtering, pre-solve contact veto, friction/restitution mixing
   (with clear worker-thread safety rules).
 - **Diagnostics** — debug-draw overlay (shapes, contacts, forces, islands) toggled right on the
-  `Box3DWorld` component; a drop-in stats HUD (step time, per-phase profile, live counts); and
-  `World.GetProfile()` / `GetCounters()` for programmatic profiling.
+  `Box3DWorld` component; a drop-in stats HUD (step time, per-phase profile, live counts);
+  `World.GetProfile()` / `GetCounters()` for programmatic profiling; and a Collision Debugger
+  window answering "why isn't this pair colliding?" rule by rule.
 - **Determinism & replay** — record a simulation, verify it reproduces bit-identical state (even
   across worker counts), save it, and scrub the replay frame by frame with divergence detection —
   either as wireframes or played back on your real scene objects. For lockstep/rollback netcode and

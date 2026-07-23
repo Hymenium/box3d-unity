@@ -29,6 +29,8 @@ namespace Box3D.Hybrid
         [SerializeField, Min(0f), Tooltip("Maximum motor torque in N·m.")]
         private float MaxMotorTorque = 10f;
 
+        private RevoluteJoint _hinge;
+
         /// <summary>Sets the local hinge axis. Must be set before the joint is created (Start).</summary>
         public void SetAxis(Vector3 localAxis)
         {
@@ -55,8 +57,25 @@ namespace Box3D.Hybrid
                 def.MaxMotorTorque = MaxMotorTorque;
             }
 
-            return World.World.CreateRevoluteJoint(def);
+            _hinge = World.World.CreateRevoluteJoint(def);
+            return _hinge;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. Axis, Anchor and Connected Body
+            // are baked into the joint frames at creation and stay fixed.
+            if (!Application.isPlaying || !_hinge.IsValid) return;
+            _hinge.EnableLimit(UseLimits);
+            _hinge.SetLimits(Mathf.Min(MinAngle, MaxAngle) * Mathf.Deg2Rad,
+                             Mathf.Max(MinAngle, MaxAngle) * Mathf.Deg2Rad);
+            _hinge.EnableMotor(UseMotor);
+            _hinge.SetMotorSpeed(MotorSpeed * Mathf.Deg2Rad);
+            _hinge.SetMaxMotorTorque(MaxMotorTorque);
+            WakeBodies();
+        }
+#endif
 
         private void OnDrawGizmosSelected()
         {

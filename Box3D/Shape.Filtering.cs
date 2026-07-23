@@ -1,4 +1,4 @@
-namespace Box3d
+namespace Box3D
 {
     public partial struct Shape
     {

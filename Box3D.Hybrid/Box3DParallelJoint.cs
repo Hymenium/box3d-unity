@@ -20,6 +20,8 @@ namespace Box3D.Hybrid
         [SerializeField, Min(0f), Tooltip("Maximum aligning torque in N·m.")]
         private float MaxTorque = 1000f;
 
+        private ParallelJoint _parallel;
+
         /// <summary>Configures the joint for runtime assembly (before Start).</summary>
         public void Configure(Box3DBody connected, Vector3 axisLocal, float hertz, float dampingRatio)
         {
@@ -39,7 +41,21 @@ namespace Box3D.Hybrid
             def.DampingRatio = DampingRatio;
             def.MaxTorque = MaxTorque;
 
-            return World.World.CreateParallelJoint(def);
+            _parallel = World.World.CreateParallelJoint(def);
+            return _parallel;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. Axis and Connected Body are
+            // baked into the joint frames at creation and stay fixed.
+            if (!Application.isPlaying || !_parallel.IsValid) return;
+            _parallel.SetSpringHertz(Hertz);
+            _parallel.SetSpringDampingRatio(DampingRatio);
+            _parallel.SetMaxTorque(MaxTorque);
+            WakeBodies();
+        }
+#endif
     }
 }

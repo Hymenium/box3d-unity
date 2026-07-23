@@ -18,6 +18,9 @@ If you know Unity's physics components, you already know these:
 | `Box3DCapsuleShape` | `CapsuleCollider` | A capsule shape (radius, height, axis). |
 | `Box3DHullShape` | convex `MeshCollider` | Convex hull from a mesh's vertices; works on dynamic bodies. |
 | `Box3DMeshShape` | non-convex `MeshCollider` | Triangle mesh from a mesh asset; **static bodies only**. |
+| `Box3DWind` | `WindZone` (visual-only in Unity) | Pushes dynamic bodies inside a box volume; optional gusts. |
+| `Box3DExplosion` | — | Radial impulse burst with radius + falloff. |
+| `Box3DRope` | — | Source 2-style cable: live editor preview, bake static or simulate in game. |
 
 ## Quick start
 
@@ -32,6 +35,14 @@ Building by hand instead: components live under **Add Component → Box3D** (`Sh
 one — set it to **Static** for non-moving geometry. The components drive the Transform, so any
 visual on the same GameObject follows.
 
+## Live tuning
+
+During play, Inspector edits apply to the running simulation immediately: world gravity, body
+type/damping, shape friction/restitution/density, sphere and capsule size (mass is re-derived),
+wind and explosion parameters, and every joint's limits, motor and spring settings. What stays
+fixed on a live object: box/hull/mesh geometry, joint axes/anchors/connected bodies (baked into
+the joint frames at creation), and the world's worker count.
+
 ## Box3DWorld
 
 Optional — placed automatically the first time a body needs it. Add one explicitly to tune:
@@ -40,7 +51,8 @@ Optional — placed automatically the first time a body needs it. Add one explic
 - **Sub Step Count** — solver sub-steps per step (higher = stiffer joints/stacks, slower).
 - **Worker Count** — physics threads; 0 = auto (about half the logical cores).
 
-Only one world is used; a second `Box3DWorld` logs a warning.
+Only one world is used; a second `Box3DWorld` logs a warning. Selecting the world draws a purple
+gravity arrow in the Scene view — direction is the gravity vector, length its strength (1 g ≈ 1.5 m).
 
 ## Box3DBody
 
@@ -119,6 +131,44 @@ Frames are computed so the joint is satisfied at the pose you built it in — cr
 the bodies. For the wheel joint, put it on the wheel and set Connected Body to the chassis; the
 suspension axis and spin (axle) axis are configurable.
 
+## Forces
+
+Scene-authorable force fields — select one to see its gizmos:
+
+- **`Box3DWind`** — a box volume that pushes every dynamic body inside along the object's forward
+  (+Z) axis each step; rotate the object to aim it. **Strength** is newtons (negative blows
+  backward); **Ignore Mass** applies it as acceleration so light and heavy bodies drift equally;
+  **Gust Amplitude** / **Gust Frequency** add Perlin-noise gusting. Gizmos show the zone and a grid
+  of arrows whose length follows the live gust strength in play mode.
+- **`Box3DExplosion`** — a radial impulse burst (native `World.Explode`) at the object's position:
+  full **Impulse Per Area** inside **Radius**, fading to zero over **Falloff** beyond it. Trigger
+  with `Explode()` from code, the Inspector's **Explode** button, or **Explode On Enable** for
+  spawned prefabs. Gizmos show both radii and the blast rays.
+
+Both live under **Add Component → Box3D → Forces** and **GameObject → Box3D**.
+
+## Rope
+
+`Box3DRope` is a Source 2-style cable (**GameObject → Box3D → Rope**). Put it on the start object,
+point **End Point** at the far end (or drag the Scene-view handle when it's empty), set
+**Segments** / **Slack** / **Radius** — the Scene view always shows the true drape while you edit:
+the preview runs a real Box3D simulation in a throwaway world with the scene's shapes frozen as
+static collision, so the rope hangs over geometry exactly as it will in play mode.
+**▶ Simulate in Editor** animates the same simulation live. Then choose:
+
+- **Dynamic** (default): at runtime the rope becomes capsule segment bodies linked by ball joints.
+  It spawns **taut** between the ends and sags into place under gravity, draping onto whatever it
+  meets. Ends attach to any `Box3DBody` found at the endpoints — the rope swings with them and
+  tugs on them — otherwise they pin to the world. The rope collides with the scene, but not with
+  the bodies it's attached to (the anchors sit at their surface, and contacts there would fight
+  the joints); enable **Collide With Attached** if you want it to drape over them.
+- **Baked** — press **Bake Current Shape**: the curve freezes (no simulation in game) with
+  optional static capsule collision, cheap enough to scatter everywhere like Source 2's static
+  cables. A rope set to Baked without ever baking settles once at startup. **Make Dynamic** reverts.
+
+Rendering goes through the rope's LineRenderer (style its material/width freely); the simulation
+drives its points every frame.
+
 ## Tooling components
 
 Drop-in components for diagnostics — all optional, none needed to simulate:
@@ -129,6 +179,7 @@ Drop-in components for diagnostics — all optional, none needed to simulate:
 | `Box3DRecorder` | Records the world and checks **determinism** (with a cross-thread option); saves a `.rec`. |
 | `Box3DReplayer` | Plays back a `.rec` (or live capture) as **wireframes** with a scrub **timeline** and divergence read-out. |
 | `Box3DVisualReplayer` | Plays a `.rec` back on the scene's **real GameObjects** (same scene), mapped by body name. |
+| `Box3DDeterminismHarness` | Runs a fixed scenario and shows its state-hash on screen — build to Editor/Android/WebGL and compare. |
 
 See [debug draw](debug-draw.md) for the overlay and HUD, and
 [determinism & replay](determinism-and-replay.md) for the recorder/replayer.

@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-namespace Box3d.Tests
+namespace Box3D.Tests
 {
     /// <summary>Determinism / lockstep tests: the same build must reproduce a simulation bit-for-bit.
     /// The scenario is deliberately kept to the low-level API (no UnityEngine types) so the exact same

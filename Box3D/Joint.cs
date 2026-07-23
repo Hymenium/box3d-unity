@@ -8,7 +8,13 @@ namespace Box3D
     {
         public JointId Id;
 
-        public bool IsValid => Ffi.b3Joint_IsValid(Id);
+        /// <summary>Wraps a joint id — the way back into the wrapper API from ids delivered by
+        /// events (e.g. <see cref="JointEvent.JointId"/>) or stored by user code. Cheap and
+        /// unchecked; test <see cref="IsValid"/>, or use <see cref="World.TryGetJoint"/> for the
+        /// validated form.</summary>
+        public Joint(JointId id) => Id = id;
+
+        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
 
         /// <summary>Application-specific data attached to the joint. Delivered back in
         /// <see cref="JointEvent.UserData"/>.</summary>

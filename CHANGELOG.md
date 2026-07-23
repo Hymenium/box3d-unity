@@ -1,5 +1,84 @@
 # Changelog
 
+## [0.7.0] — 2026-07-22
+
+### Changed — naming: Box3d → Box3D
+- Everything named `Box3d…` is now `Box3D…` (capital D): assemblies (`Box3D.Runtime`, `Box3D.Hybrid`,
+  `Box3D.Hybrid.Editor`, `Box3D.Tests`), namespaces (`Box3D`, `Box3D.Hybrid`), every component class
+  (`Box3DBody`, `Box3DBoxShape`, …) and every file. **Breaking for code** — update `using Box3d…`
+  and `Box3d…` type references to `Box3D…`. **Scenes and prefabs are unaffected**: scripts are
+  referenced by GUID and every `.meta` was preserved through the rename. The package id
+  (`com.suvitruf.box3d`) and the native library (`box3d`) stay lowercase by requirement.
+
+### Added — scene authoring for designers
+- **GameObject → Box3D creation menu** (also in the Hierarchy **+** button and right-click menu):
+  World, Box, Sphere, Capsule, Empty Body, Static Box and Ground Plane. Shape items create a Unity
+  primitive for visuals (its PhysX collider removed) with a `Box3DBody` + matching Box3D shape —
+  primitive dimensions match the shape defaults, so what you see is what simulates.
+- **Shapes auto-add a body**: adding a shape component to a GameObject with no `Box3DBody` on it or
+  any ancestor adds one automatically (like `RequireComponent`, but hierarchy-aware — compound child
+  shapes under a body don't get their own). Set the body to **Static** for non-moving geometry.
+- **Component icons**: every component now has a category-colored icon (green shapes, orange joints,
+  blue body, purple world, red replay, teal diagnostics) in the Add Component menu, Inspector,
+  Project window and Hierarchy.
+- **Add Component menu categories**: components are grouped under `Box3D/` — `Shapes/`, `Joints/`,
+  `Replay/`, `Diagnostics/`, with `Body` and `World` at the top level.
+- **Gravity gizmo**: selecting a `Box3DWorld` draws a purple gravity arrow in the Scene view —
+  direction is the gravity vector, length its strength (1 g ≈ 1.5 m, clamped for readability).
+- **Force components** (Add Component → `Box3D/Forces`, GameObject → Box3D): **`Box3DWind`** — a
+  box volume pushing dynamic bodies along its forward axis with optional Perlin gusts, visualized
+  as a zone + arrow grid that tracks live gust strength; **`Box3DExplosion`** — a radial impulse
+  burst (native `World.Explode`) with radius/falloff gizmos, an Inspector **Explode** button and
+  **Explode On Enable** for spawned prefabs.
+- **`Box3DRope`** — Source 2-style cables (`Box3D/Rope`, GameObject → Box3D → Rope): the Scene view
+  shows the true drape live while editing — the preview runs a real Box3D simulation in a throwaway
+  world with the scene's shapes frozen as static collision (draggable far-end handle, an animated
+  editor **Simulate** toggle), then **Bake** freezes the curve into a static
+  cable with optional static collision — or leave it **Dynamic** and it builds capsule segments +
+  ball joints at runtime, attaching to any `Box3DBody` at its endpoints, spawning taut and sagging
+  into place so it drapes onto scene objects instead of spawning through them. Segments are continuous
+  (bullet) bodies honoring the layer collision matrix, so the rope reacts to everything it sweeps
+  past; it ignores collision with its attached bodies by default (filter joints; **Collide With
+  Attached** re-enables it). Renders through a LineRenderer whose width follows the rope Radius.
+
+### Added — event id → wrapper resolution ([#2](https://github.com/Suvitruf/box3d-unity/issues/2))
+- **`new Body(id)` / `new Shape(id)` / `new Joint(id)`** — the documented way back into the wrapper
+  API from the raw ids that move/contact/sensor/joint events deliver. No parallel lookup table
+  needed: the wrappers are thin value types over the ids, so wrapping an id *is* the resolution.
+- **`World.TryGetBody` / `TryGetShape` / `TryGetJoint`** — the validated form: false for stale ids
+  and for ids belonging to a different world. New "[Resolving event ids](Documentation~/events.md)"
+  section in the events doc.
+
+### Fixed
+- **Inspector edits now apply live during play** across the component layer: `Box3DWorld` gravity,
+  shape friction/restitution/density and sphere/capsule size (mass is re-derived), and every
+  joint's limits, motor and spring parameters — `OnValidate` pushes them to the native objects,
+  matching `Box3DBody` which already did this. Creation-baked state still can't change on a live
+  object: box/hull/mesh geometry, joint axes/anchors/connected bodies, and the world's worker count.
+
+## [0.6.2] — 2026-07-22
+
+### Added
+- **Determinism state hashing** — `Determinism.HashState(bodies)` / `Determinism.Hash(bytes)` wrap
+  box3d's own state hash, giving lockstep/rollback games a per-step checksum to exchange and compare.
+  Ships with an example lockstep test and a new doc:
+  [determinism testing](Documentation~/determinism-testing.md).
+- **`Box3DDeterminismHarness`** — a cross-platform determinism probe: build the same seeded scene to
+  Editor (x64/Mono), Android (arm64/IL2CPP) and WebGL (WASM), and compare the on-screen hash
+  signature (platform/backend + checkpoints at 25/50/75%/final) to see whether box3d's floating-point
+  results match across platforms.
+- **Collision Debugger** (Window ▸ Box3D ▸ Collision Debugger) — assign two `Box3DBody` and get a
+  rule-by-rule verdict of why they aren't colliding: body types, enabled state, joint
+  Collide Connected, category/mask/group filters, sensors, and broadphase-AABB proximity — mirroring
+  box3d's own collision rules. The logic is reusable at runtime via `CollisionDiagnostics.Diagnose`.
+- New managed accessors: `Shape.GetFilter` / `SetFilter` / `IsSensor` / `GetAABB` / `GetBody`,
+  `Body.Type` / `IsEnabled` / `GetShapeCount` / `GetJointCount`,
+  `Joint.BodyA` / `BodyB` / `CollideConnected`.
+
+### Changed
+- `Shape.GetBody()` now returns a `Body` (previously the raw `BodyId`).
+- `Body.IsEnabled` is now a property (previously a generated `IsEnabled()` method).
+
 ## [0.6.1] — 2026-07-13
 
 ### Added

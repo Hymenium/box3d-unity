@@ -1,6 +1,6 @@
 using Unity.Mathematics;
 
-namespace Box3d
+namespace Box3D
 {
     /// <summary>A fixed, randomness-free physics scenario for determinism testing. The same math runs in
     /// every environment (the native library does it), so its per-step state-hash stream must match across

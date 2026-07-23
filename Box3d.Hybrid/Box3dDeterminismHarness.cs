@@ -1,7 +1,7 @@
 using System.Text;
 using UnityEngine;
 
-namespace Box3d.Hybrid
+namespace Box3D.Hybrid
 {
     /// <summary>Runs the fixed <see cref="DeterminismScenario"/> and shows its state-hash signature
     /// on-screen — a turnkey way to check cross-platform determinism. Put it in an otherwise empty scene,
@@ -11,8 +11,8 @@ namespace Box3d.Hybrid
     ///
     /// <para>The signature is also logged (Debug.Log) so you can read it via <c>adb logcat</c> on Android
     /// or the browser console on WebGL, and can be copied to the clipboard.</para></summary>
-    [AddComponentMenu("Box3d/Box3d Determinism Harness")]
-    public class Box3dDeterminismHarness : MonoBehaviour
+    [AddComponentMenu("Box3D/Box3D Determinism Harness")]
+    public class Box3DDeterminismHarness : MonoBehaviour
     {
 #if ENABLE_IL2CPP
         private const string Backend = "IL2CPP";
@@ -53,7 +53,7 @@ namespace Box3d.Hybrid
         private string BuildSignature()
         {
             var sb = new StringBuilder();
-            sb.Append("[Box3dDeterminism] ");
+            sb.Append("[Box3DDeterminism] ");
             sb.Append($"platform={Application.platform} backend={Backend} ");
             sb.Append($"steps={DeterminismScenario.StepCount} | ");
             sb.Append($"25%=0x{Checkpoint(25):X8} 50%=0x{Checkpoint(50):X8} ");

@@ -2,27 +2,27 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Box3d.Hybrid.Editor
+namespace Box3D.Hybrid.Editor
 {
-    /// <summary>"Why isn't this colliding?" — assign two <see cref="Box3dBody"/> objects and, in Play
+    /// <summary>"Why isn't this colliding?" — assign two <see cref="Box3DBody"/> objects and, in Play
     /// mode, get a rule-by-rule verdict on whether they collide (body types, enabled, joints, collision
     /// filters), plus sensor and broadphase-proximity notes. Answers the top filtering support question.</summary>
-    public class Box3dCollisionDebuggerWindow : EditorWindow
+    public class Box3DCollisionDebuggerWindow : EditorWindow
     {
-        private Box3dBody _bodyA;
-        private Box3dBody _bodyB;
+        private Box3DBody _bodyA;
+        private Box3DBody _bodyB;
 
-        [MenuItem("Window/Box3d/Collision Debugger")]
+        [MenuItem("Window/Box3D/Collision Debugger")]
         private static void Open()
         {
-            GetWindow<Box3dCollisionDebuggerWindow>("Collision Debugger");
+            GetWindow<Box3DCollisionDebuggerWindow>("Collision Debugger");
         }
 
         private void OnGUI()
         {
             EditorGUILayout.HelpBox("Assign two bodies and enter Play mode to see whether — and why — they collide.", MessageType.None);
-            _bodyA = (Box3dBody)EditorGUILayout.ObjectField("Body A", _bodyA, typeof(Box3dBody), true);
-            _bodyB = (Box3dBody)EditorGUILayout.ObjectField("Body B", _bodyB, typeof(Box3dBody), true);
+            _bodyA = (Box3DBody)EditorGUILayout.ObjectField("Body A", _bodyA, typeof(Box3DBody), true);
+            _bodyB = (Box3DBody)EditorGUILayout.ObjectField("Body B", _bodyB, typeof(Box3DBody), true);
 
             if (!Application.isPlaying)
             {

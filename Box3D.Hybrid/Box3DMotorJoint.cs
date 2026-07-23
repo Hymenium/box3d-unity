@@ -47,6 +47,22 @@ namespace Box3D.Hybrid
             return _motor;
         }
 
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. The rest pose is captured at
+            // creation and stays fixed; code-driven velocities are untouched.
+            if (!Application.isPlaying || !_motor.IsValid) return;
+            _motor.SetLinearHertz(LinearHertz);
+            _motor.SetLinearDampingRatio(LinearDampingRatio);
+            _motor.SetMaxSpringForce(MaxForce);
+            _motor.SetAngularHertz(AngularHertz);
+            _motor.SetAngularDampingRatio(AngularDampingRatio);
+            _motor.SetMaxSpringTorque(MaxTorque);
+            WakeBodies();
+        }
+#endif
+
         /// <summary>Drives the joint with a relative linear velocity (world space).</summary>
         public void SetLinearVelocity(Vector3 velocity)
         {

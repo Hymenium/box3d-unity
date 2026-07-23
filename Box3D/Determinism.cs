@@ -1,7 +1,7 @@
 using System;
 using Unity.Mathematics;
 
-namespace Box3d
+namespace Box3D
 {
     /// <summary>Deterministic hashing for lockstep / cross-environment determinism testing. Wraps box3d's
     /// own djb2 hash (<c>b3Hash</c>, provided by the engine "for determinism testing"), so the hash

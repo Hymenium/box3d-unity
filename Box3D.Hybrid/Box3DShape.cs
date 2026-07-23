@@ -27,7 +27,19 @@ namespace Box3D.Hybrid
         private Shape _shape;
         private Body _ownBody; // only set when this shape has no Box3DBody and creates a static one
 
+        // The attach frame from AttachTo, kept so Inspector edits can rebuild geometry in place.
+        private float3 _attachPosition;
+        private quaternion _attachRotation = quaternion.identity;
+        private float3 _attachScale = new float3(1f);
+
         protected float3 LocalCenter => Center;
+
+        /// <summary>The live native shape (valid between Awake and OnDestroy).</summary>
+        protected Shape LiveShape => _shape;
+
+        protected float3 AttachedPosition => _attachPosition;
+        protected quaternion AttachedRotation => _attachRotation;
+        protected float3 AttachedScale => _attachScale;
 
         /// <summary>Sets friction, updating the live shape if it exists.</summary>
         public void SetFriction(float value)
@@ -106,7 +118,7 @@ namespace Box3D.Hybrid
 
         // Builds a box3d mask from Unity's layer collision matrix: bit L is set for every layer
         // this layer is allowed to collide with.
-        private static ulong CollisionMaskForLayer(int layer)
+        internal static ulong CollisionMaskForLayer(int layer)
         {
             ulong mask = 0;
             for (int other = 0; other < 32; other++)
@@ -122,8 +134,42 @@ namespace Box3D.Hybrid
         /// GameObject's lossy scale, baked into the dimensions.</summary>
         internal void AttachTo(Body body, float3 localPosition, quaternion localRotation, float3 scale)
         {
+            _attachPosition = localPosition;
+            _attachRotation = localRotation;
+            _attachScale = scale;
             _shape = CreateShape(body, localPosition, localRotation, scale);
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live shape during play. SetDensity with updateBodyMass
+            // re-derives mass from the current geometry, so size edits update mass too.
+            if (!Application.isPlaying || !_shape.IsValid) return;
+            _shape.SetFriction(Friction);
+            _shape.SetRestitution(Restitution);
+            UpdateLiveGeometry();
+            _shape.SetDensity(Density, updateBodyMass: true);
+        }
+#endif
+
+        /// <summary>Pushes edited geometry to the live native shape where the engine supports
+        /// in-place replacement (sphere and capsule). Other shapes keep their creation geometry.</summary>
+        protected virtual void UpdateLiveGeometry() { }
+
+#if UNITY_EDITOR
+        /// <summary>Creates this shape on a body in a throwaway preview world (rope editor
+        /// preview), leaving component state alone. The body must already sit at this shape's
+        /// transform pose.</summary>
+        internal Shape CreateDetachedShape(Body body)
+        {
+            return CreateShape(body, float3.zero, quaternion.identity, transform.lossyScale);
+        }
+
+        /// <summary>Frees native geometry a detached preview shape allocated (mesh shapes).
+        /// Called after the preview world is destroyed.</summary>
+        internal virtual void ReleaseDetachedGeometry() { }
+#endif
 
         protected abstract Shape CreateShape(Body body, float3 localPosition, quaternion localRotation, float3 scale);
 

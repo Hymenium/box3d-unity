@@ -14,12 +14,21 @@ namespace Box3D.Hybrid
 
         protected override Shape CreateShape(Body body, float3 localPosition, quaternion localRotation, float3 scale)
         {
-            float scaledRadius = Radius * math.cmax(math.abs(scale));
-            return body.CreateSphereShape(BuildDef(), new Sphere
+            return body.CreateSphereShape(BuildDef(), BuildSphere(localPosition, localRotation, scale));
+        }
+
+        protected override void UpdateLiveGeometry()
+        {
+            LiveShape.SetSphere(BuildSphere(AttachedPosition, AttachedRotation, AttachedScale));
+        }
+
+        private Sphere BuildSphere(float3 localPosition, quaternion localRotation, float3 scale)
+        {
+            return new Sphere
             {
                 Center = ShapeCenter(localPosition, localRotation, scale),
-                Radius = scaledRadius,
-            });
+                Radius = Radius * math.cmax(math.abs(scale)),
+            };
         }
 
         private void OnDrawGizmosSelected()

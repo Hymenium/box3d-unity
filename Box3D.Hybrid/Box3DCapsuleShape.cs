@@ -37,6 +37,17 @@ namespace Box3D.Hybrid
             });
         }
 
+        protected override void UpdateLiveGeometry()
+        {
+            Resolve(AttachedPosition, AttachedRotation, AttachedScale, out float3 center1, out float3 center2, out float radius);
+            LiveShape.SetCapsule(new Capsule
+            {
+                Center1 = center1,
+                Center2 = center2,
+                Radius = radius,
+            });
+        }
+
         // The two hemisphere centers and radius after baking the local transform and scale —
         // shared by the shape and gizmo.
         private void Resolve(float3 localPosition, quaternion localRotation, float3 scale,

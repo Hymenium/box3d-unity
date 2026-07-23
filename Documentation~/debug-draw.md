@@ -55,8 +55,8 @@ Numbers to go with the geometry:
 
 ## Collision debugger ("why isn't this colliding?")
 
-**Window ▸ Box3d ▸ Collision Debugger** answers the most common physics question. Assign two
-`Box3dBody` objects, enter Play mode, and it gives a rule-by-rule verdict — the same rules the engine
+**Window ▸ Box3D ▸ Collision Debugger** answers the most common physics question. Assign two
+`Box3DBody` objects, enter Play mode, and it gives a rule-by-rule verdict — the same rules the engine
 uses:
 
 - **body types** — a static/kinematic pair never collides (at least one must be dynamic);

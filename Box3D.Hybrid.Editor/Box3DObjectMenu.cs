@@ -54,6 +54,32 @@ namespace Box3D.Hybrid.Editor
             Place(go, command, "Create Box3D Body");
         }
 
+        [MenuItem(Root + "Wind", false, 30)]
+        private static void CreateWind(MenuCommand command)
+        {
+            var go = new GameObject("Wind", typeof(Box3DWind));
+            Place(go, command, "Create Box3D Wind");
+        }
+
+        [MenuItem(Root + "Explosion", false, 31)]
+        private static void CreateExplosion(MenuCommand command)
+        {
+            var go = new GameObject("Explosion", typeof(Box3DExplosion));
+            Place(go, command, "Create Box3D Explosion");
+        }
+
+        [MenuItem(Root + "Rope", false, 32)]
+        private static void CreateRope(MenuCommand command)
+        {
+            var go = new GameObject("Rope", typeof(LineRenderer), typeof(Box3DRope));
+            var line = go.GetComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.numCapVertices = 4;
+            line.numCornerVertices = 4;
+            line.sharedMaterial = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Line.mat");
+            Place(go, command, "Create Box3D Rope");
+        }
+
         [MenuItem(Root + "Static Box", false, 40)]
         private static void CreateStaticBox(MenuCommand command)
         {
@@ -87,7 +113,7 @@ namespace Box3D.Hybrid.Editor
         {
             GameObjectUtility.SetParentAndAlign(go, command.context as GameObject);
             if (!go.transform.parent) StageUtility.PlaceGameObjectInCurrentStage(go);
-            go.name = GameObjectUtility.GetUniqueNameForSibling(go.transform.parent, go.name);
+            GameObjectUtility.EnsureUniqueNameForSibling(go); // excludes self — plain GetUniqueNameForSibling would rename the first "Box" to "Box (1)"
             Undo.RegisterCreatedObjectUndo(go, undoName);
             Selection.activeGameObject = go;
         }

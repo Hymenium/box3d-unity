@@ -15,6 +15,8 @@ namespace Box3D.Hybrid
         [SerializeField, Min(0f), Tooltip("Angular spring stiffness (Hz). 0 = perfectly rigid.")]
         private float AngularHertz;
 
+        private WeldJoint _weld;
+
         protected override Joint CreateJoint(BodyId bodyA, BodyId bodyB)
         {
             WeldJointDef def = WeldJointDef.Default;
@@ -24,7 +26,20 @@ namespace Box3D.Hybrid
             def.LinearHertz = LinearHertz;
             def.AngularHertz = AngularHertz;
 
-            return World.World.CreateWeldJoint(def);
+            _weld = World.World.CreateWeldJoint(def);
+            return _weld;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. The welded pose is captured at
+            // creation and stays fixed.
+            if (!Application.isPlaying || !_weld.IsValid) return;
+            _weld.SetLinearHertz(LinearHertz);
+            _weld.SetAngularHertz(AngularHertz);
+            WakeBodies();
+        }
+#endif
     }
 }

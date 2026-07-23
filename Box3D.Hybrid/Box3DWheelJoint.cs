@@ -113,6 +113,30 @@ namespace Box3D.Hybrid
             return _wheel;
         }
 
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live joint during play. The axes are baked into the
+            // joint frames at creation and stay fixed. Spin speed / steering pushed from code
+            // (SetSpinMotorSpeed / SetTargetSteeringAngle) are re-seeded from the Inspector fields
+            // at the moment of an edit.
+            if (!Application.isPlaying || !_wheel.IsValid) return;
+            _wheel.SetSuspensionHertz(SuspensionHertz);
+            _wheel.SetSuspensionDampingRatio(SuspensionDamping);
+            _wheel.SetSuspensionLimits(-SuspensionTravel, SuspensionTravel);
+            _wheel.EnableSpinMotor(DriveWheel);
+            _wheel.SetSpinMotorSpeed(SpinSpeed);
+            _wheel.SetMaxSpinTorque(MaxSpinTorque);
+            _wheel.EnableSteering(Steerable);
+            _wheel.EnableSteeringLimit(Steerable);
+            _wheel.SetSteeringHertz(SteeringHertz);
+            _wheel.SetSteeringDampingRatio(SteeringDamping);
+            _wheel.SetMaxSteeringTorque(MaxSteeringTorque);
+            _wheel.SetSteeringLimits(-math.radians(MaxSteerAngle), math.radians(MaxSteerAngle));
+            WakeBodies();
+        }
+#endif
+
         /// <summary>Sets the drive motor's target spin speed (rad/s). Wakes the bodies when non-zero
         /// so a settled car starts moving.</summary>
         public void SetSpinSpeed(float radiansPerSecond)

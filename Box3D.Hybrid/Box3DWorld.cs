@@ -54,6 +54,10 @@ namespace Box3D.Hybrid
         /// so live physics doesn't fight the replayed transforms.</summary>
         public bool Paused { get; set; }
 
+        /// <summary>The configured gravity vector (readable without a live world — the rope's
+        /// editor preview settles under the same gravity the simulation will use).</summary>
+        public Vector3 GravityVector => Gravity;
+
         /// <summary>A shared static body at the origin, used as the fixed endpoint for joints whose
         /// connected body is null (like Unity's null connectedBody = attach to the world).</summary>
         public Body WorldAnchor
@@ -106,6 +110,16 @@ namespace Box3D.Hybrid
             _world = World.Create(def, _debugDrawShapeFactory);
         }
 
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Push Inspector edits to the live world during play. SubStepCount and DebugDraw are
+            // read every frame anyway; WorkerCount is baked at world creation.
+            if (!Application.isPlaying || !_world.IsValid) return;
+            _world.SetGravity(Gravity);
+        }
+#endif
+
         internal void AddKinematic(Box3DBody body)
         {
             if (!_kinematicBodies.Contains(body)) _kinematicBodies.Add(body);
@@ -146,6 +160,36 @@ namespace Box3D.Hybrid
             if (DebugDraw != DebugDrawFlags.None && _world.IsValid)
             {
                 _world.DrawDebug(_debugDrawTarget, DebugDraw, DebugDrawRadius);
+            }
+        }
+
+        // Matches the world component's purple icon so the arrow reads as "the world's gravity".
+        private static readonly Color GravityGizmoColor = new Color(0.75f, 0.53f, 0.92f, 0.95f);
+
+        private void OnDrawGizmosSelected()
+        {
+            float magnitude = Gravity.magnitude;
+            if (magnitude < 1e-4f) return; // zero gravity — nothing to point at
+
+            Vector3 origin = transform.position;
+            Vector3 dir = Gravity / magnitude;
+            // Shaft length tracks strength (1 g ≈ 1.5 m), clamped so extreme values stay readable.
+            float length = Mathf.Clamp(1.5f * magnitude / 9.81f, 0.4f, 4f);
+            Vector3 tip = origin + dir * length;
+
+            // A basis perpendicular to the arrow for the head fins (gravity is usually straight
+            // down, where Vector3.up is degenerate — fall back to right).
+            Vector3 side = Vector3.Cross(dir, Vector3.up);
+            if (side.sqrMagnitude < 1e-4f) side = Vector3.Cross(dir, Vector3.right);
+            side.Normalize();
+            Vector3 side2 = Vector3.Cross(dir, side);
+
+            Gizmos.color = GravityGizmoColor;
+            Gizmos.DrawLine(origin, tip);
+            float head = Mathf.Min(0.3f * length, 0.4f);
+            foreach (Vector3 fin in new[] { side, -side, side2, -side2 })
+            {
+                Gizmos.DrawLine(tip, tip - dir * head + fin * (head * 0.5f));
             }
         }
 

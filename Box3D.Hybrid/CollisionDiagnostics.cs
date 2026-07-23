@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Box3d.Hybrid
+namespace Box3D.Hybrid
 {
     /// <summary>Outcome of one diagnostic check.</summary>
     public enum DiagnosisStatus { Pass, Fail, Note }
