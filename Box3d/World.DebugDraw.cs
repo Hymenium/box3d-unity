@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AOT;
 using Unity.Mathematics;
@@ -106,12 +105,15 @@ namespace Box3d
 
     internal unsafe static class NativeDebugDrawBridge
     {
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate void* CreateShapeDelegate(
+            b3DebugShape* debugShape,
+            void* userContext);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private unsafe delegate void* CreateShapeDelegate(b3DebugShape* debugShape, void* userContext);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private unsafe delegate void DestroyShapeDelegate(void* userShape, void* userContext);
+        private unsafe delegate void DestroyShapeDelegate(
+            void* userShape,
+            void* userContext);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate NativeBool DrawShapeDelegate(
