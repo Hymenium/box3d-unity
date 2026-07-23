@@ -23,14 +23,38 @@
 - `Shape.GetBody()` now returns a `Body` (previously the raw `BodyId`).
 - `Body.IsEnabled` is now a property (previously a generated `IsEnabled()` method).
 
+## [0.7.0] — 2026-07-22
+
+### Changed — naming: Box3d → Box3D
+- Everything named `Box3d…` is now `Box3D…` (capital D): assemblies (`Box3D.Runtime`, `Box3D.Hybrid`,
+  `Box3D.Hybrid.Editor`, `Box3D.Tests`), namespaces (`Box3D`, `Box3D.Hybrid`), every component class
+  (`Box3DBody`, `Box3DBoxShape`, …) and every file. **Breaking for code** — update `using Box3d…`
+  and `Box3d…` type references to `Box3D…`. **Scenes and prefabs are unaffected**: scripts are
+  referenced by GUID and every `.meta` was preserved through the rename. The package id
+  (`com.suvitruf.box3d`) and the native library (`box3d`) stay lowercase by requirement.
+
+### Added — scene authoring for designers
+- **GameObject → Box3D creation menu** (also in the Hierarchy **+** button and right-click menu):
+  World, Box, Sphere, Capsule, Empty Body, Static Box and Ground Plane. Shape items create a Unity
+  primitive for visuals (its PhysX collider removed) with a `Box3DBody` + matching Box3D shape —
+  primitive dimensions match the shape defaults, so what you see is what simulates.
+- **Shapes auto-add a body**: adding a shape component to a GameObject with no `Box3DBody` on it or
+  any ancestor adds one automatically (like `RequireComponent`, but hierarchy-aware — compound child
+  shapes under a body don't get their own). Set the body to **Static** for non-moving geometry.
+- **Component icons**: every component now has a category-colored icon (green shapes, orange joints,
+  blue body, purple world, red replay, teal diagnostics) in the Add Component menu, Inspector,
+  Project window and Hierarchy.
+- **Add Component menu categories**: components are grouped under `Box3D/` — `Shapes/`, `Joints/`,
+  `Replay/`, `Diagnostics/`, with `Body` and `World` at the top level.
+
 ## [0.6.1] — 2026-07-13
 
 ### Added
-- **`Box3dVisualReplayer`** — plays a recording back on the scene's **real GameObjects** (meshes and
+- **`Box3DVisualReplayer`** — plays a recording back on the scene's **real GameObjects** (meshes and
   materials), not wireframes. It pauses live physics and drives each recorded body onto its scene
-  object, mapped by **body name**, with the same scrub timeline as `Box3dReplayer`. Use it in the
+  object, mapped by **body name**, with the same scrub timeline as `Box3DReplayer`. Use it in the
   scene the recording was made in; unmatched bodies (e.g. the joint world anchor) are skipped.
-- **`Body.SetName()` / `GetName()`** — and `Box3dBody` now names its native body after the GameObject,
+- **`Body.SetName()` / `GetName()`** — and `Box3DBody` now names its native body after the GameObject,
   so names appear in recordings/debug output and drive the visual replayer's mapping.
 
 ## [0.6.0] — 2026-07-12
@@ -39,10 +63,10 @@
 - **Record / validate / replay** — capture a simulation and prove it reproduces bit-identical state,
   the tooling for lockstep/rollback netcode, authoritative server physics, and reproducing
   intermittent bugs. No other Unity physics wrapper ships this.
-- **`Box3dRecorder`**: a drop-in component that records the world and reports **`DETERMINISTIC`** /
+- **`Box3DRecorder`**: a drop-in component that records the world and reports **`DETERMINISTIC`** /
   **`DIVERGED`** — including a cross-thread option (replay at a different worker count) to verify
   box3d reproduces identically regardless of thread count. Warns if the recorded world is empty.
-- **`Box3dReplayer`** + scrub timeline: plays back a `.rec` file (or live capture) in its own replay
+- **`Box3DReplayer`** + scrub timeline: plays back a `.rec` file (or live capture) in its own replay
   world, debug-drawn, with an Inspector timeline (frame slider, transport, live divergence read-out).
 - **Low-level API**: `Recording` (Create / Save / Load / GetData / **ValidateReplay**),
   `World.StartRecording` / `StopRecording`, and `ReplayPlayer` (StepFrame / SeekFrame / Restart,
@@ -52,10 +76,10 @@
 ## [0.5.0] — 2026-07-11
 
 ### Added — diagnostics & debug tooling
-- **Debug-draw overlay on `Box3dWorld`**: a `DebugDrawFlags` mask in the Inspector overlays collision
+- **Debug-draw overlay on `Box3DWorld`**: a `DebugDrawFlags` mask in the Inspector overlays collision
   shapes, joints, contacts, normals/forces, AABBs, mass, islands and graph colors into the Scene view —
   no code needed.
-- **`Box3dStatsHud`**: a drop-in on-screen overlay — FPS, step time, awake/total body count, live
+- **`Box3DStatsHud`**: a drop-in on-screen overlay — FPS, step time, awake/total body count, live
   shape/contact/joint/island counts and memory, and a per-phase step-time breakdown.
 - **`World.GetProfile()` / `World.GetCounters()`**: public `Profile` (per-phase step timings) and
   `Counters` (live counts + allocator/broadphase stats) for programmatic profiling. Plus
@@ -78,7 +102,7 @@
 - Pyramid stress-test scene in the Benchmarks sample — Erin Catto's 16,290-box pyramid, one box deep,
   held stable by contact recycling. Throw spheres to smash it, adjust the worker-thread count, and
   watch live step/FPS/object metrics (CSV export). ([demo](https://www.youtube.com/watch?v=BtdMbw97Zds))
-- `Box3dWheelJoint.Native` — accessor to the underlying native wheel joint.
+- `Box3DWheelJoint.Native` — accessor to the underlying native wheel joint.
 
 ## [0.4.0] — 2026-07-08
 
@@ -105,7 +129,7 @@
 
 ### Added
 - Motor and wheel joint components, completing all nine joint types as components.
-- `Box3dShape.SetDensity`, `Box3dBody.AllowFastRotation`, joint `WakeBodies`, and runtime
+- `Box3DShape.SetDensity`, `Box3DBody.AllowFastRotation`, joint `WakeBodies`, and runtime
   `Configure` helpers on the wheel and parallel joints.
 
 ### Fixed
@@ -115,7 +139,7 @@
 ## [0.3.0] — 2026-07-05
 
 ### Added — component layer (author physics in the Inspector)
-- **Bodies & shapes**: `Box3dWorld`, `Box3dBody` (static/kinematic/dynamic, enable-disable, live
+- **Bodies & shapes**: `Box3DWorld`, `Box3DBody` (static/kinematic/dynamic, enable-disable, live
   type/material edits), and all five shape types — sphere, box, capsule, convex hull, triangle mesh.
 - **Compound & static colliders**: bodies gather child shapes into one compound body; a shape with
   no body becomes static automatically.
@@ -136,8 +160,8 @@
 ## [0.2.0] — 2026-07-04
 
 ### Added
-- **Experimental component layer** (`Box3d.Hybrid`): author physics in the Inspector with
-  `Box3dWorld`, `Box3dBody`, `Box3dSphereShape`, and `Box3dBoxShape`, mirroring Unity's
+- **Experimental component layer** (`Box3D.Hybrid`): author physics in the Inspector with
+  `Box3DWorld`, `Box3DBody`, `Box3DSphereShape`, and `Box3DBoxShape`, mirroring Unity's
   Rigidbody/Collider model — static/kinematic/dynamic bodies, enable/disable, live type and
   material edits, runtime `Position`/`Rotation`. Sphere and box shapes only for now.
 - WebGL native binary (static wasm), joining Windows, Linux, and Android.
@@ -152,10 +176,10 @@
 
 ## [0.1.0] — 2026-07-03
 
-First public release. Wraps Box3d v0.1.0 (commit 29bf523).
+First public release. Wraps Box3D v0.1.0 (commit 29bf523).
 
 ### Added
-- Full C API bindings (578 functions) generated from the Box3d headers, with a public C# layer:
+- Full C API bindings (578 functions) generated from the Box3D headers, with a public C# layer:
   `World`/`Body`/`Shape`/`Joint` + typed joints as value handles over generation-validated ids.
 - All shape types: sphere, capsule, convex hull (+ builders), triangle mesh, height field, compound.
 - All nine joint types with complete accessor surfaces and creation defs.

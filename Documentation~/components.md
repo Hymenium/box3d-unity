@@ -5,32 +5,34 @@
 > shape types (sphere, box, capsule, hull, mesh), compound (child) shapes, auto-static colliders,
 > seven joint components, and full inspector/gizmo/handle editing. The API is still settling, so
 > expect some churn. The pointer-level API in the rest of these docs remains the full-featured
-> path. Lives in a separate `Box3d.Hybrid` assembly.
+> path. Lives in a separate `Box3D.Hybrid` assembly.
 
 If you know Unity's physics components, you already know these:
 
 | Component | Unity analog | Role |
 |---|---|---|
-| `Box3dWorld` | the physics scene | Owns the simulation, steps it, syncs Transforms. Auto-created. |
-| `Box3dBody` | `Rigidbody` | A physics body: static / kinematic / dynamic. |
-| `Box3dSphereShape` | `SphereCollider` | A sphere shape on a body. |
-| `Box3dBoxShape` | `BoxCollider` | A box shape on a body. |
-| `Box3dCapsuleShape` | `CapsuleCollider` | A capsule shape (radius, height, axis). |
-| `Box3dHullShape` | convex `MeshCollider` | Convex hull from a mesh's vertices; works on dynamic bodies. |
-| `Box3dMeshShape` | non-convex `MeshCollider` | Triangle mesh from a mesh asset; **static bodies only**. |
+| `Box3DWorld` | the physics scene | Owns the simulation, steps it, syncs Transforms. Auto-created. |
+| `Box3DBody` | `Rigidbody` | A physics body: static / kinematic / dynamic. |
+| `Box3DSphereShape` | `SphereCollider` | A sphere shape on a body. |
+| `Box3DBoxShape` | `BoxCollider` | A box shape on a body. |
+| `Box3DCapsuleShape` | `CapsuleCollider` | A capsule shape (radius, height, axis). |
+| `Box3DHullShape` | convex `MeshCollider` | Convex hull from a mesh's vertices; works on dynamic bodies. |
+| `Box3DMeshShape` | non-convex `MeshCollider` | Triangle mesh from a mesh asset; **static bodies only**. |
 
 ## Quick start
 
-1. Create a GameObject, add **Box3dBody** (leave it Dynamic) and **Box3dSphereShape**. Put it a few
-   metres up.
-2. Make a floor: another GameObject with **Box3dBody** set to **Static** and **Box3dBoxShape**,
-   scaled wide and flat.
-3. Press play. The sphere falls and lands. No `Box3dWorld` needed — one is created automatically.
+1. **GameObject → Box3D → Sphere** (the menu is also in the Hierarchy **+** button and right-click
+   menu). You get a visible sphere with a dynamic **Box3DBody** and **Box3DSphereShape** already
+   attached. Move it a few metres up.
+2. **GameObject → Box3D → Ground Plane** — a wide static slab whose top face sits at y = 0.
+3. Press play. The sphere falls and lands. No `Box3DWorld` needed — one is created automatically.
 
-Add a `MeshRenderer` (or start from a primitive) to see the objects; the components drive the
-Transform, so any visual on the same GameObject follows.
+Building by hand instead: components live under **Add Component → Box3D** (`Shapes/`, `Joints/`,
+`Replay/`, `Diagnostics/`). Adding a shape to a GameObject with no `Box3DBody` above it auto-adds
+one — set it to **Static** for non-moving geometry. The components drive the Transform, so any
+visual on the same GameObject follows.
 
-## Box3dWorld
+## Box3DWorld
 
 Optional — placed automatically the first time a body needs it. Add one explicitly to tune:
 
@@ -38,9 +40,9 @@ Optional — placed automatically the first time a body needs it. Add one explic
 - **Sub Step Count** — solver sub-steps per step (higher = stiffer joints/stacks, slower).
 - **Worker Count** — physics threads; 0 = auto (about half the logical cores).
 
-Only one world is used; a second `Box3dWorld` logs a warning.
+Only one world is used; a second `Box3DWorld` logs a warning.
 
-## Box3dBody
+## Box3DBody
 
 The body type mirrors Unity exactly:
 
@@ -54,11 +56,11 @@ Behaves like a Unity component:
 - **Enabling/disabling** the component (or its GameObject) removes it from / returns it to the
   simulation without recreating it. A disabled body is frozen *and non-solid* — other objects pass
   through it.
-- **Moving from code**: set `Box3dBody.Position` / `Box3dBody.Rotation` (like `Rigidbody.position`),
+- **Moving from code**: set `Box3DBody.Position` / `Box3DBody.Rotation` (like `Rigidbody.position`),
   which teleports the body and wakes it. Don't set `transform.position` directly on a dynamic body
   — same advice as Unity. (In the editor, dragging the Transform in the Scene view during play does
   work, as a convenience.)
-- **Changing the type at runtime** (`Box3dBody.BodyType = …`, or the Inspector during play) re-types
+- **Changing the type at runtime** (`Box3DBody.BodyType = …`, or the Inspector during play) re-types
   the live body.
 
 ## Shapes
@@ -90,28 +92,28 @@ recreated.)
 ## Compound shapes & static colliders
 
 Like Unity: a body gathers shape components from its own GameObject **and its children** (stopping
-at any nested `Box3dBody`), so several shapes under one body form a single compound body — each
-child shape is placed at its Transform relative to the body. And a shape with **no** `Box3dBody` on
+at any nested `Box3DBody`), so several shapes under one body form a single compound body — each
+child shape is placed at its Transform relative to the body. And a shape with **no** `Box3DBody` on
 itself or an ancestor gets its own static body automatically (a collider without a rigidbody is
 static geometry).
 
 ## Joints
 
-Add a joint component to a GameObject that has a `Box3dBody`; it constrains that body to a
+Add a joint component to a GameObject that has a `Box3DBody`; it constrains that body to a
 **Connected Body** (or to the world, if left null — like Unity's null connectedBody). The **Anchor**
 is the local pivot point.
 
 | Component | Unity analog | Notes |
 |---|---|---|
-| `Box3dHingeJoint` | `HingeJoint` | Rotates around **Axis**; optional angle limits + motor. |
-| `Box3dBallJoint` | `CharacterJoint` | Ball-and-socket; optional cone (swing) + twist limits. |
-| `Box3dSliderJoint` | `ConfigurableJoint` (1 axis) | Slides along **Axis**; optional limits + motor. |
-| `Box3dDistanceJoint` | `SpringJoint` | Holds a fixed distance between two anchors; optional spring. |
-| `Box3dFixedJoint` | `FixedJoint` | Rigidly welds the bodies at their current pose; optional spring. |
-| `Box3dParallelJoint` | — | Spring keeps an axis aligned (stay upright). |
-| `Box3dFilterJoint` | — | No constraint; disables collision between the two bodies. |
-| `Box3dMotorJoint` | — | Soft, driveable spring toward the rest pose (soft attachment / drag). |
-| `Box3dWheelJoint` | `WheelCollider`-ish | Vehicle suspension: spring travel, free spin, optional steering. |
+| `Box3DHingeJoint` | `HingeJoint` | Rotates around **Axis**; optional angle limits + motor. |
+| `Box3DBallJoint` | `CharacterJoint` | Ball-and-socket; optional cone (swing) + twist limits. |
+| `Box3DSliderJoint` | `ConfigurableJoint` (1 axis) | Slides along **Axis**; optional limits + motor. |
+| `Box3DDistanceJoint` | `SpringJoint` | Holds a fixed distance between two anchors; optional spring. |
+| `Box3DFixedJoint` | `FixedJoint` | Rigidly welds the bodies at their current pose; optional spring. |
+| `Box3DParallelJoint` | — | Spring keeps an axis aligned (stay upright). |
+| `Box3DFilterJoint` | — | No constraint; disables collision between the two bodies. |
+| `Box3DMotorJoint` | — | Soft, driveable spring toward the rest pose (soft attachment / drag). |
+| `Box3DWheelJoint` | `WheelCollider`-ish | Vehicle suspension: spring travel, free spin, optional steering. |
 
 Frames are computed so the joint is satisfied at the pose you built it in — creating it never snaps
 the bodies. For the wheel joint, put it on the wheel and set Connected Body to the chassis; the
@@ -123,11 +125,10 @@ Drop-in components for diagnostics — all optional, none needed to simulate:
 
 | Component | Does |
 |---|---|
-| `Box3dStatsHud` | On-screen HUD: FPS, step time + per-phase breakdown, live body/contact/island counts, memory. |
-| `Box3dRecorder` | Records the world and checks **determinism** (with a cross-thread option); saves a `.rec`. |
-| `Box3dReplayer` | Plays back a `.rec` (or live capture) as **wireframes** with a scrub **timeline** and divergence read-out. |
-| `Box3dVisualReplayer` | Plays a `.rec` back on the scene's **real GameObjects** (same scene), mapped by body name. |
-| `Box3dDeterminismHarness` | Runs a fixed scenario and shows its state-hash on screen — build to Editor/Android/WebGL and compare. |
+| `Box3DStatsHud` | On-screen HUD: FPS, step time + per-phase breakdown, live body/contact/island counts, memory. |
+| `Box3DRecorder` | Records the world and checks **determinism** (with a cross-thread option); saves a `.rec`. |
+| `Box3DReplayer` | Plays back a `.rec` (or live capture) as **wireframes** with a scrub **timeline** and divergence read-out. |
+| `Box3DVisualReplayer` | Plays a `.rec` back on the scene's **real GameObjects** (same scene), mapped by body name. |
 
 See [debug draw](debug-draw.md) for the overlay and HUD, and
 [determinism & replay](determinism-and-replay.md) for the recorder/replayer.
@@ -138,4 +139,4 @@ See [debug draw](debug-draw.md) for the overlay and HUD, and
   shapes read mesh vertices at runtime, so the mesh asset must have **Read/Write enabled**.
 
 For anything beyond this, drop to the code API ([getting started](getting-started.md)) — the
-components and the API share the same world and interoperate (`Box3dBody.Body`, `Box3dWorld.World`).
+components and the API share the same world and interoperate (`Box3DBody.Body`, `Box3DWorld.World`).

@@ -1,0 +1,22 @@
+{
+    "name": "Box3D.Hybrid",
+    "rootNamespace": "Box3D.Hybrid",
+    "references": [
+<<<<<<< HEAD:Box3d.Hybrid/Box3d.Hybrid.asmdef
+        "Box3d.Runtime",
+        "Box3d.Unity",
+=======
+        "Box3D.Runtime",
+>>>>>>> efdc57779d9457ad38e46c55e0e9724073be3c46:Box3D.Hybrid/Box3D.Hybrid.asmdef
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
