@@ -287,7 +287,7 @@ namespace Box3D
                 if (debugShape == null) return null;
 
                 IDebugShapeFactory factory = GetFactory(userContext);
-                Shape owner = Shape.WrapUnchecked(debugShape->shapeId);
+                Shape owner = new(debugShape->shapeId);
                 IDebugShape u_shape = debugShape->type switch
                 {
                     ShapeType.Sphere => factory.CreateSphere(*debugShape->sphere, owner),

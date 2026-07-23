@@ -8,9 +8,9 @@ namespace Box3D
     public partial struct Shape
     {
         public ShapeType GetShapeType() => Ffi.b3Shape_GetType(Id);
-        public BodyId GetBody() => Ffi.b3Shape_GetBody(Id);
+        // public BodyId GetBody() => Ffi.b3Shape_GetBody(Id);
         public WorldId GetWorld() => Ffi.b3Shape_GetWorld(Id);
-        public bool IsSensor() => Ffi.b3Shape_IsSensor(Id);
+        // public bool IsSensor() => Ffi.b3Shape_IsSensor(Id);
         public void SetDensity(float density, bool updateBodyMass) => Ffi.b3Shape_SetDensity(Id, density, updateBodyMass);
         public float GetDensity() => Ffi.b3Shape_GetDensity(Id);
         public void SetFriction(float friction) => Ffi.b3Shape_SetFriction(Id, friction);
@@ -22,8 +22,8 @@ namespace Box3D
         public int GetMeshMaterialCount() => Ffi.b3Shape_GetMeshMaterialCount(Id);
         public void SetMeshMaterial(SurfaceMaterial surfaceMaterial, int index) => Ffi.b3Shape_SetMeshMaterial(Id, surfaceMaterial, index);
         public SurfaceMaterial GetMeshSurfaceMaterial(int index) => Ffi.b3Shape_GetMeshSurfaceMaterial(Id, index);
-        public CollisionFilter GetFilter() => Ffi.b3Shape_GetFilter(Id);
-        public void SetFilter(CollisionFilter filter, bool invokeContacts) => Ffi.b3Shape_SetFilter(Id, filter, invokeContacts);
+        // public CollisionFilter GetFilter() => Ffi.b3Shape_GetFilter(Id);
+        // public void SetFilter(CollisionFilter filter, bool invokeContacts) => Ffi.b3Shape_SetFilter(Id, filter, invokeContacts);
         public void EnableSensorEvents(bool flag) => Ffi.b3Shape_EnableSensorEvents(Id, flag);
         public bool AreSensorEventsEnabled() => Ffi.b3Shape_AreSensorEventsEnabled(Id);
         public void EnableContactEvents(bool flag) => Ffi.b3Shape_EnableContactEvents(Id, flag);
@@ -36,7 +36,7 @@ namespace Box3D
         public Capsule GetCapsule() => Ffi.b3Shape_GetCapsule(Id);
         public int GetContactCapacity() => Ffi.b3Shape_GetContactCapacity(Id);
         public int GetSensorCapacity() => Ffi.b3Shape_GetSensorCapacity(Id);
-        public B3Aabb GetAABB() => Ffi.b3Shape_GetAABB(Id);
+        //public B3Aabb GetAABB() => Ffi.b3Shape_GetAABB(Id);
         public MassData ComputeMassData() => Ffi.b3Shape_ComputeMassData(Id);
         public Unity.Mathematics.float3 GetClosestPoint(Unity.Mathematics.float3 target) => Ffi.b3Shape_GetClosestPoint(Id, target);
         public void ApplyWind(Unity.Mathematics.float3 wind, float drag, float lift, float maxSpeed, bool wake) => Ffi.b3Shape_ApplyWind(Id, wind, drag, lift, maxSpeed, wake);

@@ -16,7 +16,7 @@ namespace Box3D
         /// validated form.</summary>
         public Body(BodyId id) => Id = id;
 
-        public bool IsValid => UnsafeBindings.b3Body_IsValid(Id);
+        public bool IsValid => Ffi.b3Body_IsValid(Id);
 
         public void Destroy()
         {
@@ -24,8 +24,6 @@ namespace Box3D
             Ffi.b3DestroyBody(Id);
             Id = default;
         }
-
-        public static Body WrapUnchecked(BodyId id) => new() { Id = id };
 
         public float3 Position => Ffi.b3Body_GetPosition(Id);
 
@@ -48,10 +46,10 @@ namespace Box3D
         public bool IsAwake => Ffi.b3Body_IsAwake(Id);
 
         /// <summary>The body's simulation type (static / kinematic / dynamic).</summary>
-        public BodyType Type => UnsafeBindings.b3Body_GetType(Id);
+        public BodyType Type => Ffi.b3Body_GetType(Id);
 
         /// <summary>Whether the body participates in simulation (disabled bodies don't collide or move).</summary>
-        public bool IsEnabled => UnsafeBindings.b3Body_IsEnabled(Id);
+        public bool IsEnabled => Ffi.b3Body_IsEnabled(Id);
 
         /// <summary>Application-specific data attached to the body. Delivered back in
         /// <see cref="BodyMoveEvent.UserData"/> — the cheap transform-sync channel.</summary>
@@ -62,10 +60,10 @@ namespace Box3D
         }
 
         /// <summary>Number of shapes attached to this body.</summary>
-        public int GetShapeCount() => UnsafeBindings.b3Body_GetShapeCount(Id);
+        public int GetShapeCount() => Ffi.b3Body_GetShapeCount(Id);
 
         /// <summary>Number of joints attached to this body.</summary>
-        public int GetJointCount() => UnsafeBindings.b3Body_GetJointCount(Id);
+        public int GetJointCount() => Ffi.b3Body_GetJointCount(Id);
 
         /// <summary>Copies the ids of shapes attached to this body into the buffer.
         /// Returns the number written. Size the buffer with GetShapeCount().</summary>
@@ -101,11 +99,9 @@ namespace Box3D
 
             public ContactId Id => Native.contactId;
 
-            public Shape ShapeA =>
-                Shape.WrapUnchecked(Native.shapeIdA);
+            public Shape ShapeA => new(Native.shapeIdA);
 
-            public Shape ShapeB =>
-                Shape.WrapUnchecked(Native.shapeIdB);
+            public Shape ShapeB => new(Native.shapeIdB);
 
             public ReadOnlySpan<Manifold> Manifolds =>
                 new(Native.manifolds, Native.manifoldCount);
@@ -209,14 +205,14 @@ namespace Box3D
         {
             ShapeDef localDef = def;
             Sphere localSphere = sphere;
-            return Shape.WrapUnchecked(Ffi.b3CreateSphereShape(Id, &localDef, &localSphere));
+            return new(Ffi.b3CreateSphereShape(Id, &localDef, &localSphere));
         }
 
         public unsafe Shape CreateCapsuleShape(in ShapeDef def, in Capsule capsule)
         {
             ShapeDef localDef = def;
             Capsule localCapsule = capsule;
-            return Shape.WrapUnchecked(Ffi.b3CreateCapsuleShape(Id, &localDef, &localCapsule));
+            return new(Ffi.b3CreateCapsuleShape(Id, &localDef, &localCapsule));
         }
 
         /// <summary>Attaches a convex hull shape. The hull data is fully cloned by the engine, so a
@@ -225,7 +221,7 @@ namespace Box3D
         {
             ShapeDef localDef = def;
             BoxHull localHull = hull;
-            return Shape.WrapUnchecked(Ffi.b3CreateHullShape(Id, &localDef, &localHull.Base));
+            return new(Ffi.b3CreateHullShape(Id, &localDef, &localHull.Base));
         }
 
         /// <summary>Attaches a convex hull shape. The hull data is cloned into the world — the
@@ -234,7 +230,7 @@ namespace Box3D
         {
             if (!hull.IsCreated) throw new ArgumentException("Hull is not created (default or already destroyed)", nameof(hull));
             ShapeDef localDef = def;
-            return Shape.WrapUnchecked(Ffi.b3CreateHullShape(Id, &localDef, (b3HullData*)hull.Data));
+            return new(Ffi.b3CreateHullShape(Id, &localDef, (b3HullData*)hull.Data));
         }
 
         /// <summary>Attaches a triangle mesh shape (static bodies only). The mesh data is
@@ -243,7 +239,7 @@ namespace Box3D
         {
             if (!mesh.IsCreated) throw new ArgumentException("TriangleMesh is not created (default or already destroyed)", nameof(mesh));
             ShapeDef localDef = def;
-            return Shape.WrapUnchecked(Ffi.b3CreateMeshShape(Id, &localDef, (b3MeshData*)mesh.Data, scale));
+            return new(Ffi.b3CreateMeshShape(Id, &localDef, (b3MeshData*)mesh.Data, scale));
         }
 
         public Shape CreateMeshShape(in ShapeDef def, TriangleMesh mesh)
@@ -257,7 +253,7 @@ namespace Box3D
         {
             if (!heightField.IsCreated) throw new ArgumentException("HeightField is not created (default or already destroyed)", nameof(heightField));
             ShapeDef localDef = def;
-            return Shape.WrapUnchecked(Ffi.b3CreateHeightFieldShape(Id, &localDef, (b3HeightFieldData*)heightField.Data));
+            return new(Ffi.b3CreateHeightFieldShape(Id, &localDef, (b3HeightFieldData*)heightField.Data));
         }
 
         /// <summary>Attaches a compound shape (static bodies only). The data is REFERENCED —
@@ -266,7 +262,7 @@ namespace Box3D
         {
             if (!compound.IsCreated) throw new ArgumentException("Compound is not created (default or already destroyed)", nameof(compound));
             ShapeDef localDef = def;
-            return Shape.WrapUnchecked(Ffi.b3CreateCompoundShape(Id, &localDef, (b3CompoundData*)compound.Data));
+            return new(Ffi.b3CreateCompoundShape(Id, &localDef, (b3CompoundData*)compound.Data));
         }
 
         public bool Equals(Body other)

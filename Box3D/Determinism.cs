@@ -23,7 +23,7 @@ namespace Box3D
             if (data.Length == 0) return hash;
             fixed (byte* p = data)
             {
-                return UnsafeBindings.b3Hash(hash, p, data.Length);
+                return Ffi.b3Hash(hash, p, data.Length);
             }
         }
 
@@ -47,7 +47,7 @@ namespace Box3D
                 buffer[4] = rotation.value.y;
                 buffer[5] = rotation.value.z;
                 buffer[6] = rotation.value.w;
-                hash = UnsafeBindings.b3Hash(hash, (byte*)buffer, 7 * sizeof(float));
+                hash = Ffi.b3Hash(hash, (byte*)buffer, 7 * sizeof(float));
             }
             return hash;
         }

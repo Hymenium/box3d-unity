@@ -1,8 +1,8 @@
 {
-    "name": "Box3d.Unity",
-    "rootNamespace": "Box3d.Unity",
+    "name": "Box3D.Unity",
+    "rootNamespace": "Box3D.Unity",
     "references": [
-        "Box3d.Runtime",
+        "Box3D.Runtime",
         "Unity.Mathematics",
         "DCFApixels.DebugX"
     ],

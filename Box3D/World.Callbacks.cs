@@ -49,7 +49,7 @@ namespace Box3D
             {
                 CustomFilterCallback callback = CustomFilters[(uint)context];
                 if (callback == null) return true;
-                return callback(Shape.WrapUnchecked(shapeIdA), Shape.WrapUnchecked(shapeIdB));
+                return callback(new(shapeIdA), new(shapeIdB));
             }
             catch (Exception exception)
             {
@@ -65,7 +65,7 @@ namespace Box3D
             {
                 PreSolveCallback callback = PreSolves[(uint)context];
                 if (callback == null) return true;
-                return callback(Shape.WrapUnchecked(shapeIdA), Shape.WrapUnchecked(shapeIdB), point, normal);
+                return callback(new(shapeIdA), new(shapeIdB), point, normal);
             }
             catch (Exception exception)
             {

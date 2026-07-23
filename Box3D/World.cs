@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Box3D
 {
     using Sys;
-    /// <summary>A Box3d simulation world. Thin value wrapper over a generation-validated world id —
+    /// <summary>A Box3D simulation world. Thin value wrapper over a generation-validated world id —
     /// safe to copy; a stale handle fails <see cref="IsValid"/> rather than crashing.</summary>
     public partial struct World : IEquatable<World>
     {
@@ -87,7 +87,7 @@ namespace Box3D
         public unsafe Body CreateBody(in BodyDef def)
         {
             BodyDef local = def;
-            return Body.WrapUnchecked(Ffi.b3CreateBody(Id, &local));
+            return new(Ffi.b3CreateBody(Id, &local));
         }
 
         /// <summary>Move events for bodies that moved during the last step.

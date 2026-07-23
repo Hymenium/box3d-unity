@@ -14,7 +14,7 @@ namespace Box3D
         /// validated form.</summary>
         public Joint(JointId id) => Id = id;
 
-        public bool IsValid => UnsafeBindings.b3Joint_IsValid(Id);
+        public bool IsValid => Ffi.b3Joint_IsValid(Id);
 
         /// <summary>Application-specific data attached to the joint. Delivered back in
         /// <see cref="JointEvent.UserData"/>.</summary>

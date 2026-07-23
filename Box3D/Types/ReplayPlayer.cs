@@ -108,6 +108,6 @@ namespace Box3D
         public unsafe int BodyCount => Ffi.b3RecPlayer_GetBodyCount((b3RecPlayer*)_handle);
 
         /// <summary>A tracked body at the current frame (index in [0, <see cref="BodyCount"/>)).</summary>
-        public unsafe Body GetBody(int index) => Body.WrapUnchecked(Ffi.b3RecPlayer_GetBodyId((b3RecPlayer*)_handle, index));
+        public unsafe Body GetBody(int index) => new(Ffi.b3RecPlayer_GetBodyId((b3RecPlayer*)_handle, index));
     }
 }

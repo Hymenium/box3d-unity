@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Box3d.Unity;
+using Box3D.Unity;
 using UnityEngine;
 
 namespace Box3D.Hybrid
