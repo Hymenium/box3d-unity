@@ -4,7 +4,7 @@ using DCFApixels;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Box3d.Unity
+namespace Box3D.Unity
 {
     public class DebugXDrawShape : IDebugShape { }
 

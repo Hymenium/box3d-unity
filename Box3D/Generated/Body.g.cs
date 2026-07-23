@@ -50,7 +50,7 @@ namespace Box3D
         public bool IsSleepEnabled() => Ffi.b3Body_IsSleepEnabled(Id);
         public void SetSleepThreshold(float sleepThreshold) => Ffi.b3Body_SetSleepThreshold(Id, sleepThreshold);
         public float GetSleepThreshold() => Ffi.b3Body_GetSleepThreshold(Id);
-        public bool IsEnabled() => Ffi.b3Body_IsEnabled(Id);
+        // public bool IsEnabled() => Ffi.b3Body_IsEnabled(Id);
         public void Disable() => Ffi.b3Body_Disable(Id);
         public void Enable() => Ffi.b3Body_Enable(Id);
         public void SetMotionLocks(MotionLocks locks) => Ffi.b3Body_SetMotionLocks(Id, locks);
@@ -61,8 +61,8 @@ namespace Box3D
         public bool IsContactRecyclingEnabled() => Ffi.b3Body_IsContactRecyclingEnabled(Id);
         public void EnableHitEvents(bool enableHitEvents) => Ffi.b3Body_EnableHitEvents(Id, enableHitEvents);
         public WorldId GetWorld() => Ffi.b3Body_GetWorld(Id);
-        public int GetShapeCount() => Ffi.b3Body_GetShapeCount(Id);
-        public int GetJointCount() => Ffi.b3Body_GetJointCount(Id);
+        // public int GetShapeCount() => Ffi.b3Body_GetShapeCount(Id);
+        // public int GetJointCount() => Ffi.b3Body_GetJointCount(Id);
         public int GetContactCapacity() => Ffi.b3Body_GetContactCapacity(Id);
         public B3Aabb ComputeAABB() => Ffi.b3Body_ComputeAABB(Id);
     }

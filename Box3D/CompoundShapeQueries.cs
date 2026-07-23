@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using AOT;
 using Debug = UnityEngine.Debug;
 
-namespace Box3d
+namespace Box3D
 {
     public readonly struct CompoundQueryResult
     {

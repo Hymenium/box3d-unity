@@ -1,52 +1,5 @@
 # Changelog
 
-## [0.6.2] — 2026-07-22
-
-### Added
-- **Determinism state hashing** — `Determinism.HashState(bodies)` / `Determinism.Hash(bytes)` wrap
-  box3d's own state hash, giving lockstep/rollback games a per-step checksum to exchange and compare.
-  Ships with an example lockstep test and a new doc:
-  [determinism testing](Documentation~/determinism-testing.md).
-- **`Box3dDeterminismHarness`** — a cross-platform determinism probe: build the same seeded scene to
-  Editor (x64/Mono), Android (arm64/IL2CPP) and WebGL (WASM), and compare the on-screen hash
-  signature (platform/backend + checkpoints at 25/50/75%/final) to see whether box3d's floating-point
-  results match across platforms.
-- **Collision Debugger** (Window ▸ Box3d ▸ Collision Debugger) — assign two `Box3dBody` and get a
-  rule-by-rule verdict of why they aren't colliding: body types, enabled state, joint
-  Collide Connected, category/mask/group filters, sensors, and broadphase-AABB proximity — mirroring
-  box3d's own collision rules. The logic is reusable at runtime via `CollisionDiagnostics.Diagnose`.
-- New managed accessors: `Shape.GetFilter` / `SetFilter` / `IsSensor` / `GetAABB` / `GetBody`,
-  `Body.Type` / `IsEnabled` / `GetShapeCount` / `GetJointCount`,
-  `Joint.BodyA` / `BodyB` / `CollideConnected`.
-
-### Changed
-- `Shape.GetBody()` now returns a `Body` (previously the raw `BodyId`).
-- `Body.IsEnabled` is now a property (previously a generated `IsEnabled()` method).
-
-## [0.7.0] — 2026-07-22
-
-### Changed — naming: Box3d → Box3D
-- Everything named `Box3d…` is now `Box3D…` (capital D): assemblies (`Box3D.Runtime`, `Box3D.Hybrid`,
-  `Box3D.Hybrid.Editor`, `Box3D.Tests`), namespaces (`Box3D`, `Box3D.Hybrid`), every component class
-  (`Box3DBody`, `Box3DBoxShape`, …) and every file. **Breaking for code** — update `using Box3d…`
-  and `Box3d…` type references to `Box3D…`. **Scenes and prefabs are unaffected**: scripts are
-  referenced by GUID and every `.meta` was preserved through the rename. The package id
-  (`com.suvitruf.box3d`) and the native library (`box3d`) stay lowercase by requirement.
-
-### Added — scene authoring for designers
-- **GameObject → Box3D creation menu** (also in the Hierarchy **+** button and right-click menu):
-  World, Box, Sphere, Capsule, Empty Body, Static Box and Ground Plane. Shape items create a Unity
-  primitive for visuals (its PhysX collider removed) with a `Box3DBody` + matching Box3D shape —
-  primitive dimensions match the shape defaults, so what you see is what simulates.
-- **Shapes auto-add a body**: adding a shape component to a GameObject with no `Box3DBody` on it or
-  any ancestor adds one automatically (like `RequireComponent`, but hierarchy-aware — compound child
-  shapes under a body don't get their own). Set the body to **Static** for non-moving geometry.
-- **Component icons**: every component now has a category-colored icon (green shapes, orange joints,
-  blue body, purple world, red replay, teal diagnostics) in the Add Component menu, Inspector,
-  Project window and Hierarchy.
-- **Add Component menu categories**: components are grouped under `Box3D/` — `Shapes/`, `Joints/`,
-  `Replay/`, `Diagnostics/`, with `Body` and `World` at the top level.
-
 ## [0.6.1] — 2026-07-13
 
 ### Added
