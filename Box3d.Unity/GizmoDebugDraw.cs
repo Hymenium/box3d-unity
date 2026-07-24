@@ -105,21 +105,6 @@ namespace Box3D.Unity
             }
         }
 
-        private void DestroyCompoundChildren(CompoundChild[] children)
-        {
-            foreach (var child in children)
-            {
-                try
-                {
-                    DestroyShape(child.Shape);
-                }
-                catch (Exception destroyException)
-                {
-                    Debug.LogException(destroyException);
-                }
-            }
-        }
-
         // Buffered geometry
         public IDebugShape CreateSphere(in Sphere sphere, in Shape source)
         {
@@ -184,36 +169,17 @@ namespace Box3D.Unity
                 compound.HullCount +
                 compound.MeshCount);
 
-            try
-            {
-                AddCapsuleChildren(compound, children, source);
-                AddHullChildren(compound, children, source);
-                AddMeshChildren(compound, children, source);
-                AddSphereChildren(compound, children, source);
+            AddCapsuleChildren(compound, children, source);
+            AddHullChildren(compound, children, source);
+            AddMeshChildren(compound, children, source);
+            AddSphereChildren(compound, children, source);
 
-                return children.Count == 0
+            return children.Count == 0
                     ? null
                     : new CompoundDebugShape(compound, children.ToArray());
-            }
-            catch
-            {
-                // DestroyCompoundChildren(factory, children);
-                throw;
-            }
         }
 
-        public void DestroyShape(IDebugShape shape)
-        {
-            switch (shape)
-            {
-                case GizmoDebugDrawShape gizmoShape:
-                    gizmoShape.lines = null;
-                    break;
-                case CompoundDebugShape compoundShape:
-                    DestroyCompoundChildren(compoundShape.Children);
-                    break;
-            }
-        }
+        public void DestroyShape(IDebugShape shape) { }
     }
 
     public class GizmoDebugDrawTarget : IDebugDrawTarget
