@@ -595,6 +595,10 @@ namespace Box3D.Sys
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
+    public unsafe delegate NativeBool b3MeshQueryFcn([NativeTypeName("b3Vec3")] Unity.Mathematics.float3 a, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 b, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 c, int triangleIndex, void* context);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [return: NativeTypeName("_Bool")]
     public unsafe delegate NativeBool b3TreeQueryCallbackFcn(int proxyId, [NativeTypeName("uint64_t")] ulong userData, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -1744,10 +1748,6 @@ namespace Box3D
     using static Ffi;
     public unsafe partial class Consts
     {
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        [return: NativeTypeName("_Bool")]
-        public unsafe delegate NativeBool b3MeshQueryFcn([NativeTypeName("b3Vec3")] Unity.Mathematics.float3 a, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 b, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 c, int triangleIndex, void* context);
-
         [NativeTypeName("#define B3_ENABLE_VALIDATION 0")]
         public const int B3_ENABLE_VALIDATION = 0;
 
