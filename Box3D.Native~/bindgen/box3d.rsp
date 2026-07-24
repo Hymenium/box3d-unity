@@ -16,9 +16,13 @@ c17
 --namespace
 Box3D
 --methodClassName
-UnsafeBindings
+Ffi
+--with-class
+B3_*=Consts
+--with-namespace
+b3*=Box3D.Sys
 --with-access-specifier
-*=internal
+*=public
 --libraryPath
 box3d
 --exclude
@@ -55,7 +59,6 @@ b3ShapeType
 b3ShapeDef
 b3Sphere
 b3Capsule
-b3HullData
 b3BoxHull
 b3BodyMoveEvent
 b3BodyEvents
@@ -112,7 +115,6 @@ b3ShapeType=ShapeType
 b3ShapeDef=ShapeDef
 b3Sphere=Sphere
 b3Capsule=Capsule
-b3HullData=HullData
 b3BoxHull=BoxHull
 b3BodyMoveEvent=BodyMoveEvent
 b3BodyEvents=BodyEventsRaw

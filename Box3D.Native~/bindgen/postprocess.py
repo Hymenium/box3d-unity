@@ -30,10 +30,8 @@ def dedupe(match):
 
 text = extern_pattern.sub(dedupe, text)
 
-text = text.replace("public static unsafe partial class UnsafeBindings",
-                    "internal static unsafe partial class UnsafeBindings")
-text = text.replace("public static partial class UnsafeBindings",
-                    "internal static unsafe partial class UnsafeBindings")
+# text = text.replace("public static partial class UnsafeBindings",
+#                     "internal static unsafe partial class UnsafeBindings")
 
 # Parsing on Linux resolves uint64_t to 'unsigned long', which ClangSharp maps to UIntPtr —
 # semantically wrong (and invalid as const). Replace globally with ulong, EXCEPT the 3 genuine
