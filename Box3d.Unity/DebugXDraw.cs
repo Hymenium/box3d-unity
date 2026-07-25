@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using DCFApixels;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Assert = UnityEngine.Assertions.Assert;
 
 namespace Box3D.Unity
 {
@@ -73,26 +77,21 @@ namespace Box3D.Unity
             return new DebugXCapsule(capsule);
         }
 
-        // View are valid only during the call
         public IDebugShape CreateHull(HullView hull, in Shape source)
         {
-            Vector3[] vertices = new Vector3[hull.PointCount];
-
             ReadOnlySpan<float3> points = hull.Points;
-
-            for (int i = 0; i < vertices.Length; ++i)
-            {
-                float3 point = points[i];
-                vertices[i] = new Vector3(point.x, point.y, point.z);
-            }
-
             ReadOnlySpan<HullHalfEdge> edges = hull.HalfEdges;
+
             // Two indices per unique edge.
             int uniqueEdgeCount = edges.Length / 2;
-            int[] indices = new int[uniqueEdgeCount * 2];
+            int indexCount = uniqueEdgeCount * 2;
+            Assert.IsTrue(points.Length <= ushort.MaxValue, "Hull points count exceeds ushort.MaxValue");
+
+            Span<ushort> indices = indexCount <= 512
+                ? stackalloc ushort[indexCount]
+                : new ushort[indexCount];
 
             int outputIndex = 0;
-
             for (int i = 0; i < edges.Length; ++i)
             {
                 HullHalfEdge edge = edges[i];
@@ -105,11 +104,34 @@ namespace Box3D.Unity
                 indices[outputIndex++] = edge.Origin;
                 indices[outputIndex++] = edges[edge.Twin].Origin;
             }
+            Assert.AreEqual(indexCount, outputIndex, "Hull index count mismatch");
 
+            var dataArray = Mesh.AllocateWritableMeshData(1);
+            var meshData = dataArray[0];
+
+            VertexAttributeDescriptor vAttrDesc = new(
+                VertexAttribute.Position,
+                VertexAttributeFormat.Float32,
+                3
+            );
+            meshData.SetVertexBufferParams(points.Length, vAttrDesc);
+            meshData.SetIndexBufferParams(indexCount, IndexFormat.UInt16);
+
+            // 3. Directly copy your ReadOnlySpan<float3> points into Unity's vertex memory
+            var destVerts = meshData.GetVertexData<float3>();
+            points.CopyTo(destVerts);
+
+            // 4. Copy your wireframe line indices into Unity's index memory
+            var destIndices = meshData.GetIndexData<ushort>();
+            indices.CopyTo(destIndices);
+
+            // 5. Configure SubMesh as MeshTopology.Lines
+            meshData.subMeshCount = 1;
+            meshData.SetSubMesh(0, new SubMeshDescriptor(0, indexCount, MeshTopology.Lines));
+
+            // 6. Finalize into a Unity Mesh
             Mesh mesh = new() { name = "Box3D Debug Hull" };
-
-            mesh.SetVertices(vertices);
-            mesh.SetIndices(indices, MeshTopology.Lines, 0);
+            Mesh.ApplyAndDisposeWritableMeshData(dataArray, mesh);
             mesh.RecalculateBounds();
 
             return new DebugXHull(mesh);
@@ -117,36 +139,60 @@ namespace Box3D.Unity
 
         public IDebugShape CreateMesh(MeshView mesh, in Shape source)
         {
-            Mesh unity_mesh = new() { name = "Box3D Debug Mesh" };
-
             ReadOnlySpan<float3> vertices = mesh.Vertices;
             ReadOnlySpan<MeshTriangle> triangles = mesh.Triangles;
 
-            if (vertices.Length > ushort.MaxValue)
+            int totalIndices = triangles.Length * 3;
+
+            // 1. Allocate writable mesh data
+            var dataArray = Mesh.AllocateWritableMeshData(1);
+            var meshData = dataArray[0];
+
+            // 2. Set index format based on vertex count
+            IndexFormat indexFormat = vertices.Length > ushort.MaxValue
+                ? IndexFormat.UInt32
+                : IndexFormat.UInt16;
+
+            // 3. Define vertex and index buffer parameters
+            VertexAttributeDescriptor vAttrDesc = new(
+                VertexAttribute.Position,
+                VertexAttributeFormat.Float32,
+                3
+            );
+            meshData.SetVertexBufferParams(vertices.Length, vAttrDesc);
+            meshData.SetIndexBufferParams(totalIndices, indexFormat);
+
+            // 4. Copy vertex positions directly from ReadOnlySpan<float3> (0-alloc)
+            var destVerts = meshData.GetVertexData<float3>();
+            vertices.CopyTo(destVerts);
+
+            // 5. Direct 0-copy cast of MeshTriangle -> int span
+            // Assumes MeshTriangle is layed out as 3 sequential 32-bit ints (Index1, Index2, Index3)
+            Assert.AreEqual(3 * sizeof(int), Unsafe.SizeOf<MeshTriangle>());
+            ReadOnlySpan<int> indexSpan = MemoryMarshal.Cast<MeshTriangle, int>(triangles);
+
+            if (indexFormat == IndexFormat.UInt32)
             {
-                Debug.LogWarning("Mesh has more vertices than ushort.MaxValue, using UInt32 index format");
-                unity_mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                var destIndices = meshData.GetIndexData<int>();
+                indexSpan.CopyTo(destIndices);
+            }
+            else
+            {
+                // If ushort indices are required by UInt16 format, downcast into destination
+                var destIndices = meshData.GetIndexData<ushort>();
+                for (int i = 0; i < indexSpan.Length; ++i)
+                {
+                    destIndices[i] = (ushort)indexSpan[i];
+                }
             }
 
-            Vector3[] unity_vertices = new Vector3[vertices.Length];
-            int[] unity_triangles = new int[triangles.Length * 3];
+            // 6. Set up triangle submesh
+            meshData.subMeshCount = 1;
+            meshData.SetSubMesh(0, new SubMeshDescriptor(0, totalIndices, MeshTopology.Triangles));
 
-            for (int i = 0; i < vertices.Length; ++i)
-            {
-                float3 point = vertices[i];
-                unity_vertices[i] = new Vector3(point.x, point.y, point.z);
-            }
-
-            for (int i = 0; i < triangles.Length; ++i)
-            {
-                MeshTriangle triangle = triangles[i];
-                unity_triangles[i * 3] = triangle.Index1;
-                unity_triangles[i * 3 + 1] = triangle.Index2;
-                unity_triangles[i * 3 + 2] = triangle.Index3;
-            }
-
-            unity_mesh.SetVertices(unity_vertices);
-            unity_mesh.SetTriangles(unity_triangles, 0);
+            // 7. Apply to final Unity Mesh
+            Mesh unity_mesh = new() { name = "Box3D Debug Mesh" };
+            Mesh.ApplyAndDisposeWritableMeshData(dataArray, unity_mesh);
             unity_mesh.RecalculateBounds();
 
             return new DebugXMesh(unity_mesh, mesh.Scale);
@@ -161,83 +207,128 @@ namespace Box3D.Unity
                 return null;
 
             int vertex_count = column_count * row_count;
+            int max_index_count = height_field.TriangleCount * 3;
 
-            var vertices = new Vector3[vertex_count];
+            // 1. Allocate writable mesh data
+            var dataArray = Mesh.AllocateWritableMeshData(1);
+            var meshData = dataArray[0];
 
+            IndexFormat indexFormat = vertex_count > ushort.MaxValue
+                ? IndexFormat.UInt32
+                : IndexFormat.UInt16;
+
+            meshData.SetVertexBufferParams(
+                vertex_count,
+                new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3)
+            );
+            meshData.SetIndexBufferParams(max_index_count, indexFormat);
+
+            // 2. Populate Vertices directly into Unity's destination memory
+            var destVerts = meshData.GetVertexData<float3>();
             for (int row = 0; row < row_count; ++row)
             {
                 for (int column = 0; column < column_count; ++column)
                 {
                     int index = row * column_count + column;
-                    float3 point = height_field.GetPoint(column, row);
-
-                    vertices[index] =
-                        new Vector3(point.x, point.y, point.z);
+                    destVerts[index] = height_field.GetPoint(column, row);
                 }
             }
 
-            // Some cells may be holes, so the final index count may be
-            // smaller than height_field.TriangleCount * 3.
-            var indices = new List<int>(height_field.TriangleCount * 3);
+            // 3. Populate Indices directly into Unity's index memory
+            int indexCount = 0;
+            bool isCw = height_field.Clockwise;
 
-            for (int row = 0; row < row_count - 1; ++row)
+            if (indexFormat == IndexFormat.UInt32)
             {
-                for (int column = 0; column < column_count - 1; ++column)
+                var destIndices = meshData.GetIndexData<int>();
+
+                for (int row = 0; row < row_count - 1; ++row)
                 {
-                    byte material =
-                        height_field.GetMaterial(column, row);
-
-                    if (material == Consts.B3_HEIGHT_FIELD_HOLE)
-                        continue;
-
-                    int i00 = row * column_count + column;
-                    int i10 = i00 + 1;
-                    int i01 = i00 + column_count;
-                    int i11 = i01 + 1;
-
-                    if (height_field.Clockwise)
+                    for (int column = 0; column < column_count - 1; ++column)
                     {
-                        // tri0: p00, p10, p01
-                        indices.Add(i00);
-                        indices.Add(i10);
-                        indices.Add(i01);
+                        if (height_field.GetMaterial(column, row) == Consts.B3_HEIGHT_FIELD_HOLE)
+                            continue;
 
-                        // tri1: p11, p01, p10
-                        indices.Add(i11);
-                        indices.Add(i01);
-                        indices.Add(i10);
+                        int i00 = row * column_count + column;
+                        int i10 = i00 + 1;
+                        int i01 = i00 + column_count;
+                        int i11 = i01 + 1;
+
+                        if (isCw)
+                        {
+                            destIndices[indexCount++] = i00;
+                            destIndices[indexCount++] = i10;
+                            destIndices[indexCount++] = i01;
+
+                            destIndices[indexCount++] = i11;
+                            destIndices[indexCount++] = i01;
+                            destIndices[indexCount++] = i10;
+                        }
+                        else
+                        {
+                            destIndices[indexCount++] = i00;
+                            destIndices[indexCount++] = i01;
+                            destIndices[indexCount++] = i10;
+
+                            destIndices[indexCount++] = i11;
+                            destIndices[indexCount++] = i10;
+                            destIndices[indexCount++] = i01;
+                        }
                     }
-                    else
-                    {
-                        // tri0: p00, p01, p10
-                        indices.Add(i00);
-                        indices.Add(i01);
-                        indices.Add(i10);
+                }
+            }
+            else // UInt16 branch
+            {
+                var destIndices = meshData.GetIndexData<ushort>();
 
-                        // tri1: p11, p10, p01
-                        indices.Add(i11);
-                        indices.Add(i10);
-                        indices.Add(i01);
+                for (int row = 0; row < row_count - 1; ++row)
+                {
+                    for (int column = 0; column < column_count - 1; ++column)
+                    {
+                        if (height_field.GetMaterial(column, row) == Consts.B3_HEIGHT_FIELD_HOLE)
+                            continue;
+
+                        ushort i00 = (ushort)(row * column_count + column);
+                        ushort i10 = (ushort)(i00 + 1);
+                        ushort i01 = (ushort)(i00 + column_count);
+                        ushort i11 = (ushort)(i01 + 1);
+
+                        if (isCw)
+                        {
+                            destIndices[indexCount++] = i00;
+                            destIndices[indexCount++] = i10;
+                            destIndices[indexCount++] = i01;
+
+                            destIndices[indexCount++] = i11;
+                            destIndices[indexCount++] = i01;
+                            destIndices[indexCount++] = i10;
+                        }
+                        else
+                        {
+                            destIndices[indexCount++] = i00;
+                            destIndices[indexCount++] = i01;
+                            destIndices[indexCount++] = i10;
+
+                            destIndices[indexCount++] = i11;
+                            destIndices[indexCount++] = i10;
+                            destIndices[indexCount++] = i01;
+                        }
                     }
                 }
             }
 
-            if (indices.Count == 0)
+            if (indexCount == 0)
+            {
+                dataArray.Dispose();
                 return null;
-
-            var mesh = new UnityEngine.Mesh
-            {
-                name = "Box3D Debug HeightField"
-            };
-
-            if (vertex_count > ushort.MaxValue)
-            {
-                mesh.indexFormat =
-                    UnityEngine.Rendering.IndexFormat.UInt32;
             }
 
-            mesh.SetVertices(vertices);
-            mesh.SetTriangles(indices, 0, calculateBounds: false);
+            // 4. Finalize SubMesh with actual written index count
+            meshData.subMeshCount = 1;
+            meshData.SetSubMesh(0, new SubMeshDescriptor(0, indexCount, MeshTopology.Triangles));
+
+            Mesh mesh = new() { name = "Box3D Debug HeightField" };
+            Mesh.ApplyAndDisposeWritableMeshData(dataArray, mesh);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
@@ -273,6 +364,46 @@ namespace Box3D.Unity
             return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
         }
 
+        private void DrawSphere(in B3Transform transform, float3 center, float radius, uint color)
+        {
+            var c = ToColor(color);
+            var p = transform.Position + math.rotate(transform.Rotation, center);
+            Color fill_c = new(c.r, c.g, c.b, 0.18f);
+            DebugX.Draw(fill_c).Sphere(p, radius);
+
+            float3x3 rotMatrix = new(transform.Rotation);
+            float3 right = rotMatrix.c0;
+            float3 up = rotMatrix.c1;
+            float3 forward = rotMatrix.c2;
+
+            DebugX.Draw(c).Circle(p, right, radius);
+            DebugX.Draw(c).Circle(p, up, radius);
+            DebugX.Draw(c).Circle(p, forward, radius);
+            DebugX.Draw(Color.white).Line(p, p + forward * radius);
+        }
+
+        private void DrawCapsule(in B3Transform transform, in float3 c1, in float3 c2, float radius, uint color)
+        {
+            var c = ToColor(color);
+            Color fill_c = new(c.r, c.g, c.b, 0.18f);
+            var p1 = transform.Position + math.rotate(transform.Rotation, c1);
+            var p2 = transform.Position + math.rotate(transform.Rotation, c2);
+
+            DebugX.Draw(fill_c).Capsule(p1, p2, radius);
+            DebugX.Draw(c).WireCapsule(p1, p2, radius);
+
+            float3 forward = math.rotate(transform.Rotation, new float3(0, 0, 1));
+            DebugX.Draw(Color.white).Line(transform.Position, transform.Position + forward * radius);
+        }
+
+        private void DrawMesh(in B3Transform transform, in Mesh mesh, uint color, in float3 scale)
+        {
+            var c = ToColor(color);
+            Color fill_c = new(c.r, c.g, c.b, 0.18f);
+            DebugX.Draw(fill_c).UnlitMesh(mesh, transform.Position, transform.Rotation, scale);
+            DebugX.Draw(c).WireMesh(mesh, transform.Position, transform.Rotation, scale);
+        }
+
         public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
         {
             if (shape is not DebugXDrawShape)
@@ -285,31 +416,26 @@ namespace Box3D.Unity
             switch (shape)
             {
                 case DebugXSphere sphere:
-                    DebugX.Draw(unityColor).Sphere(
-                        transform.Position + sphere.sphere.Center,
-                        sphere.sphere.Radius);
+                    DrawSphere(transform, sphere.sphere.Center, sphere.sphere.Radius, color);
                     break;
 
                 case DebugXCapsule capsule:
-                    float3 a = transform.Position + math.mul(transform.Rotation, capsule.capsule.Center1);
-                    float3 b = transform.Position + math.mul(transform.Rotation, capsule.capsule.Center2);
-                    DebugX.Draw(unityColor).Capsule(a, b, capsule.capsule.Radius);
+                    DrawCapsule(transform, capsule.capsule.Center1,
+                        capsule.capsule.Center2,
+                        capsule.capsule.Radius,
+                        color);
                     break;
 
                 case DebugXHull hull:
-                    DebugX.Draw(unityColor).UnlitMesh(
-                        hull.mesh,
-                        transform.Position,
-                        transform.Rotation,
-                        Vector3.one);
+                    DrawMesh(transform, hull.mesh, color, new float3(1, 1, 1));
                     break;
 
                 case DebugXMesh mesh:
-                    DebugX.Draw(unityColor).UnlitMesh(
-                        mesh.mesh,
-                        transform.Position,
-                        transform.Rotation,
-                        mesh.scale);
+                    DrawMesh(transform, mesh.mesh, color, mesh.scale);
+                    break;
+
+                case DebugXHeightField heightField:
+                    DrawMesh(transform, heightField.mesh, color, new float3(1, 1, 1));
                     break;
             }
 
@@ -326,16 +452,13 @@ namespace Box3D.Unity
         {
             DebugX.Draw(Color.red).Line(
                 transform.Position,
-                transform.Position + math.mul(transform.Rotation,
-                    new float3(1f, 0f, 0f)));
+                transform.Position + math.mul(transform.Rotation, math.right()));
             DebugX.Draw(Color.green).Line(
                 transform.Position,
-                transform.Position + math.mul(transform.Rotation,
-                    new float3(0f, 1f, 0f)));
+                transform.Position + math.mul(transform.Rotation, math.up()));
             DebugX.Draw(Color.blue).Line(
                 transform.Position,
-                transform.Position + math.mul(transform.Rotation,
-                    new float3(0f, 0f, 1f)));
+                transform.Position + math.mul(transform.Rotation, math.forward()));
         }
 
         public void DrawPoint(float3 position, float size, uint color)
@@ -362,7 +485,7 @@ namespace Box3D.Unity
 
         public void DrawBox(float3 extents, in B3Transform transform, uint color)
         {
-            DebugX.Draw(ToColor(color)).WireCube(transform.Position, transform.Rotation, extents);
+            DebugX.Draw(ToColor(color)).Cube(transform.Position, transform.Rotation, extents);
         }
 
         public void DrawString(float3 p, string str, uint color)
