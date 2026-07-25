@@ -363,7 +363,7 @@ namespace Box3D.Unity
         }
     }
 
-    internal class DebugDrawTarget : IDebugDrawTarget
+    public class DebugXDrawTarget : IDebugDrawTarget
     {
         public B3Aabb screenBounds = new()
         {
@@ -429,7 +429,6 @@ namespace Box3D.Unity
                 return true;
             }
 
-            Color unityColor = ToColor(color);
             switch (shape)
             {
                 case DebugXSphere sphere:
