@@ -12,5 +12,14 @@ namespace Box3D
         public quaternion Rotation;
 
         public static B3Transform Identity => new B3Transform { Position = float3.zero, Rotation = quaternion.identity };
+
+        public static B3Transform operator *(in B3Transform a, in B3Transform b)
+        {
+            return new B3Transform
+            {
+                Position = a.Position + math.rotate(a.Rotation, b.Position),
+                Rotation = math.mul(a.Rotation, b.Rotation),
+            };
+        }
     }
 }

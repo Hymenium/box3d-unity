@@ -11,29 +11,6 @@ namespace Box3D.Unity
         public float3[] lines;
     }
 
-    public class CompoundChild
-    {
-        public GizmoDebugDrawShape Shape { get; }
-        public B3Transform Transform { get; }
-        public CompoundChild(GizmoDebugDrawShape shape, B3Transform transform)
-        {
-            Shape = shape;
-            Transform = transform;
-        }
-    }
-
-    internal sealed unsafe class CompoundDebugShape : IDebugShape
-    {
-        public readonly Sys.b3CompoundData* Data;
-        public readonly CompoundChild[] Children;
-        public CompoundDebugShape(CompoundView view, CompoundChild[] children)
-        {
-            Data = view.NativeData;
-            Children = children;
-        }
-        public CompoundView View => new(Data);
-    }
-
     public class GizmoDebugShapeFactory : IDebugShapeFactory
     {
         private static void AddLine(LineList lines, float3 a, float3 b)
@@ -52,56 +29,6 @@ namespace Box3D.Unity
                 float3 next = center + (axisA * math.cos(angle) + axisB * math.sin(angle)) * radius;
                 AddLine(lines, previous, next);
                 previous = next;
-            }
-        }
-
-        private void AddSphereChildren(CompoundView compound,
-            List<CompoundChild> children, in Shape owner)
-        {
-            foreach (var compound_sphere in compound.Spheres)
-            {
-                IDebugShape debug_shape = CreateSphere(compound_sphere.sphere, in owner);
-
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild((GizmoDebugDrawShape)debug_shape, B3Transform.Identity));
-            }
-        }
-
-        private void AddCapsuleChildren(CompoundView compound, List<CompoundChild> children, in Shape owner)
-        {
-            foreach (var compound_capsule in compound.Capsules)
-            {
-                var debug_shape = (GizmoDebugDrawShape)CreateCapsule(compound_capsule.capsule, in owner);
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild(debug_shape, B3Transform.Identity));
-            }
-        }
-
-        private void AddHullChildren(CompoundView compound, List<CompoundChild> children, in Shape owner)
-        {
-            var hull_count = compound.HullCount;
-            for (int i = 0; i < hull_count; i++)
-            {
-                var hull = compound.GetHull(i);
-                var debug_shape = (GizmoDebugDrawShape)CreateHull(hull.Hull, in owner);
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild(debug_shape, hull.Transform));
-            }
-        }
-
-        private void AddMeshChildren(CompoundView compound, List<CompoundChild> children, in Shape owner)
-        {
-            var mesh_count = compound.MeshCount;
-            for (int i = 0; i < mesh_count; i++)
-            {
-                var mesh = compound.GetMesh(i);
-                var debug_shape = (GizmoDebugDrawShape)CreateMesh(mesh.Mesh, owner);
-                if (debug_shape == null) continue;
-
-                children.Add(new CompoundChild(debug_shape, mesh.Transform));
             }
         }
 
@@ -163,20 +90,7 @@ namespace Box3D.Unity
 
         public IDebugShape CreateCompound(CompoundView compound, in Shape source)
         {
-            var children = new List<CompoundChild>(
-                compound.SphereCount +
-                compound.CapsuleCount +
-                compound.HullCount +
-                compound.MeshCount);
-
-            AddCapsuleChildren(compound, children, source);
-            AddHullChildren(compound, children, source);
-            AddMeshChildren(compound, children, source);
-            AddSphereChildren(compound, children, source);
-
-            return children.Count == 0
-                    ? null
-                    : new CompoundDebugShape(compound, children.ToArray());
+            return CompoundDebugDraw.CreateCompound(this, compound, source);
         }
 
         public void DestroyShape(IDebugShape shape) { }
@@ -194,15 +108,6 @@ namespace Box3D.Unity
         private static Color ToColor(uint hex)
         {
             return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
-        }
-
-        private static B3Transform Multiply(in B3Transform a, in B3Transform b)
-        {
-            return new B3Transform
-            {
-                Position = a.Position + math.rotate(a.Rotation, b.Position),
-                Rotation = math.mul(a.Rotation, b.Rotation),
-            };
         }
 
         private static void Line(float3 a, float3 b, Color color)
@@ -249,32 +154,13 @@ namespace Box3D.Unity
             }
         }
 
-        private bool DrawCompound(CompoundDebugShape compound, in B3Transform compound_transform, uint color, B3Aabb treeBounds)
-        {
-            int capacity = compound.Children.Length;
-            Span<int> childIndices = capacity <= 128
-                ? stackalloc int[capacity]
-                : new int[capacity];
-
-            CompoundQueryResult result = compound.View.QueryChildren(treeBounds, childIndices);
-
-            for (int i = 0; i < result.Count; i++)
-            {
-                int childIndex = childIndices[i];
-                ref readonly CompoundChild child = ref compound.Children[childIndex];
-                B3Transform child_transform = Multiply(compound_transform, child.Transform);
-                DrawShape(child.Shape, in child_transform, color);
-            }
-            return true;
-        }
-
         // Return true if drawing should continue
         public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
         {
-            if (shape is CompoundDebugShape compoundShape)
+            if (shape is DebugCompoundShape compoundShape)
             {
                 // Can use compoundShape.Data->tree
-                return DrawCompound(compoundShape, in transform, color, screenBounds);
+                return CompoundDebugDraw.DrawCompound(this, compoundShape, in transform, color, screenBounds);
             }
 
             if (shape is not GizmoDebugDrawShape gizmoShape)

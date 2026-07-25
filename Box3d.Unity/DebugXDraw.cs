@@ -335,12 +335,18 @@ namespace Box3D.Unity
             return new DebugXHeightField(mesh);
         }
 
-        public IDebugShape CreateCompound(CompoundView compoundView, in Shape source) => null;
+        public IDebugShape CreateCompound(CompoundView compoundView, in Shape source)
+        {
+            return CompoundDebugDraw.CreateCompound(this, compoundView, source);
+        }
 
         public void DestroyShape(IDebugShape shape)
         {
             switch (shape)
             {
+                case DebugCompoundShape compoundShape:
+                    CompoundDebugDraw.DestroyCompound(this, compoundShape);
+                    break;
                 case DebugXHull hull:
                     UnityEngine.Object.Destroy(hull.mesh);
                     break;
@@ -359,6 +365,12 @@ namespace Box3D.Unity
 
     internal class DebugDrawTarget : IDebugDrawTarget
     {
+        public B3Aabb screenBounds = new()
+        {
+            LowerBound = new float3(-50f, -50f, -50f),
+            UpperBound = new float3(50f, 50f, 50f)
+        };
+
         private static Color ToColor(uint hex)
         {
             return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
@@ -406,6 +418,11 @@ namespace Box3D.Unity
 
         public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
         {
+            if (shape is DebugCompoundShape compoundShape)
+            {
+                return CompoundDebugDraw.DrawCompound(this, compoundShape, in transform, color, screenBounds);
+            }
+
             if (shape is not DebugXDrawShape)
             {
                 Debug.LogError("Invalid shape type");
@@ -420,7 +437,9 @@ namespace Box3D.Unity
                     break;
 
                 case DebugXCapsule capsule:
-                    DrawCapsule(transform, capsule.capsule.Center1,
+                    DrawCapsule(
+                        transform,
+                        capsule.capsule.Center1,
                         capsule.capsule.Center2,
                         capsule.capsule.Radius,
                         color);

@@ -491,7 +491,5 @@ namespace Box3D
                 Debug.LogException(exception);
             }
         }
-
     }
-
 }
