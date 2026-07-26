@@ -1,3 +1,5 @@
+#if DEBUGX_AVAILABLE
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -514,3 +516,5 @@ namespace Box3D.Unity
         }
     }
 }
+
+#endif // DEBUGX_AVAILABLE
