@@ -39,4 +39,13 @@ namespace Box3D
         public float3 Delta;
         public int IterationCount;
     }
+
+    /// <summary>Mirrors native b3BodyPlaneResult (28 bytes): the separating plane between a mover and
+    /// a shape, plus the closest point on the shape.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BodyPlaneResult
+    {
+        public Shape Shape;
+        public PlaneResult Result;
+    }
 }

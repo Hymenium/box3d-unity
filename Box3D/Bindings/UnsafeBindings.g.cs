@@ -2612,7 +2612,7 @@ namespace Box3D
         public static extern NativeBool b3Body_OverlapShape([NativeTypeName("b3BodyId")] BodyId bodyId, [NativeTypeName("b3Pos")] Unity.Mathematics.float3 origin, [NativeTypeName("const b3ShapeProxy *")] b3ShapeProxy* proxy, [NativeTypeName("b3QueryFilter")] QueryFilter filter, [NativeTypeName("b3WorldTransform")] B3Transform bodyTransform);
 
         [DllImport(Box3DLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern int b3Body_CollideMover([NativeTypeName("b3BodyId")] BodyId bodyId, b3BodyPlaneResult* bodyPlanes, int planeCapacity, [NativeTypeName("b3Pos")] Unity.Mathematics.float3 origin, [NativeTypeName("const b3Capsule *")] Capsule* mover, [NativeTypeName("b3QueryFilter")] QueryFilter filter, [NativeTypeName("b3WorldTransform")] B3Transform bodyTransform);
+        public static extern int b3Body_CollideMover([NativeTypeName("b3BodyId")] BodyId bodyId, [NativeTypeName("b3BodyPlaneResult *")] BodyPlaneResult* bodyPlanes, int planeCapacity, [NativeTypeName("b3Pos")] Unity.Mathematics.float3 origin, [NativeTypeName("const b3Capsule *")] Capsule* mover, [NativeTypeName("b3QueryFilter")] QueryFilter filter, [NativeTypeName("b3WorldTransform")] B3Transform bodyTransform);
 
         [DllImport(Box3DLibrary.Name, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: NativeTypeName("b3ShapeId")]
