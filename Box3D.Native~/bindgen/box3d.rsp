@@ -88,6 +88,7 @@ b3RayResult
 b3ExplosionDef
 b3Plane
 b3PlaneResult
+b3BodyPlaneResult
 b3CollisionPlane
 b3PlaneSolverResult
 --remap
@@ -144,6 +145,7 @@ b3WeldJointDef=WeldJointDef
 b3WheelJointDef=WheelJointDef
 b3Plane=B3Plane
 b3PlaneResult=PlaneResult
+b3BodyPlaneResult=BodyPlaneResult
 b3CollisionPlane=CollisionPlane
 b3PlaneSolverResult=PlaneSolverResult
 bool=NativeBool
