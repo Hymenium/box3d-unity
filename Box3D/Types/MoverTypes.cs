@@ -12,7 +12,7 @@ namespace Box3D
     }
 
     /// <summary>Mirrors native b3PlaneResult (28 bytes): the separating plane between a mover and
-    /// a shape, plus the closest point on the shape.</summary>
+    /// a shape, plus the closest point on the shape. Point is local to the mover origin.</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct PlaneResult
     {

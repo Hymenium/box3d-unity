@@ -6,7 +6,7 @@ namespace Box3D
 {
     public partial struct Body
     {
-        public unsafe int CollideMover(Span<BodyPlaneResult> planes, float3 origin, in Capsule mover, QueryFilter filter)
+        public unsafe int CollideMover(Span<BodyPlaneResult> planes, B3Pos origin, in Capsule mover, QueryFilter filter)
         {
             Capsule localMover = mover;
             fixed (BodyPlaneResult* buffer = planes)

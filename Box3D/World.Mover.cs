@@ -55,7 +55,7 @@ namespace Box3D
 
         /// <summary>Collides a capsule mover with the world and collects the collision planes
         /// using the provided <see cref="b3PlaneResultFcn"/> callback.</summary>
-        public unsafe void CollideMover(float3 origin, in Capsule mover, QueryFilter filter,
+        public unsafe void CollideMover(B3Pos origin, in Capsule mover, QueryFilter filter,
             b3PlaneResultFcn callback, void* context)
         {
             if (callback == null)
@@ -72,13 +72,13 @@ namespace Box3D
 
         /// <summary>Sweeps a capsule mover along a translation. Returns the fraction [0,1] of the
         /// translation that can be taken before hitting something (1 = free path).</summary>
-        public float CastMover(float3 origin, in Capsule mover, float3 translation, QueryFilter filter)
+        public float CastMover(B3Pos origin, in Capsule mover, float3 translation, QueryFilter filter)
         {
             Capsule localMover = mover;
             return Ffi.b3World_CastMover(Id, origin, &localMover, translation, filter, IntPtr.Zero, null);
         }
 
-        public unsafe float CastMover(float3 origin, in Capsule mover, float3 translation, QueryFilter filter,
+        public unsafe float CastMover(B3Pos origin, in Capsule mover, float3 translation, QueryFilter filter,
             b3MoverFilterFcn callback, void* context)
         {
             if (callback == null)
