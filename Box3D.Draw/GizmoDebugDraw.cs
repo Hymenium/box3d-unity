@@ -4,6 +4,10 @@ using Unity.Mathematics;
 using UnityEngine;
 using LineList = System.Collections.Generic.List<Unity.Mathematics.float3>;
 
+#if BOX3D_DOUBLE
+#warning "Box3D Debug Draw: Precision will be lost when casting double precision to Unity's float-based rendering."
+#endif
+
 namespace Box3D.Draw
 {
     public class GizmoDebugDrawShape : IDebugShape
@@ -36,9 +40,9 @@ namespace Box3D.Draw
         public IDebugShape CreateSphere(in Sphere sphere, in Shape source)
         {
             var lines = new LineList(128);
-            AddCircle(lines, sphere.Center, sphere.Radius, new float3(1f, 0f, 0f), new float3(0f, 1f, 0f));
-            AddCircle(lines, sphere.Center, sphere.Radius, new float3(0f, 1f, 0f), new float3(0f, 0f, 1f));
-            AddCircle(lines, sphere.Center, sphere.Radius, new float3(0f, 0f, 1f), new float3(1f, 0f, 0f));
+            AddCircle(lines, sphere.Center, sphere.Radius, math.right(), math.up());
+            AddCircle(lines, sphere.Center, sphere.Radius, math.up(), math.forward());
+            AddCircle(lines, sphere.Center, sphere.Radius, math.forward(), math.right());
             return new GizmoDebugDrawShape { lines = lines.ToArray() };
         }
 
@@ -115,9 +119,8 @@ namespace Box3D.Draw
             Debug.DrawLine(a, b, color);
         }
 
-        private static float3[] Corners(B3Aabb aabb)
+        private static void Corners(B3Aabb aabb, Span<float3> corners)
         {
-            var corners = new float3[8];
             for (int i = 0; i < 8; i++)
             {
                 corners[i] = new float3(
@@ -125,10 +128,9 @@ namespace Box3D.Draw
                     (i & 2) == 0 ? aabb.LowerBound.y : aabb.UpperBound.y,
                     (i & 4) == 0 ? aabb.LowerBound.z : aabb.UpperBound.z);
             }
-            return corners;
         }
 
-        private static void DrawEdges(float3[] corners, Color color)
+        private static void DrawEdges(ReadOnlySpan<float3> corners, Color color)
         {
             // Connect corners differing in exactly one bit (12 box edges).
             for (int i = 0; i < 8; i++)
@@ -140,6 +142,7 @@ namespace Box3D.Draw
                 }
             }
         }
+
 
         private static void DrawCircleLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
         {
@@ -155,12 +158,12 @@ namespace Box3D.Draw
         }
 
         // Return true if drawing should continue
-        public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
+        public bool DrawShape(IDebugShape shape, in B3WorldTransform worldTransform, uint color)
         {
             if (shape is DebugCompoundShape compoundShape)
             {
                 // Can use compoundShape.Data->tree
-                return CompoundDebugDraw.DrawCompound(this, compoundShape, in transform, color, screenBounds);
+                return CompoundDebugDraw.DrawCompound(this, compoundShape, in worldTransform, color, screenBounds);
             }
 
             if (shape is not GizmoDebugDrawShape gizmoShape)
@@ -170,6 +173,7 @@ namespace Box3D.Draw
             }
 
             drawCallCount++;
+            var transform = worldTransform.ToB3Transform();
             Color unityColor = ToColor(color);
             for (int i = 0; i < gizmoShape.lines.Length; i += 2)
             {
@@ -180,24 +184,26 @@ namespace Box3D.Draw
         }
 
         // Immediate geometry
-        public void DrawSegment(float3 start, float3 end, uint color)
+        public void DrawSegment(B3Pos start, B3Pos end, uint color)
         {
             drawCallCount++;
-            Line(start, end, ToColor(color));
+            Line(start.ToFloat3(), end.ToFloat3(), ToColor(color));
         }
 
-        public void DrawTransform(in B3Transform transform)
+        public void DrawTransform(in B3WorldTransform worldTransform)
         {
             drawCallCount++;
             const float axisLength = 0.3f;
+            var transform = worldTransform.ToB3Transform();
             float3 p = transform.Position;
             Line(p, p + math.mul(transform.Rotation, new float3(axisLength, 0f, 0f)), Color.red);
             Line(p, p + math.mul(transform.Rotation, new float3(0f, axisLength, 0f)), Color.green);
             Line(p, p + math.mul(transform.Rotation, new float3(0f, 0f, axisLength)), Color.blue);
         }
 
-        public void DrawPoint(float3 position, float size, uint color)
+        public void DrawPoint(B3Pos p, float size, uint color)
         {
+            float3 position = p.ToFloat3();
             drawCallCount++;
             Color unityColor = ToColor(color);
             float h = size * 0.02f;
@@ -215,8 +221,9 @@ namespace Box3D.Draw
                 unityColor);
         }
 
-        public void DrawSphere(float3 position, float radius, uint color, float alpha)
+        public void DrawSphere(B3Pos p, float radius, uint color, float alpha)
         {
+            float3 position = p.ToFloat3();
             drawCallCount++;
             Color unityColor = ToColor(color);
             DrawCircleLines(
@@ -239,32 +246,37 @@ namespace Box3D.Draw
                 unityColor);
         }
 
-        public void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha)
+        public void DrawCapsule(B3Pos p1, B3Pos p2, float radius, uint color, float alpha)
         {
+            float3 p1_f = p1.ToFloat3();
+            float3 p2_f = p2.ToFloat3();
             drawCallCount++;
             Color unityColor = ToColor(color);
-            float3 axis = math.normalizesafe(p2 - p1, new float3(0f, 1f, 0f));
+            float3 axis = math.normalizesafe(p2_f - p1_f, new float3(0f, 1f, 0f));
             float3 side = math.normalizesafe(math.cross(axis, new float3(0.371f, 0.827f, 0.421f)), new float3(1f, 0f, 0f));
             float3 forward = math.cross(axis, side);
 
-            DrawCircleLines(p1, radius, side, forward, unityColor);
-            DrawCircleLines(p2, radius, side, forward, unityColor);
-            Line(p1 + side * radius, p2 + side * radius, unityColor);
-            Line(p1 - side * radius, p2 - side * radius, unityColor);
-            Line(p1 + forward * radius, p2 + forward * radius, unityColor);
-            Line(p1 - forward * radius, p2 - forward * radius, unityColor);
+            DrawCircleLines(p1_f, radius, side, forward, unityColor);
+            DrawCircleLines(p2_f, radius, side, forward, unityColor);
+            Line(p1_f + side * radius, p2_f + side * radius, unityColor);
+            Line(p1_f - side * radius, p2_f - side * radius, unityColor);
+            Line(p1_f + forward * radius, p2_f + forward * radius, unityColor);
+            Line(p1_f - forward * radius, p2_f - forward * radius, unityColor);
         }
 
         public void DrawBounds(in B3Aabb bounds, uint color)
         {
             drawCallCount++;
-            DrawEdges(Corners(bounds), ToColor(color));
+            Span<float3> corners = stackalloc float3[8];
+            Corners(bounds, corners);
+            DrawEdges(corners, ToColor(color));
         }
 
-        public void DrawBox(float3 extents, in B3Transform transform, uint color)
+        public void DrawBox(float3 extents, in B3WorldTransform worldTransform, uint color)
         {
+            var transform = worldTransform.ToB3Transform();
             drawCallCount++;
-            var corners = new float3[8];
+            Span<float3> corners = stackalloc float3[8];
             for (int i = 0; i < 8; i++)
             {
                 float3 local = new(
@@ -276,6 +288,6 @@ namespace Box3D.Draw
             DrawEdges(corners, ToColor(color));
         }
 
-        public void DrawString(float3 p, string str, uint color) { }
+        public void DrawString(B3Pos p, in string str, uint color) { }
     }
 }

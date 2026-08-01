@@ -25,19 +25,19 @@ namespace Box3D.Tests
     {
         public bool WasCalled { get; private set; }
 
-        public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
+        public bool DrawShape(IDebugShape shape, in B3WorldTransform transform, uint color)
         {
             WasCalled = true;
             return true;
         }
-        public void DrawSegment(float3 start, float3 end, uint color) { }
-        public void DrawTransform(in B3Transform transform) { }
-        public void DrawPoint(float3 position, float size, uint color) { }
-        public void DrawSphere(float3 position, float radius, uint color, float alpha) { }
-        public void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha) { }
+        public void DrawSegment(B3Pos start, B3Pos end, uint color) { }
+        public void DrawTransform(in B3WorldTransform transform) { }
+        public void DrawPoint(B3Pos position, float size, uint color) { }
+        public void DrawSphere(B3Pos position, float radius, uint color, float alpha) { }
+        public void DrawCapsule(B3Pos p1, B3Pos p2, float radius, uint color, float alpha) { }
         public void DrawBounds(in B3Aabb bounds, uint color) { }
-        public void DrawBox(float3 extents, in B3Transform transform, uint color) { }
-        public void DrawString(float3 p, string str, uint color) { }
+        public void DrawBox(float3 extents, in B3WorldTransform transform, uint color) { }
+        public void DrawString(B3Pos p, in string str, uint color) { }
     }
 
     /// <summary>Debug-draw bridge: native draw callbacks must reach the managed trampolines.</summary>

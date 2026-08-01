@@ -111,7 +111,7 @@ namespace Box3D
             }
         }
 
-        public static bool DrawCompound(IDebugDrawTarget target, DebugCompoundShape compound, in B3Transform compound_transform, uint color, B3Aabb treeBounds)
+        public static bool DrawCompound(IDebugDrawTarget target, DebugCompoundShape compound, in B3WorldTransform compound_transform, uint color, B3Aabb treeBounds)
         {
             int capacity = compound.Children.Length;
             Span<int> childIndices = capacity <= 128
@@ -124,7 +124,7 @@ namespace Box3D
             {
                 int childIndex = childIndices[i];
                 ref readonly DebugCompoundChild child = ref compound.Children[childIndex];
-                B3Transform child_transform = compound_transform * child.Transform;
+                B3WorldTransform child_transform = compound_transform * child.Transform;
                 if (!target.DrawShape(child.Shape, in child_transform, color))
                     return false;
             }

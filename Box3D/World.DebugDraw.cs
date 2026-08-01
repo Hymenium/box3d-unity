@@ -50,17 +50,17 @@ namespace Box3D
     public interface IDebugDrawTarget
     {
         // Return true if drawing should continue
-        bool DrawShape(IDebugShape shape, in B3Transform transform, uint color);
+        bool DrawShape(IDebugShape shape, in B3WorldTransform transform, uint color);
 
         // Immediate geometry
-        void DrawSegment(float3 start, float3 end, uint color);
-        void DrawTransform(in B3Transform transform);
-        void DrawPoint(float3 position, float size, uint color);
-        void DrawSphere(float3 position, float radius, uint color, float alpha);
-        void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha);
+        void DrawSegment(B3Pos start, B3Pos end, uint color);
+        void DrawTransform(in B3WorldTransform transform);
+        void DrawPoint(B3Pos p, float size, uint color);
+        void DrawSphere(B3Pos p, float radius, uint color, float alpha);
+        void DrawCapsule(B3Pos p1, B3Pos p2, float radius, uint color, float alpha);
         void DrawBounds(in B3Aabb bounds, uint color);
-        void DrawBox(float3 extents, in B3Transform transform, uint color);
-        void DrawString(float3 p, string str, uint color);
+        void DrawBox(float3 extents, in B3WorldTransform transform, uint color);
+        void DrawString(B3Pos p, in string str, uint color);
     }
 
     public unsafe partial struct World
@@ -178,43 +178,43 @@ namespace Box3D
             uint color,
             void* context);
 
-        private static readonly CreateShapeDelegate CREATE_SHAPE_INSTANCE = CreateShape;
-        private static readonly DestroyShapeDelegate DESTROY_SHAPE_INSTANCE = DestroyShape;
-        private static readonly DrawShapeDelegate DRAW_SHAPE_INSTANCE = DrawShape;
-        private static readonly DrawSegmentDelegate DRAW_SEGMENT_INSTANCE = DrawSegment;
-        private static readonly DrawTransformDelegate DRAW_TRANSFORM_INSTANCE = DrawTransform;
-        private static readonly DrawPointDelegate DRAW_POINT_INSTANCE = DrawPoint;
-        private static readonly DrawSphereDelegate DRAW_SPHERE_INSTANCE = DrawSphere;
-        private static readonly DrawCapsuleDelegate DRAW_CAPSULE_INSTANCE = DrawCapsule;
-        private static readonly DrawBoundsDelegate DRAW_BOUNDS_INSTANCE = DrawBounds;
-        private static readonly DrawBoxDelegate DRAW_BOX_INSTANCE = DrawBox;
-        private static readonly DrawStringDelegate DRAW_STRING_INSTANCE = DrawString;
+        private static readonly CreateShapeDelegate _createShapeInstance = CreateShape;
+        private static readonly DestroyShapeDelegate _destroyShapeInstance = DestroyShape;
+        private static readonly DrawShapeDelegate _drawShapeInstance = DrawShape;
+        private static readonly DrawSegmentDelegate _drawSegmentInstance = DrawSegment;
+        private static readonly DrawTransformDelegate _drawTransformInstance = DrawTransform;
+        private static readonly DrawPointDelegate _drawPointInstance = DrawPoint;
+        private static readonly DrawSphereDelegate _drawSphereInstance = DrawSphere;
+        private static readonly DrawCapsuleDelegate _drawCapsuleInstance = DrawCapsule;
+        private static readonly DrawBoundsDelegate _drawBoundsInstance = DrawBounds;
+        private static readonly DrawBoxDelegate _drawBoxInstance = DrawBox;
+        private static readonly DrawStringDelegate _drawStringInstance = DrawString;
 
-        internal static readonly IntPtr CREATE_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(CREATE_SHAPE_INSTANCE);
-        internal static readonly IntPtr DESTROY_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(DESTROY_SHAPE_INSTANCE);
-        private static readonly IntPtr DRAW_SHAPE_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_SHAPE_INSTANCE);
-        private static readonly IntPtr DRAW_SEGMENT_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_SEGMENT_INSTANCE);
-        private static readonly IntPtr DRAW_TRANSFORM_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_TRANSFORM_INSTANCE);
-        private static readonly IntPtr DRAW_POINT_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_POINT_INSTANCE);
-        private static readonly IntPtr DRAW_SPHERE_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_SPHERE_INSTANCE);
-        private static readonly IntPtr DRAW_CAPSULE_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_CAPSULE_INSTANCE);
-        private static readonly IntPtr DRAW_BOUNDS_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_BOUNDS_INSTANCE);
-        private static readonly IntPtr DRAW_BOX_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_BOX_INSTANCE);
-        private static readonly IntPtr DRAW_STRING_PTR = Marshal.GetFunctionPointerForDelegate(DRAW_STRING_INSTANCE);
+        internal static readonly IntPtr CreateShapePtr = Marshal.GetFunctionPointerForDelegate(_createShapeInstance);
+        internal static readonly IntPtr DestroyShapePtr = Marshal.GetFunctionPointerForDelegate(_destroyShapeInstance);
+        private static readonly IntPtr _drawShapePtr = Marshal.GetFunctionPointerForDelegate(_drawShapeInstance);
+        private static readonly IntPtr _drawSegmentPtr = Marshal.GetFunctionPointerForDelegate(_drawSegmentInstance);
+        private static readonly IntPtr _drawTransformPtr = Marshal.GetFunctionPointerForDelegate(_drawTransformInstance);
+        private static readonly IntPtr _drawPointPtr = Marshal.GetFunctionPointerForDelegate(_drawPointInstance);
+        private static readonly IntPtr _drawSpherePtr = Marshal.GetFunctionPointerForDelegate(_drawSphereInstance);
+        private static readonly IntPtr _drawCapsulePtr = Marshal.GetFunctionPointerForDelegate(_drawCapsuleInstance);
+        private static readonly IntPtr _drawBoundsPtr = Marshal.GetFunctionPointerForDelegate(_drawBoundsInstance);
+        private static readonly IntPtr _drawBoxPtr = Marshal.GetFunctionPointerForDelegate(_drawBoxInstance);
+        private static readonly IntPtr _drawStringPtr = Marshal.GetFunctionPointerForDelegate(_drawStringInstance);
 
         internal static b3DebugDraw CreateNativeDraw()
         {
             var native_draw = Ffi.b3DefaultDebugDraw();
 
-            native_draw.DrawShapeFcn = DRAW_SHAPE_PTR;
-            native_draw.DrawSegmentFcn = DRAW_SEGMENT_PTR;
-            native_draw.DrawTransformFcn = DRAW_TRANSFORM_PTR;
-            native_draw.DrawPointFcn = DRAW_POINT_PTR;
-            native_draw.DrawSphereFcn = DRAW_SPHERE_PTR;
-            native_draw.DrawCapsuleFcn = DRAW_CAPSULE_PTR;
-            native_draw.DrawBoundsFcn = DRAW_BOUNDS_PTR;
-            native_draw.DrawBoxFcn = DRAW_BOX_PTR;
-            native_draw.DrawStringFcn = DRAW_STRING_PTR;
+            native_draw.DrawShapeFcn = _drawShapePtr;
+            native_draw.DrawSegmentFcn = _drawSegmentPtr;
+            native_draw.DrawTransformFcn = _drawTransformPtr;
+            native_draw.DrawPointFcn = _drawPointPtr;
+            native_draw.DrawSphereFcn = _drawSpherePtr;
+            native_draw.DrawCapsuleFcn = _drawCapsulePtr;
+            native_draw.DrawBoundsFcn = _drawBoundsPtr;
+            native_draw.DrawBoxFcn = _drawBoxPtr;
+            native_draw.DrawStringFcn = _drawStringPtr;
 
             return native_draw;
         }

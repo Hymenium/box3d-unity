@@ -19,8 +19,8 @@ namespace Box3D
 
             if (shape_factory != null)
             {
-                local.CreateDebugShape = NativeDebugDrawBridge.CREATE_SHAPE_PTR;
-                local.DestroyDebugShape = NativeDebugDrawBridge.DESTROY_SHAPE_PTR;
+                local.CreateDebugShape = NativeDebugDrawBridge.CreateShapePtr;
+                local.DestroyDebugShape = NativeDebugDrawBridge.DestroyShapePtr;
                 handle = GCHandle.Alloc(shape_factory);
                 local.UserDebugShapeContext = GCHandle.ToIntPtr(handle);
             }

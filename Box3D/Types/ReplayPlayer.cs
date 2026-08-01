@@ -67,8 +67,8 @@ namespace Box3D
             _shapeFactoryHandle = GCHandle.Alloc(shapeFactory);
 
             Ffi.b3RecPlayer_SetDebugShapeCallbacks((b3RecPlayer*)_handle,
-                NativeDebugDrawBridge.CREATE_SHAPE_PTR,
-                NativeDebugDrawBridge.DESTROY_SHAPE_PTR,
+                NativeDebugDrawBridge.CreateShapePtr,
+                NativeDebugDrawBridge.DestroyShapePtr,
                 (void*)GCHandle.ToIntPtr(_shapeFactoryHandle));
         }
 

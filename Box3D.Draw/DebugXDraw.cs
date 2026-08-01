@@ -10,6 +10,10 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Assert = UnityEngine.Assertions.Assert;
 
+#if BOX3D_DOUBLE
+#warning "Box3D Debug Draw: Precision will be lost when casting double precision to Unity's float-based rendering."
+#endif
+
 namespace Box3D.Draw
 {
     public class DebugXDrawShape : IDebugShape { }
@@ -378,7 +382,7 @@ namespace Box3D.Draw
             return new Color(((hex >> 16) & 0xFF) / 255f, ((hex >> 8) & 0xFF) / 255f, (hex & 0xFF) / 255f);
         }
 
-        private void DrawSphere(in B3Transform transform, float3 center, float radius, uint color)
+        private void DrawSphere(in B3WorldTransform transform, float3 center, float radius, uint color)
         {
             var c = ToColor(color);
             var p = transform.Position + math.rotate(transform.Rotation, center);
@@ -396,7 +400,7 @@ namespace Box3D.Draw
             DebugX.Draw(Color.white).Line(p, p + forward * radius);
         }
 
-        private void DrawCapsule(in B3Transform transform, in float3 c1, in float3 c2, float radius, uint color)
+        private void DrawCapsule(in B3WorldTransform transform, in float3 c1, in float3 c2, float radius, uint color)
         {
             var c = ToColor(color);
             Color fill_c = new(c.r, c.g, c.b, 0.18f);
@@ -410,7 +414,7 @@ namespace Box3D.Draw
             DebugX.Draw(Color.white).Line(transform.Position, transform.Position + forward * radius);
         }
 
-        private void DrawMesh(in B3Transform transform, in Mesh mesh, uint color, in float3 scale)
+        private void DrawMesh(in B3WorldTransform transform, in Mesh mesh, uint color, in float3 scale)
         {
             var c = ToColor(color);
             Color fill_c = new(c.r, c.g, c.b, 0.18f);
@@ -418,7 +422,7 @@ namespace Box3D.Draw
             DebugX.Draw(c).WireMesh(mesh, transform.Position, transform.Rotation, scale);
         }
 
-        public bool DrawShape(IDebugShape shape, in B3Transform transform, uint color)
+        public bool DrawShape(IDebugShape shape, in B3WorldTransform transform, uint color)
         {
             if (shape is DebugCompoundShape compoundShape)
             {
@@ -463,12 +467,12 @@ namespace Box3D.Draw
         }
 
         // Immediate geometry
-        public void DrawSegment(float3 start, float3 end, uint color)
+        public void DrawSegment(B3Pos start, B3Pos end, uint color)
         {
             DebugX.Draw(ToColor(color)).Line(start, end);
         }
 
-        public void DrawTransform(in B3Transform transform)
+        public void DrawTransform(in B3WorldTransform transform)
         {
             DebugX.Draw(Color.red).Line(
                 transform.Position,
@@ -481,17 +485,17 @@ namespace Box3D.Draw
                 transform.Position + math.mul(transform.Rotation, math.forward()));
         }
 
-        public void DrawPoint(float3 position, float size, uint color)
+        public void DrawPoint(B3Pos p, float size, uint color)
         {
-            DebugX.Draw(ToColor(color)).Sphere(position, size * 0.5f);
+            DebugX.Draw(ToColor(color)).Sphere(p, size * 0.5f);
         }
 
-        public void DrawSphere(float3 position, float radius, uint color, float alpha)
+        public void DrawSphere(B3Pos p, float radius, uint color, float alpha)
         {
-            DebugX.Draw(ToColor(color)).Sphere(position, radius);
+            DebugX.Draw(ToColor(color)).Sphere(p, radius);
         }
 
-        public void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha)
+        public void DrawCapsule(B3Pos p1, B3Pos p2, float radius, uint color, float alpha)
         {
             DebugX.Draw(ToColor(color)).Capsule(p1, p2, radius);
         }
@@ -503,12 +507,12 @@ namespace Box3D.Draw
             DebugX.Draw(ToColor(color)).WireCube(center, Quaternion.identity, size);
         }
 
-        public void DrawBox(float3 extents, in B3Transform transform, uint color)
+        public void DrawBox(float3 extents, in B3WorldTransform transform, uint color)
         {
             DebugX.Draw(ToColor(color)).Cube(transform.Position, transform.Rotation, extents);
         }
 
-        public void DrawString(float3 p, string str, uint color)
+        public void DrawString(B3Pos p, in string str, uint color)
         {
             var s = DebugXTextSettings.ScreenSpace;
             s.BackgroundColor = ToColor(color);
