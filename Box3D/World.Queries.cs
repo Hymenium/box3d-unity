@@ -9,166 +9,6 @@ namespace Box3D
 
     public unsafe partial struct World
     {
-        // public sealed class ShapeCollector : IOverlapCallback
-        // {
-        //     private readonly List<ShapeId> _results;
-
-        //     public ShapeCollector(List<ShapeId> results)
-        //     {
-        //         _results = results;
-        //     }
-
-        //     public bool ReportShape(ShapeId shape_id)
-        //     {
-        //         _results.Add(shape_id);
-        //         return true;
-        //     }
-        // }
-
-        public interface IOverlapCallback
-        {
-            // return true to continue, false to stop
-            bool ReportShape(ShapeId shape_id);
-        }
-
-        public interface ICastCallback
-        {
-            // return -1: ignore this shape and continue
-            // return 0: terminate the ray cast
-            // return fraction: clip the ray to this point
-            // return 1: don't clip the ray and continue
-            float OnHit(
-                ShapeId shape_id,
-                float3 point, float3 normal, float fraction,
-                ulong user_material_id,
-                int triangle_index,
-                int child_index);
-        }
-
-        private static readonly b3OverlapResultFcn OverlapTrampolineDelegate = ManagedOverlapTrampoline;
-        private static readonly b3CastResultFcn CastTrampolineDelegate = ManagedCastTrampoline;
-        private static readonly IntPtr OVERLAP_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(OverlapTrampolineDelegate);
-        private static readonly IntPtr CAST_TRAMPOLINE_PTR = Marshal.GetFunctionPointerForDelegate(CastTrampolineDelegate);
-
-        [MonoPInvokeCallback(typeof(b3OverlapResultFcn))]
-        private static unsafe NativeBool ManagedOverlapTrampoline(ShapeId shape_id, void* raw_context)
-        {
-            var callback = (IOverlapCallback)GCHandle.FromIntPtr((IntPtr)raw_context).Target!;
-            return callback.ReportShape(shape_id);
-        }
-
-        [MonoPInvokeCallback(typeof(b3CastResultFcn))]
-        private static unsafe float ManagedCastTrampoline(
-            ShapeId shape_id,
-            B3Pos point, float3 normal, float fraction,
-            ulong user_material_id,
-            int triangle_index,
-            int child_index,
-            void* raw_context)
-        {
-            var callback = (ICastCallback)GCHandle.FromIntPtr((IntPtr)raw_context).Target!;
-            return callback.OnHit(
-                shape_id, point, normal, fraction,
-                user_material_id, triangle_index, child_index);
-        }
-
-        public unsafe TreeStats OverlapAABB(B3Aabb aabb, QueryFilter filter, IOverlapCallback callback)
-        {
-            GCHandle handle = GCHandle.Alloc(callback);
-            try
-            {
-                void* context = (void*)GCHandle.ToIntPtr(handle);
-                b3TreeStats s = Ffi.b3World_OverlapAABB(
-                    Id,
-                    aabb,
-                    filter,
-                    OVERLAP_TRAMPOLINE_PTR,
-                    context);
-
-                return new(s.nodeVisits, s.leafVisits);
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        public unsafe TreeStats OverlapShape(B3Pos origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
-            QueryFilter filter, IOverlapCallback callback, void* context)
-        {
-            if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
-            GCHandle handle = GCHandle.Alloc(callback);
-            try
-            {
-                fixed (float3* points = proxyPoints)
-                {
-                    var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
-                    void* ctx = (void*)GCHandle.ToIntPtr(handle);
-                    b3TreeStats s = Ffi.b3World_OverlapShape(
-                        Id,
-                        origin,
-                        &proxy,
-                        filter,
-                        OVERLAP_TRAMPOLINE_PTR,
-                        ctx);
-                    return new(s.nodeVisits, s.leafVisits);
-                }
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        public unsafe TreeStats CastRay(float3 origin, float3 translation, QueryFilter filter, ICastCallback callback)
-        {
-            GCHandle handle = GCHandle.Alloc(callback);
-            try
-            {
-                void* ctx = (void*)GCHandle.ToIntPtr(handle);
-                b3TreeStats s = Ffi.b3World_CastRay(
-                    Id,
-                    origin,
-                    translation,
-                    filter,
-                    CAST_TRAMPOLINE_PTR,
-                    ctx);
-                return new(s.nodeVisits, s.leafVisits);
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        public unsafe TreeStats CastShape(B3Pos origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
-            float3 translation, QueryFilter filter, ICastCallback callback, void* context)
-        {
-            if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
-            GCHandle handle = GCHandle.Alloc(callback);
-            try
-            {
-                fixed (float3* points = proxyPoints)
-                {
-                    var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
-                    void* ctx = (void*)GCHandle.ToIntPtr(handle);
-                    b3TreeStats s = Ffi.b3World_CastShape(
-                        Id,
-                        origin,
-                        &proxy,
-                        translation,
-                        filter,
-                        CAST_TRAMPOLINE_PTR,
-                        ctx);
-                    return new(s.nodeVisits, s.leafVisits);
-                }
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
         // Collector trampolines: static, rooted for the process lifetime, IL2CPP-safe via
         // MonoPInvokeCallback. Per-call state travels through the native context pointer as a
         // stack-allocated context struct — no allocation per query.
@@ -240,6 +80,21 @@ namespace Box3D
             }
         }
 
+        public unsafe TreeStats OverlapAABB(B3Aabb aabb, QueryFilter filter, b3OverlapResultFcn callback, void* context)
+        {
+            if (callback == null)
+            {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            IntPtr callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
+
+            var res = Ffi.b3World_OverlapAABB(Id, aabb, filter, callbackPtr, context);
+            GC.KeepAlive(callback);
+
+            return new(res.nodeVisits, res.leafVisits);
+        }
+
         /// <summary>Finds shapes overlapping a convex point-cloud proxy (a sphere when one point,
         /// a capsule when two, a hull otherwise) placed at origin. Fills the buffer, returns the count.</summary>
         public int OverlapShape(float3 origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
@@ -262,6 +117,26 @@ namespace Box3D
             }
         }
 
+        public unsafe TreeStats OverlapShape(B3Pos origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
+            QueryFilter filter, b3OverlapResultFcn callback, void* context)
+        {
+            if (callback == null)
+            {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            IntPtr callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
+
+            fixed (float3* points = proxyPoints)
+            {
+                var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
+                var res = Ffi.b3World_OverlapShape(Id, origin, &proxy, filter, callbackPtr, context);
+                GC.KeepAlive(callback);
+
+                return new(res.nodeVisits, res.leafVisits);
+            }
+        }
+
         /// <summary>Collects every hit along the ray (unordered). Fills the buffer, returns the
         /// count. For just the nearest hit use <see cref="CastRayClosest"/>.</summary>
         public int CastRay(float3 origin, float3 translation, QueryFilter filter, Span<RayHit> hits)
@@ -277,6 +152,22 @@ namespace Box3D
                 stats = new(s.nodeVisits, s.leafVisits);
                 return ctx.Count;
             }
+        }
+
+        public unsafe TreeStats CastRay(float3 origin, float3 translation, QueryFilter filter,
+            b3CastResultFcn callback, void* context)
+        {
+            if (callback == null)
+            {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            IntPtr callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
+
+            var res = Ffi.b3World_CastRay(Id, origin, translation, filter, callbackPtr, context);
+            GC.KeepAlive(callback);
+
+            return new(res.nodeVisits, res.leafVisits);
         }
 
         /// <summary>Sweeps a convex point-cloud proxy from origin along translation, collecting
@@ -298,6 +189,28 @@ namespace Box3D
                 b3TreeStats s = Ffi.b3World_CastShape(Id, origin, &proxy, translation, filter, CastCollectorPtr, &ctx);
                 stats = new(s.nodeVisits, s.leafVisits);
                 return ctx.Count;
+            }
+        }
+
+        public unsafe TreeStats CastShape(float3 origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
+            float3 translation, QueryFilter filter, b3CastResultFcn callback, void* context)
+        {
+            if (callback == null)
+            {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
+
+            IntPtr callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
+
+            fixed (float3* points = proxyPoints)
+            {
+                var proxy = new b3ShapeProxy { points = points, count = proxyPoints.Length, radius = proxyRadius };
+                var res = Ffi.b3World_CastShape(Id, origin, &proxy, translation, filter, callbackPtr, context);
+                GC.KeepAlive(callback);
+
+                return new(res.nodeVisits, res.leafVisits);
             }
         }
     }
