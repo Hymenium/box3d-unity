@@ -39,7 +39,7 @@ namespace Box3D
     public struct RayHit
     {
         public ShapeId ShapeId;
-        public float3 Point;
+        public B3Pos Point;
         public float3 Normal;
         public float Fraction;
         public ulong UserMaterialId;

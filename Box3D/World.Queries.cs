@@ -211,7 +211,7 @@ namespace Box3D
             ctx->Buffer[ctx->Count] = new RayHit
             {
                 ShapeId = shapeId,
-                Point = (float3)point,
+                Point = point,
                 Normal = normal,
                 Fraction = fraction,
                 UserMaterialId = userMaterialId,
