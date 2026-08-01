@@ -63,14 +63,14 @@ namespace Box3D.Sys
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
-    internal unsafe delegate NativeBool b3PreSolveFcn([NativeTypeName("b3ShapeId")] ShapeId shapeIdA, [NativeTypeName("b3ShapeId")] ShapeId shapeIdB, B3Pos point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, void* context);
+    public unsafe delegate NativeBool b3PreSolveFcn([NativeTypeName("b3ShapeId")] ShapeId shapeIdA, [NativeTypeName("b3ShapeId")] ShapeId shapeIdB, B3Pos point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: NativeTypeName("_Bool")]
     public unsafe delegate NativeBool b3OverlapResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, void* context);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal unsafe delegate float b3CastResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, B3Pos point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, float fraction, [NativeTypeName("uint64_t")] ulong userMaterialId, int triangleIndex, int childIndex, void* context);
+    public unsafe delegate float b3CastResultFcn([NativeTypeName("b3ShapeId")] ShapeId shapeId, B3Pos point, [NativeTypeName("b3Vec3")] Unity.Mathematics.float3 normal, float fraction, [NativeTypeName("uint64_t")] ulong userMaterialId, int triangleIndex, int childIndex, void* context);
 
     public partial struct b3Profile
     {
