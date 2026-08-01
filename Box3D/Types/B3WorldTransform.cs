@@ -17,6 +17,19 @@ namespace Box3D
 
         public static B3WorldTransform Identity => new B3WorldTransform { Position = B3Pos.Zero, Rotation = quaternion.identity };
 
+        public static B3WorldTransform operator *(in B3WorldTransform a, in B3Transform b)
+        {
+            return new B3WorldTransform
+            {
+#if !BOX3D_DOUBLE
+                Position = a.Position + math.rotate(a.Rotation, b.Position),
+#else
+                Position = a.Position + (double3)math.rotate(a.Rotation, b.Position),
+#endif
+                Rotation = math.mul(a.Rotation, b.Rotation),
+            };
+        }
+
 #if !BOX3D_DOUBLE
         public static implicit operator B3Transform(B3WorldTransform t)
             => new B3Transform { Position = t.Position, Rotation = t.Rotation };
