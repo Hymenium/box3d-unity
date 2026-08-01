@@ -1,6 +1,6 @@
 {
-    "name": "Box3D.Unity",
-    "rootNamespace": "Box3D.Unity",
+    "name": "Box3D.Draw",
+    "rootNamespace": "Box3D.Draw",
     "references": [
         "Box3D.Runtime",
         "Unity.Mathematics",

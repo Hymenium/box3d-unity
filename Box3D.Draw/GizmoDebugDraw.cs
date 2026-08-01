@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using LineList = System.Collections.Generic.List<Unity.Mathematics.float3>;
 
-namespace Box3D.Unity
+namespace Box3D.Draw
 {
     public class GizmoDebugDrawShape : IDebugShape
     {

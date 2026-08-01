@@ -3,7 +3,7 @@
     "rootNamespace": "Box3D.Hybrid",
     "references": [
         "Box3D.Runtime",
-        "Box3D.Unity",
+        "Box3D.Draw",
         "Unity.Mathematics"
     ],
     "includePlatforms": [],

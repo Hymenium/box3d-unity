@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Assert = UnityEngine.Assertions.Assert;
 
-namespace Box3D.Unity
+namespace Box3D.Draw
 {
     public class DebugXDrawShape : IDebugShape { }
 

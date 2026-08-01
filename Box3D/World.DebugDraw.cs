@@ -118,32 +118,32 @@ namespace Box3D
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate NativeBool DrawShapeDelegate(
             void* userShape,
-            B3Transform transform,
+            B3WorldTransform transform,
             uint color,
             void* context);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate void DrawSegmentDelegate(
-            float3 start,
-            float3 end,
+            B3Pos start,
+            B3Pos end,
             uint color,
             void* context);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate void DrawTransformDelegate(
-            B3Transform transform,
+            B3WorldTransform transform,
             void* context);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate void DrawPointDelegate(
-            float3 p,
+            B3Pos p,
             float size,
             uint color,
             void* context);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate void DrawSphereDelegate(
-            float3 p,
+            B3Pos p,
             float radius,
             uint color,
             float alpha,
@@ -151,8 +151,8 @@ namespace Box3D
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate void DrawCapsuleDelegate(
-            float3 p1,
-            float3 p2,
+            B3Pos p1,
+            B3Pos p2,
             float radius,
             uint color,
             float alpha,
@@ -167,13 +167,13 @@ namespace Box3D
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate void DrawBoxDelegate(
             float3 extents,
-            B3Transform transform,
+            B3WorldTransform transform,
             uint color,
             void* context);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate void DrawStringDelegate(
-            float3 p,
+            B3Pos p,
             sbyte* s,
             uint color,
             void* context);
@@ -345,7 +345,7 @@ namespace Box3D
         [MonoPInvokeCallback(typeof(DrawShapeDelegate))]
         private static NativeBool DrawShape(
             void* userShape,
-            B3Transform transform,
+            B3WorldTransform transform,
             uint color,
             void* context)
         {
@@ -368,8 +368,8 @@ namespace Box3D
 
         [MonoPInvokeCallback(typeof(DrawSegmentDelegate))]
         private static void DrawSegment(
-            float3 start,
-            float3 end,
+            B3Pos start,
+            B3Pos end,
             uint color,
             void* context)
         {
@@ -387,7 +387,7 @@ namespace Box3D
 
         [MonoPInvokeCallback(typeof(DrawTransformDelegate))]
         private static void DrawTransform(
-            B3Transform transform,
+            B3WorldTransform transform,
             void* context)
         {
             try
@@ -404,7 +404,7 @@ namespace Box3D
 
         [MonoPInvokeCallback(typeof(DrawPointDelegate))]
         private static void DrawPoint(
-            float3 p,
+            B3Pos p,
             float size,
             uint color,
             void* context)
@@ -422,7 +422,7 @@ namespace Box3D
         }
 
         [MonoPInvokeCallback(typeof(DrawSphereDelegate))]
-        private static void DrawSphere(float3 p, float radius, uint color, float alpha, void* context)
+        private static void DrawSphere(B3Pos p, float radius, uint color, float alpha, void* context)
         {
             try
             {
@@ -436,7 +436,7 @@ namespace Box3D
         }
 
         [MonoPInvokeCallback(typeof(DrawCapsuleDelegate))]
-        private static void DrawCapsule(float3 p1, float3 p2, float radius, uint color, float alpha, void* context)
+        private static void DrawCapsule(B3Pos p1, B3Pos p2, float radius, uint color, float alpha, void* context)
         {
             try
             {
@@ -464,7 +464,7 @@ namespace Box3D
         }
 
         [MonoPInvokeCallback(typeof(DrawBoxDelegate))]
-        private static void DrawBox(float3 extents, B3Transform transform, uint color, void* context)
+        private static void DrawBox(float3 extents, B3WorldTransform transform, uint color, void* context)
         {
             try
             {
@@ -478,7 +478,7 @@ namespace Box3D
         }
 
         [MonoPInvokeCallback(typeof(DrawStringDelegate))]
-        private static void DrawString(float3 p, sbyte* s, uint color, void* context)
+        private static void DrawString(B3Pos p, sbyte* s, uint color, void* context)
         {
             try
             {

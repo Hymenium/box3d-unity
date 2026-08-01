@@ -60,7 +60,7 @@ namespace Box3D
         [MonoPInvokeCallback(typeof(b3CastResultFcn))]
         private static unsafe float ManagedCastTrampoline(
             ShapeId shape_id,
-            float3 point, float3 normal, float fraction,
+            B3Pos point, float3 normal, float fraction,
             ulong user_material_id,
             int triangle_index,
             int child_index,
@@ -93,7 +93,7 @@ namespace Box3D
             }
         }
 
-        public unsafe TreeStats OverlapShape(float3 origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
+        public unsafe TreeStats OverlapShape(B3Pos origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
             QueryFilter filter, IOverlapCallback callback, void* context)
         {
             if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
@@ -141,7 +141,7 @@ namespace Box3D
             }
         }
 
-        public unsafe TreeStats CastShape(float3 origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
+        public unsafe TreeStats CastShape(B3Pos origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
             float3 translation, QueryFilter filter, ICastCallback callback, void* context)
         {
             if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
@@ -203,7 +203,7 @@ namespace Box3D
         }
 
         [MonoPInvokeCallback(typeof(b3CastResultFcn))]
-        private static unsafe float CastCollector(ShapeId shapeId, float3 point, float3 normal,
+        private static unsafe float CastCollector(ShapeId shapeId, B3Pos point, float3 normal,
             float fraction, ulong userMaterialId, int triangleIndex, int childIndex, void* context)
         {
             var ctx = (RayCollectorContext*)context;
@@ -211,7 +211,7 @@ namespace Box3D
             ctx->Buffer[ctx->Count] = new RayHit
             {
                 ShapeId = shapeId,
-                Point = point,
+                Point = (float3)point,
                 Normal = normal,
                 Fraction = fraction,
                 UserMaterialId = userMaterialId,
@@ -247,7 +247,7 @@ namespace Box3D
             => OverlapShape(origin, proxyPoints, proxyRadius, filter, results, out _);
 
         /// <summary>As the other <c>OverlapShape</c>, also reporting broadphase-tree work.</summary>
-        public unsafe int OverlapShape(float3 origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
+        public unsafe int OverlapShape(B3Pos origin, ReadOnlySpan<float3> proxyPoints, float proxyRadius,
             QueryFilter filter, Span<ShapeId> results, out TreeStats stats)
         {
             if (proxyPoints.IsEmpty) throw new ArgumentException("proxy needs at least one point", nameof(proxyPoints));
