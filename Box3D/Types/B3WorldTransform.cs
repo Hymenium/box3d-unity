@@ -21,11 +21,7 @@ namespace Box3D
         {
             return new B3WorldTransform
             {
-#if !BOX3D_DOUBLE
                 Position = a.Position + math.rotate(a.Rotation, b.Position),
-#else
-                Position = a.Position + (double3)math.rotate(a.Rotation, b.Position),
-#endif
                 Rotation = math.mul(a.Rotation, b.Rotation),
             };
         }

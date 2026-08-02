@@ -57,6 +57,15 @@ namespace Box3D
         public float3 ToFloat3() => new float3((float)x, (float)y, (float)z);
 #endif
 
+        public static B3Pos operator +(B3Pos position, float3 offset)
+        {
+#if !BOX3D_DOUBLE
+            return (float3)position + offset;
+#else
+            return (double3)position + (double3)offset;
+#endif
+        }
+
         public static B3Pos Zero => default;
 
         public override string ToString() => $"({x}, {y}, {z})";
