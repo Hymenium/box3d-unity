@@ -66,7 +66,17 @@ namespace Box3D
     public unsafe partial struct World
     {
         // TODO: Add documentation
-        public void DrawDebug(IDebugDrawTarget target, DebugDrawFlags flags = DebugDrawFlags.Default, float drawRadius = 100f)
+        public readonly void DrawDebug(IDebugDrawTarget target, DebugDrawFlags flags = DebugDrawFlags.Default, float drawRadius = 100f)
+        {
+            var bounds = new B3Aabb
+            {
+                LowerBound = new(-drawRadius, -drawRadius, -drawRadius),
+                UpperBound = new(drawRadius, drawRadius, drawRadius),
+            };
+            DrawDebug(target, bounds, flags);
+        }
+
+        public readonly void DrawDebug(IDebugDrawTarget target, in B3Aabb drawBounds, DebugDrawFlags flags = DebugDrawFlags.Default)
         {
             if (target == null)
             {
@@ -79,11 +89,8 @@ namespace Box3D
             var handle = GCHandle.Alloc(target);
             draw.context = (void*)GCHandle.ToIntPtr(handle);
 
-            draw.drawingBounds = new B3Aabb
-            {
-                LowerBound = new float3(-drawRadius, -drawRadius, -drawRadius),
-                UpperBound = new float3(drawRadius, drawRadius, drawRadius),
-            };
+            draw.drawingBounds = drawBounds;
+
             draw.drawShapes = (flags & DebugDrawFlags.Shapes) != 0;
             draw.drawJoints = (flags & DebugDrawFlags.Joints) != 0;
             draw.drawJointExtras = (flags & DebugDrawFlags.JointExtras) != 0;
