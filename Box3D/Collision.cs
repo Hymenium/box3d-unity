@@ -14,7 +14,7 @@ namespace Box3D
         /// Checks for overlap between a Capsule and a shape proxy defined by a set of points and a radius.
         /// </summary>
         public static unsafe NativeBool OverlapCapsule(
-            in Capsule capsule,
+            Capsule capsule,
             B3Transform transform,
             ReadOnlySpan<float3> proxyPoints,
             float proxyRadius)
@@ -28,10 +28,28 @@ namespace Box3D
                     radius = proxyRadius
                 };
 
-                fixed (Capsule* capsulePtr = &capsule)
-                {
-                    return Ffi.b3OverlapCapsule(capsulePtr, transform, &proxy);
-                }
+                return Ffi.b3OverlapCapsule(&capsule, transform, &proxy);
+            }
+        }
+
+        /// <summary>
+        /// Collides two capsules and populates the given local manifold.
+        /// </summary>
+        public static unsafe void CollideCapsules(
+            ref b3LocalManifold manifold,
+            int capacity,
+            Capsule capsuleA,
+            Capsule capsuleB,
+            B3Transform transformBtoA)
+        {
+            fixed (b3LocalManifold* manifoldPtr = &manifold)
+            {
+                Ffi.b3CollideCapsules(
+                    manifoldPtr,
+                    capacity,
+                    &capsuleA,
+                    &capsuleB,
+                    transformBtoA);
             }
         }
     }
