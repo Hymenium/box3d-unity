@@ -46,7 +46,7 @@ namespace Box3D
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct BoxHull
     {
-        internal b3HullData Base;
+        public b3HullData Base;
         internal fixed byte Data[304];
 
         /// <summary>A box hull with the given half-extents, centered at the local origin.</summary>
