@@ -57,6 +57,31 @@ namespace Box3D
         public float3 ToFloat3() => new float3((float)x, (float)y, (float)z);
 #endif
 
+        public static B3Pos operator +(B3Pos a, B3Pos b)
+        {
+            return new B3Pos(a.x + b.x, a.y + b.y, a.z + b.z);
+        }
+
+        public static B3Pos operator -(B3Pos a, B3Pos b)
+        {
+            return new B3Pos(a.x - b.x, a.y - b.y, a.z - b.z);
+        }
+
+        public static B3Pos operator *(B3Pos p, float s)
+        {
+            return new B3Pos(p.x * s, p.y * s, p.z * s);
+        }
+
+        public static B3Pos operator *(float s, B3Pos p)
+        {
+            return new B3Pos(p.x * s, p.y * s, p.z * s);
+        }
+
+        public static B3Pos operator /(B3Pos p, float s)
+        {
+            return new B3Pos(p.x / s, p.y / s, p.z / s);
+        }
+
         public static B3Pos operator +(B3Pos position, float3 offset)
         {
 #if !BOX3D_DOUBLE
