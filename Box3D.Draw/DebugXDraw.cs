@@ -74,6 +74,15 @@ namespace Box3D.Draw
 
     public class DebugXShapeFactory : IDebugShapeFactory
     {
+
+
+        private struct DebugVertex
+        {
+            public float3 pos;
+            public float3 norm;
+            public float4 tan;
+            public float2 uv;
+        }
         private static readonly System.Collections.Generic.List<Mesh> s_Trash = new();
         private static bool s_Subscribed;
 
@@ -142,7 +151,9 @@ namespace Box3D.Draw
             Mesh wireMesh = new() { name = "Box3D Debug Hull Wire" };
             var dataArray1 = Mesh.AllocateWritableMeshData(1);
             var meshData1 = dataArray1[0];
-            meshData1.SetVertexBufferParams(points.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
+            meshData1.SetVertexBufferParams(points.Length,
+                new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, 1));
             meshData1.SetIndexBufferParams(lineIndexCount, IndexFormat.UInt16);
             points.CopyTo(meshData1.GetVertexData<float3>());
             lineIndices.CopyTo(meshData1.GetIndexData<ushort>());
@@ -194,10 +205,20 @@ namespace Box3D.Draw
             Mesh solidMesh = new() { name = "Box3D Debug Hull Solid" };
             var dataArray2 = Mesh.AllocateWritableMeshData(1);
             var meshData2 = dataArray2[0];
-            meshData2.SetVertexBufferParams(points.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
+            meshData2.SetVertexBufferParams(points.Length,
+                new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, 0),
+                new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, 0));
             meshData2.SetIndexBufferParams(triIndexCount, IndexFormat.UInt16);
-            points.CopyTo(meshData2.GetVertexData<float3>());
+
+            var vertexData = meshData2.GetVertexData<DebugVertex>();
+            for (int i = 0; i < points.Length; i++)
+            {
+                vertexData[i] = new DebugVertex { pos = points[i] };
+            }
             triIndices.CopyTo(meshData2.GetIndexData<ushort>());
+
             meshData2.subMeshCount = 1;
             meshData2.SetSubMesh(0, new SubMeshDescriptor(0, triOutIdx, MeshTopology.Triangles));
             Mesh.ApplyAndDisposeWritableMeshData(dataArray2, solidMesh);
@@ -225,17 +246,19 @@ namespace Box3D.Draw
                 : IndexFormat.UInt16;
 
             // 3. Define vertex and index buffer parameters
-            VertexAttributeDescriptor vAttrDesc = new(
-                VertexAttribute.Position,
-                VertexAttributeFormat.Float32,
-                3
-            );
-            meshData.SetVertexBufferParams(vertices.Length, vAttrDesc);
+            meshData.SetVertexBufferParams(vertices.Length,
+                new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, 0),
+                new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, 0));
             meshData.SetIndexBufferParams(totalIndices, indexFormat);
 
             // memory copy
-            var destVerts = meshData.GetVertexData<float3>();
-            vertices.CopyTo(destVerts);
+            var destVerts = meshData.GetVertexData<DebugVertex>();
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                destVerts[i] = new DebugVertex { pos = vertices[i] };
+            }
 
             if (indexFormat == IndexFormat.UInt32)
             {
@@ -288,18 +311,21 @@ namespace Box3D.Draw
 
             meshData.SetVertexBufferParams(
                 vertex_count,
-                new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3)
+                new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, 0),
+                new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, 0),
+                new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, 0)
             );
             meshData.SetIndexBufferParams(max_index_count, indexFormat);
 
             // 2. Populate Vertices directly into Unity's destination memory
-            var destVerts = meshData.GetVertexData<float3>();
+            var destVerts = meshData.GetVertexData<DebugVertex>();
             for (int row = 0; row < row_count; ++row)
             {
                 for (int column = 0; column < column_count; ++column)
                 {
                     int index = row * column_count + column;
-                    destVerts[index] = height_field.GetPoint(column, row);
+                    destVerts[index] = new DebugVertex { pos = height_field.GetPoint(column, row) };
                 }
             }
 
@@ -520,8 +546,23 @@ namespace Box3D.Draw
                 case DebugXHull hull:
                     var cHull = ToColor(color);
                     Color fill_cHull = new(cHull.r, cHull.g, cHull.b, 0.18f);
-                    if (hull.solidMesh != null) DebugX.Draw(fill_cHull).Mesh(hull.solidMesh, transform.Position, transform.Rotation, new float3(1, 1, 1));
-                    if (hull.wireMesh != null) DebugX.Draw(cHull).Mesh<DCFApixels.DebugXCore.GeometryUnlitMat>(hull.wireMesh, transform.Position, transform.Rotation, new float3(1, 1, 1));
+                    if (hull.solidMesh != null)
+                    {
+                        DebugX.Draw(fill_cHull).Mesh(
+                            hull.solidMesh,
+                            transform.Position,
+                            transform.Rotation,
+                            new float3(1f));
+                    }
+
+                    if (hull.wireMesh != null)
+                    {
+                        DebugX.Draw(cHull).UnlitMesh(
+                            hull.wireMesh,
+                            transform.Position,
+                            transform.Rotation,
+                            new float3(1f));
+                    }
                     break;
 
                 case DebugXMesh mesh:
