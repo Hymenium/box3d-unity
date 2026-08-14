@@ -40,11 +40,13 @@ namespace Box3D.Draw
 
     public sealed class DebugXHull : DebugXDrawShape
     {
-        public readonly Mesh mesh;
+        public readonly Mesh solidMesh;
+        public readonly Mesh wireMesh;
 
-        public DebugXHull(Mesh mesh)
+        public DebugXHull(Mesh solidMesh, Mesh wireMesh)
         {
-            this.mesh = mesh;
+            this.solidMesh = solidMesh;
+            this.wireMesh = wireMesh;
         }
     }
 
@@ -72,6 +74,31 @@ namespace Box3D.Draw
 
     public class DebugXShapeFactory : IDebugShapeFactory
     {
+        private static readonly System.Collections.Generic.List<Mesh> s_Trash = new();
+        private static bool s_Subscribed;
+
+        public DebugXShapeFactory()
+        {
+            if (!s_Subscribed)
+            {
+                UnityEngine.Rendering.RenderPipelineManager.endContextRendering += (ctx, cams) => FlushTrash();
+                UnityEngine.Camera.onPostRender += (cam) => FlushTrash();
+                s_Subscribed = true;
+            }
+        }
+
+        private static void FlushTrash()
+        {
+            if (s_Trash.Count > 0)
+            {
+                foreach (var m in s_Trash)
+                {
+                    if (m != null) UnityEngine.Object.DestroyImmediate(m);
+                }
+                s_Trash.Clear();
+            }
+        }
+
         // Buffered geometry
         public IDebugShape CreateSphere(in Sphere sphere, in Shape source)
         {
@@ -88,59 +115,86 @@ namespace Box3D.Draw
             ReadOnlySpan<float3> points = hull.Points;
             ReadOnlySpan<HullHalfEdge> edges = hull.HalfEdges;
 
-            // Two indices per unique edge.
+            // 1. Create Wire Mesh (Lines)
             int uniqueEdgeCount = edges.Length / 2;
-            int indexCount = uniqueEdgeCount * 2;
-            Assert.IsTrue(points.Length <= ushort.MaxValue, "Hull points count exceeds ushort.MaxValue");
+            int lineIndexCount = uniqueEdgeCount * 2;
+            Span<ushort> lineIndices = lineIndexCount <= 512
+                ? stackalloc ushort[lineIndexCount]
+                : new ushort[lineIndexCount];
 
-            Span<ushort> indices = indexCount <= 512
-                ? stackalloc ushort[indexCount]
-                : new ushort[indexCount];
-
-            int outputIndex = 0;
+            int lineOutIdx = 0;
             for (int i = 0; i < edges.Length; ++i)
             {
                 HullHalfEdge edge = edges[i];
-
-                // Each physical edge appears twice in a half-edge mesh.
-                // Keep only one of the pair.
-                if (i > edge.Twin)
-                    continue;
-
-                indices[outputIndex++] = edge.Origin;
-                indices[outputIndex++] = edges[edge.Twin].Origin;
+                if (i > edge.Twin) continue;
+                lineIndices[lineOutIdx++] = edge.Origin;
+                lineIndices[lineOutIdx++] = edges[edge.Twin].Origin;
             }
-            Assert.AreEqual(indexCount, outputIndex, "Hull index count mismatch");
 
-            var dataArray = Mesh.AllocateWritableMeshData(1);
-            var meshData = dataArray[0];
+            Mesh wireMesh = new() { name = "Box3D Debug Hull Wire" };
+            var dataArray1 = Mesh.AllocateWritableMeshData(1);
+            var meshData1 = dataArray1[0];
+            meshData1.SetVertexBufferParams(points.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
+            meshData1.SetIndexBufferParams(lineIndexCount, IndexFormat.UInt16);
+            points.CopyTo(meshData1.GetVertexData<float3>());
+            lineIndices.CopyTo(meshData1.GetIndexData<ushort>());
+            meshData1.subMeshCount = 1;
+            meshData1.SetSubMesh(0, new SubMeshDescriptor(0, lineIndexCount, MeshTopology.Lines));
+            Mesh.ApplyAndDisposeWritableMeshData(dataArray1, wireMesh);
+            wireMesh.RecalculateBounds();
 
-            VertexAttributeDescriptor vAttrDesc = new(
-                VertexAttribute.Position,
-                VertexAttributeFormat.Float32,
-                3
-            );
-            meshData.SetVertexBufferParams(points.Length, vAttrDesc);
-            meshData.SetIndexBufferParams(indexCount, IndexFormat.UInt16);
+            // 2. Create Solid Mesh (Triangles)
+            int triangleCount = edges.Length - 2 * hull.FaceCount;
+            int triIndexCount = triangleCount * 3;
+            Span<ushort> triIndices = triIndexCount <= 1024
+                ? stackalloc ushort[triIndexCount]
+                : new ushort[triIndexCount];
+            
+            Span<int> faceStart = stackalloc int[hull.FaceCount];
+            faceStart.Fill(-1);
+            for (int i = 0; i < edges.Length; i++) {
+                if (faceStart[edges[i].Face] == -1) faceStart[edges[i].Face] = i;
+            }
 
-            // 3. Directly copy your ReadOnlySpan<float3> points into Unity's vertex memory
-            var destVerts = meshData.GetVertexData<float3>();
-            points.CopyTo(destVerts);
+            int triOutIdx = 0;
+            for (int f = 0; f < hull.FaceCount; f++) {
+                int startEdge = faceStart[f];
+                if (startEdge == -1) continue;
+                
+                int v0 = edges[startEdge].Origin;
+                int currEdge = edges[startEdge].Next;
+                
+                while (currEdge != startEdge) {
+                    int v1 = edges[currEdge].Origin;
+                    int nextEdge = edges[currEdge].Next;
+                    
+                    if (nextEdge == startEdge) break;
+                    
+                    int v2 = edges[nextEdge].Origin;
+                    
+                    triIndices[triOutIdx++] = (ushort)v0;
+                    triIndices[triOutIdx++] = (ushort)v2; // Swap v1/v2 to make faces point outward
+                    triIndices[triOutIdx++] = (ushort)v1;
+                    
+                    currEdge = nextEdge;
+                }
+            }
 
-            // 4. Copy your wireframe line indices into Unity's index memory
-            var destIndices = meshData.GetIndexData<ushort>();
-            indices.CopyTo(destIndices);
+            Mesh solidMesh = new() { name = "Box3D Debug Hull Solid" };
+            var dataArray2 = Mesh.AllocateWritableMeshData(1);
+            var meshData2 = dataArray2[0];
+            meshData2.SetVertexBufferParams(points.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
+            meshData2.SetIndexBufferParams(triIndexCount, IndexFormat.UInt16);
+            points.CopyTo(meshData2.GetVertexData<float3>());
+            triIndices.CopyTo(meshData2.GetIndexData<ushort>());
+            meshData2.subMeshCount = 1;
+            meshData2.SetSubMesh(0, new SubMeshDescriptor(0, triOutIdx, MeshTopology.Triangles));
+            Mesh.ApplyAndDisposeWritableMeshData(dataArray2, solidMesh);
+            
+            solidMesh.RecalculateNormals();
+            solidMesh.RecalculateBounds();
 
-            // 5. Configure SubMesh as MeshTopology.Lines
-            meshData.subMeshCount = 1;
-            meshData.SetSubMesh(0, new SubMeshDescriptor(0, indexCount, MeshTopology.Lines));
-
-            // 6. Finalize into a Unity Mesh
-            Mesh mesh = new() { name = "Box3D Debug Hull" };
-            Mesh.ApplyAndDisposeWritableMeshData(dataArray, mesh);
-            mesh.RecalculateBounds();
-
-            return new DebugXHull(mesh);
+            return new DebugXHull(solidMesh, wireMesh);
         }
 
         public IDebugShape CreateMesh(MeshView mesh, in Shape source)
@@ -172,23 +226,24 @@ namespace Box3D.Draw
             var destVerts = meshData.GetVertexData<float3>();
             vertices.CopyTo(destVerts);
 
-            // 5. Direct 0-copy cast of MeshTriangle -> int span
-            // Assumes MeshTriangle is layed out as 3 sequential 32-bit ints (Index1, Index2, Index3)
-            Assert.AreEqual(3 * sizeof(int), Unsafe.SizeOf<MeshTriangle>());
-            ReadOnlySpan<int> indexSpan = MemoryMarshal.Cast<MeshTriangle, int>(triangles);
-
             if (indexFormat == IndexFormat.UInt32)
             {
                 var destIndices = meshData.GetIndexData<int>();
-                indexSpan.CopyTo(destIndices);
+                for (int i = 0; i < triangles.Length; ++i)
+                {
+                    destIndices[i * 3] = triangles[i].Index1;
+                    destIndices[i * 3 + 1] = triangles[i].Index3; // Swapped to reverse winding order
+                    destIndices[i * 3 + 2] = triangles[i].Index2; // Swapped to reverse winding order
+                }
             }
             else
             {
-                // If ushort indices are required by UInt16 format, downcast into destination
                 var destIndices = meshData.GetIndexData<ushort>();
-                for (int i = 0; i < indexSpan.Length; ++i)
+                for (int i = 0; i < triangles.Length; ++i)
                 {
-                    destIndices[i] = (ushort)indexSpan[i];
+                    destIndices[i * 3] = (ushort)triangles[i].Index1;
+                    destIndices[i * 3 + 1] = (ushort)triangles[i].Index3; // Swapped to reverse winding order
+                    destIndices[i * 3 + 2] = (ushort)triangles[i].Index2; // Swapped to reverse winding order
                 }
             }
 
@@ -199,6 +254,7 @@ namespace Box3D.Draw
             // 7. Apply to final Unity Mesh
             Mesh unity_mesh = new() { name = "Box3D Debug Mesh" };
             Mesh.ApplyAndDisposeWritableMeshData(dataArray, unity_mesh);
+            unity_mesh.RecalculateNormals();
             unity_mesh.RecalculateBounds();
 
             return new DebugXMesh(unity_mesh, mesh.Scale);
@@ -346,6 +402,14 @@ namespace Box3D.Draw
             return CompoundDebugDraw.CreateCompound(this, compoundView, source);
         }
 
+        private void SafeDestroyMesh(Mesh mesh)
+        {
+            if (mesh != null)
+            {
+                s_Trash.Add(mesh);
+            }
+        }
+
         public void DestroyShape(IDebugShape shape)
         {
             switch (shape)
@@ -354,13 +418,14 @@ namespace Box3D.Draw
                     CompoundDebugDraw.DestroyCompound(this, compoundShape);
                     break;
                 case DebugXHull hull:
-                    UnityEngine.Object.Destroy(hull.mesh);
+                    SafeDestroyMesh(hull.solidMesh);
+                    SafeDestroyMesh(hull.wireMesh);
                     break;
                 case DebugXMesh mesh:
-                    UnityEngine.Object.Destroy(mesh.mesh);
+                    SafeDestroyMesh(mesh.mesh);
                     break;
                 case DebugXHeightField heightField:
-                    UnityEngine.Object.Destroy(heightField.mesh);
+                    SafeDestroyMesh(heightField.mesh);
                     break;
                 case DebugXCapsule:
                 case DebugXSphere:
@@ -387,16 +452,11 @@ namespace Box3D.Draw
             var c = ToColor(color);
             var p = transform.Position + math.rotate(transform.Rotation, center);
             Color fill_c = new(c.r, c.g, c.b, 0.18f);
+            
             DebugX.Draw(fill_c).Sphere(p, radius);
+            DebugX.Draw(c).WireSphere(p, radius);
 
-            float3x3 rotMatrix = new(transform.Rotation);
-            float3 right = rotMatrix.c0;
-            float3 up = rotMatrix.c1;
-            float3 forward = rotMatrix.c2;
-
-            DebugX.Draw(c).Circle(p, right, radius);
-            DebugX.Draw(c).Circle(p, up, radius);
-            DebugX.Draw(c).Circle(p, forward, radius);
+            float3 forward = math.rotate(transform.Rotation, new float3(0, 0, 1));
             DebugX.Draw(Color.white).Line(p, p + forward * radius);
         }
 
@@ -418,7 +478,7 @@ namespace Box3D.Draw
         {
             var c = ToColor(color);
             Color fill_c = new(c.r, c.g, c.b, 0.18f);
-            DebugX.Draw(fill_c).UnlitMesh(mesh, transform.Position, transform.Rotation, scale);
+            DebugX.Draw(fill_c).Mesh(mesh, transform.Position, transform.Rotation, scale);
             DebugX.Draw(c).WireMesh(mesh, transform.Position, transform.Rotation, scale);
         }
 
@@ -451,7 +511,10 @@ namespace Box3D.Draw
                     break;
 
                 case DebugXHull hull:
-                    DrawMesh(transform, hull.mesh, color, new float3(1, 1, 1));
+                    var cHull = ToColor(color);
+                    Color fill_cHull = new(cHull.r, cHull.g, cHull.b, 0.18f);
+                    if (hull.solidMesh != null) DebugX.Draw(fill_cHull).Mesh(hull.solidMesh, transform.Position, transform.Rotation, new float3(1, 1, 1));
+                    if (hull.wireMesh != null) DebugX.Draw(cHull).Mesh<DCFApixels.DebugXCore.GeometryUnlitMat>(hull.wireMesh, transform.Position, transform.Rotation, new float3(1, 1, 1));
                     break;
 
                 case DebugXMesh mesh:
@@ -503,13 +566,13 @@ namespace Box3D.Draw
         public void DrawBounds(in B3Aabb bounds, uint color)
         {
             float3 center = (bounds.LowerBound + bounds.UpperBound) * 0.5f;
-            float3 size = (bounds.UpperBound - bounds.LowerBound) * 0.5f;
+            float3 size = (bounds.UpperBound - bounds.LowerBound); // Full size
             DebugX.Draw(ToColor(color)).WireCube(center, Quaternion.identity, size);
         }
 
         public void DrawBox(float3 extents, in B3WorldTransform transform, uint color)
         {
-            DebugX.Draw(ToColor(color)).Cube(transform.Position, transform.Rotation, extents);
+            DebugX.Draw(ToColor(color)).Cube(transform.Position, transform.Rotation, extents * 2f);
         }
 
         public void DrawString(B3Pos p, in string str, uint color)
