@@ -12,7 +12,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": ["NEVER_COMPILE"],
     "versionDefines": [],
     "noEngineReferences": false
 }

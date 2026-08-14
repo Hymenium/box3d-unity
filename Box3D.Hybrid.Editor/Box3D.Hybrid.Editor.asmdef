@@ -11,5 +11,6 @@
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "autoReferenced": true
+    "autoReferenced": true,
+    "defineConstraints": ["NEVER_COMPILE"]
 }
