@@ -99,6 +99,14 @@ namespace Box3D.Draw
             }
         }
 
+        private void SafeDestroyMesh(Mesh mesh)
+        {
+            if (mesh != null)
+            {
+                s_Trash.Add(mesh);
+            }
+        }
+
         // Buffered geometry
         public IDebugShape CreateSphere(in Sphere sphere, in Shape source)
         {
@@ -149,33 +157,36 @@ namespace Box3D.Draw
             Span<ushort> triIndices = triIndexCount <= 1024
                 ? stackalloc ushort[triIndexCount]
                 : new ushort[triIndexCount];
-            
+
             Span<int> faceStart = stackalloc int[hull.FaceCount];
             faceStart.Fill(-1);
-            for (int i = 0; i < edges.Length; i++) {
+            for (int i = 0; i < edges.Length; i++)
+            {
                 if (faceStart[edges[i].Face] == -1) faceStart[edges[i].Face] = i;
             }
 
             int triOutIdx = 0;
-            for (int f = 0; f < hull.FaceCount; f++) {
+            for (int f = 0; f < hull.FaceCount; f++)
+            {
                 int startEdge = faceStart[f];
                 if (startEdge == -1) continue;
-                
+
                 int v0 = edges[startEdge].Origin;
                 int currEdge = edges[startEdge].Next;
-                
-                while (currEdge != startEdge) {
+
+                while (currEdge != startEdge)
+                {
                     int v1 = edges[currEdge].Origin;
                     int nextEdge = edges[currEdge].Next;
-                    
+
                     if (nextEdge == startEdge) break;
-                    
+
                     int v2 = edges[nextEdge].Origin;
-                    
+
                     triIndices[triOutIdx++] = (ushort)v0;
-                    triIndices[triOutIdx++] = (ushort)v2; // Swap v1/v2 to make faces point outward
                     triIndices[triOutIdx++] = (ushort)v1;
-                    
+                    triIndices[triOutIdx++] = (ushort)v2;
+
                     currEdge = nextEdge;
                 }
             }
@@ -190,7 +201,7 @@ namespace Box3D.Draw
             meshData2.subMeshCount = 1;
             meshData2.SetSubMesh(0, new SubMeshDescriptor(0, triOutIdx, MeshTopology.Triangles));
             Mesh.ApplyAndDisposeWritableMeshData(dataArray2, solidMesh);
-            
+
             solidMesh.RecalculateNormals();
             solidMesh.RecalculateBounds();
 
@@ -222,19 +233,15 @@ namespace Box3D.Draw
             meshData.SetVertexBufferParams(vertices.Length, vAttrDesc);
             meshData.SetIndexBufferParams(totalIndices, indexFormat);
 
-            // 4. Copy vertex positions directly from ReadOnlySpan<float3> (0-alloc)
+            // memory copy
             var destVerts = meshData.GetVertexData<float3>();
             vertices.CopyTo(destVerts);
 
             if (indexFormat == IndexFormat.UInt32)
             {
-                var destIndices = meshData.GetIndexData<int>();
-                for (int i = 0; i < triangles.Length; ++i)
-                {
-                    destIndices[i * 3] = triangles[i].Index1;
-                    destIndices[i * 3 + 1] = triangles[i].Index3; // Swapped to reverse winding order
-                    destIndices[i * 3 + 2] = triangles[i].Index2; // Swapped to reverse winding order
-                }
+                // memory copy
+                var destIndices = meshData.GetIndexData<MeshTriangle>();
+                triangles.CopyTo(destIndices);
             }
             else
             {
@@ -242,8 +249,8 @@ namespace Box3D.Draw
                 for (int i = 0; i < triangles.Length; ++i)
                 {
                     destIndices[i * 3] = (ushort)triangles[i].Index1;
-                    destIndices[i * 3 + 1] = (ushort)triangles[i].Index3; // Swapped to reverse winding order
-                    destIndices[i * 3 + 2] = (ushort)triangles[i].Index2; // Swapped to reverse winding order
+                    destIndices[i * 3 + 1] = (ushort)triangles[i].Index2;
+                    destIndices[i * 3 + 2] = (ushort)triangles[i].Index3;
                 }
             }
 
@@ -402,13 +409,6 @@ namespace Box3D.Draw
             return CompoundDebugDraw.CreateCompound(this, compoundView, source);
         }
 
-        private void SafeDestroyMesh(Mesh mesh)
-        {
-            if (mesh != null)
-            {
-                s_Trash.Add(mesh);
-            }
-        }
 
         public void DestroyShape(IDebugShape shape)
         {
@@ -452,7 +452,7 @@ namespace Box3D.Draw
             var c = ToColor(color);
             var p = transform.Position + math.rotate(transform.Rotation, center);
             Color fill_c = new(c.r, c.g, c.b, 0.18f);
-            
+
             DebugX.Draw(fill_c).Sphere(p, radius);
             DebugX.Draw(c).WireSphere(p, radius);
 
@@ -467,8 +467,14 @@ namespace Box3D.Draw
             var p1 = transform.Position + math.rotate(transform.Rotation, c1);
             var p2 = transform.Position + math.rotate(transform.Rotation, c2);
 
-            DebugX.Draw(fill_c).Capsule(p1, p2, radius);
-            DebugX.Draw(c).WireCapsule(p1, p2, radius);
+            var center = (p1 + p2) * 0.5f;
+            var distance = math.distance(p1, p2);
+            var height = distance + radius * 2f;
+            var dir = distance > 0 ? (float3)((p2 - p1) / distance) : new float3(0, 1, 0);
+            var rotation = UnityEngine.Quaternion.LookRotation(dir, UnityEngine.Vector3.up) * UnityEngine.Quaternion.Euler(90, 0, 0);
+
+            DebugX.Draw(fill_c).Capsule(center, rotation, radius, height);
+            DebugX.Draw(c).WireCapsule(center, rotation, radius, height);
 
             float3 forward = math.rotate(transform.Rotation, new float3(0, 0, 1));
             DebugX.Draw(Color.white).Line(transform.Position, transform.Position + forward * radius);
@@ -476,6 +482,7 @@ namespace Box3D.Draw
 
         private void DrawMesh(in B3WorldTransform transform, in Mesh mesh, uint color, in float3 scale)
         {
+            if (mesh == null) return;
             var c = ToColor(color);
             Color fill_c = new(c.r, c.g, c.b, 0.18f);
             DebugX.Draw(fill_c).Mesh(mesh, transform.Position, transform.Rotation, scale);
@@ -560,7 +567,16 @@ namespace Box3D.Draw
 
         public void DrawCapsule(B3Pos p1, B3Pos p2, float radius, uint color, float alpha)
         {
-            DebugX.Draw(ToColor(color)).Capsule(p1, p2, radius);
+            var c = ToColor(color);
+            Color fill_c = new(c.r, c.g, c.b, alpha);
+            var center = (p1 + p2) * 0.5f;
+            var distance = math.distance(p1, p2);
+            var height = distance + radius * 2f;
+            var dir = distance > 0 ? (float3)((p2 - p1) / distance) : new float3(0, 1, 0);
+            var rotation = UnityEngine.Quaternion.LookRotation(dir, UnityEngine.Vector3.up) * UnityEngine.Quaternion.Euler(90, 0, 0);
+
+            DebugX.Draw(fill_c).Capsule(center, rotation, radius, height);
+            if (alpha > 0f) DebugX.Draw(c).WireCapsule(center, rotation, radius, height);
         }
 
         public void DrawBounds(in B3Aabb bounds, uint color)
