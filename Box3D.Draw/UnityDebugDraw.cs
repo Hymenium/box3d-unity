@@ -860,6 +860,11 @@ namespace Box3D.Draw
                 DrawLine(p1_f - side * radius, p2_f - side * radius, c);
                 DrawLine(p1_f + fwd * radius, p2_f + fwd * radius, c);
                 DrawLine(p1_f - fwd * radius, p2_f - fwd * radius, c);
+
+                DrawArcLines(p2_f, radius, side, axis, c);
+                DrawArcLines(p2_f, radius, fwd, axis, c);
+                DrawArcLines(p1_f, radius, side, -axis, c);
+                DrawArcLines(p1_f, radius, fwd, -axis, c);
             }
         }
 
