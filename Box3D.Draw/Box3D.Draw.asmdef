@@ -3,8 +3,7 @@
     "rootNamespace": "Box3D.Draw",
     "references": [
         "Box3D.Runtime",
-        "Unity.Mathematics",
-        "DCFApixels.DebugX"
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,12 +12,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [
-        {
-            "name": "com.dcfa_pixels.debugx",
-            "expression": "",
-            "define": "DEBUGX_AVAILABLE"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }
