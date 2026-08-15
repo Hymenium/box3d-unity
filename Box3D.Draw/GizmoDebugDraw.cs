@@ -103,7 +103,7 @@ namespace Box3D.Draw
     public class GizmoDebugDrawTarget : IDebugDrawTarget
     {
         public int drawCallCount;
-        public B3Aabb screenBounds = new()
+        public B3Aabb CullingBounds { get; set; } = new()
         {
             LowerBound = new float3(-50f, -50f, -50f),
             UpperBound = new float3(50f, 50f, 50f)
@@ -163,7 +163,7 @@ namespace Box3D.Draw
             if (shape is DebugCompoundShape compoundShape)
             {
                 // Can use compoundShape.Data->tree
-                return CompoundDebugDraw.DrawCompound(this, compoundShape, in worldTransform, color, screenBounds);
+                return CompoundDebugDraw.DrawCompound(this, compoundShape, in worldTransform, color, CullingBounds);
             }
 
             if (shape is not GizmoDebugDrawShape gizmoShape)

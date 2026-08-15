@@ -49,6 +49,8 @@ namespace Box3D
 
     public interface IDebugDrawTarget
     {
+        B3Aabb CullingBounds { get; set; }
+
         // Return true if drawing should continue
         bool DrawShape(IDebugShape shape, in B3WorldTransform transform, uint color);
 
@@ -89,9 +91,10 @@ namespace Box3D
             var handle = GCHandle.Alloc(target);
             draw.context = (void*)GCHandle.ToIntPtr(handle);
 
-            draw.drawingBounds = drawBounds;
+        draw.drawingBounds = drawBounds;
+        target.CullingBounds = drawBounds;
 
-            draw.drawShapes = (flags & DebugDrawFlags.Shapes) != 0;
+        draw.drawShapes = (flags & DebugDrawFlags.Shapes) != 0;
             draw.drawJoints = (flags & DebugDrawFlags.Joints) != 0;
             draw.drawJointExtras = (flags & DebugDrawFlags.JointExtras) != 0;
             draw.drawBounds = (flags & DebugDrawFlags.Bounds) != 0;

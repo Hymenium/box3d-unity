@@ -412,7 +412,7 @@ namespace Box3D.Draw
 
     public class UnityDebugDrawTarget : IDebugDrawTarget
     {
-        public B3Aabb screenBounds = new()
+        public B3Aabb CullingBounds { get; set; } = new()
         {
             LowerBound = new float3(-50f, -50f, -50f),
             UpperBound = new float3(50f, 50f, 50f)
@@ -672,7 +672,7 @@ namespace Box3D.Draw
         {
             if (shape is DebugCompoundShape compoundShape)
             {
-                return CompoundDebugDraw.DrawCompound(this, compoundShape, in transform, color, screenBounds);
+                return CompoundDebugDraw.DrawCompound(this, compoundShape, in transform, color, CullingBounds);
             }
 
             if (shape is not UnityDebugShape)
