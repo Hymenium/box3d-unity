@@ -23,6 +23,7 @@ namespace Box3D.Tests
 
     public sealed class TestingDebugDrawTarget : IDebugDrawTarget
     {
+        public B3Aabb CullingBounds { get; set; }
         public bool WasCalled { get; private set; }
 
         public bool DrawShape(IDebugShape shape, in B3WorldTransform transform, uint color)

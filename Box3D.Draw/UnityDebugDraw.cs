@@ -412,6 +412,25 @@ namespace Box3D.Draw
 
     public class UnityDebugDrawTarget : IDebugDrawTarget
     {
+        private struct DebugStringData
+        {
+            public float3 Position;
+            public string Text;
+            public Color Color;
+        }
+
+        private System.Collections.Generic.List<DebugStringData> _strings = new(1024);
+        private Mesh _textMesh;
+        private Material _fontMat;
+        private Font _font;
+        private TextGenerator _textGen;
+        private TextGenerationSettings _textGenSettings;
+
+        private System.Collections.Generic.List<Vector3> _textVertices = new(4096);
+        private System.Collections.Generic.List<Color32> _textColors = new(4096);
+        private System.Collections.Generic.List<Vector2> _textUVs = new(4096);
+        private System.Collections.Generic.List<int> _textIndices = new(6144);
+
         public B3Aabb CullingBounds { get; set; } = new()
         {
             LowerBound = new float3(-50f, -50f, -50f),
@@ -453,6 +472,39 @@ namespace Box3D.Draw
             _mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             _mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
             _mat.SetInt("_ZWrite", 0);
+        }
+
+        private void InitText()
+        {
+            if (_font != null) return;
+            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (_font != null)
+            {
+                _fontMat = _font.material;
+            }
+
+            _textGen = new TextGenerator();
+            _textGenSettings = new TextGenerationSettings
+            {
+                font = _font,
+                fontSize = 14,
+                color = Color.white,
+                pivot = new Vector2(0.5f, 0.5f),
+                generationExtents = new Vector2(1000, 1000),
+                richText = false,
+                horizontalOverflow = HorizontalWrapMode.Overflow,
+                verticalOverflow = VerticalWrapMode.Overflow,
+                lineSpacing = 1,
+                fontStyle = FontStyle.Normal,
+                resizeTextForBestFit = false,
+                updateBounds = false,
+                scaleFactor = 1.0f,
+                textAnchor = TextAnchor.MiddleCenter
+            };
+
+            _textMesh = new Mesh { name = "Box3D Text Buffer" };
+            _textMesh.MarkDynamic();
+            _textMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         }
 
         private static System.Collections.Generic.Dictionary<float, Mesh> _capsuleMeshes = new();
@@ -862,7 +914,93 @@ namespace Box3D.Draw
 
         public void DrawString(B3Pos p, in string str, uint color)
         {
-            // Empty for now as string rendering without an external package or GUI is complex
+            _strings.Add(new DebugStringData
+            {
+                Position = p.ToFloat3(),
+                Text = str,
+                Color = ToColor(color)
+            });
+        }
+
+        public void FlushStrings(Camera camera = null)
+        {
+            if (camera == null) camera = Camera.main;
+
+            Debug.Log($"FlushStrings called. String Count: {_strings.Count}. Camera null? {camera == null}");
+
+            if (_strings.Count == 0) return;
+            if (camera == null) return;
+
+            InitText();
+
+            _textVertices.Clear();
+            _textColors.Clear();
+            _textUVs.Clear();
+            _textIndices.Clear();
+
+            quaternion camRotation = camera.transform.rotation;
+            float scale = 0.02f;
+
+            int vertexOffset = 0;
+
+            foreach (var strData in _strings)
+            {
+                _font.RequestCharactersInTexture(strData.Text, _textGenSettings.fontSize, _textGenSettings.fontStyle);
+                _textGenSettings.color = strData.Color;
+                _textGen.Populate(strData.Text, _textGenSettings);
+
+                var verts = _textGen.verts;
+                int vertCount = verts.Count;
+                if (vertCount == 0) continue;
+
+                for (int i = 0; i < vertCount; i++)
+                {
+                    UIVertex v = verts[i];
+
+                    float3 localPos = new float3(v.position.x, v.position.y, v.position.z) * scale;
+                    float3 worldPos = strData.Position + math.rotate(camRotation, localPos);
+
+                    _textVertices.Add(worldPos);
+                    _textColors.Add(v.color);
+                    _textUVs.Add(v.uv0);
+                }
+
+                for (int i = 0; i < vertCount; i += 4)
+                {
+                    int baseIdx = vertexOffset + i;
+                    _textIndices.Add(baseIdx + 0);
+                    _textIndices.Add(baseIdx + 1);
+                    _textIndices.Add(baseIdx + 2);
+
+                    _textIndices.Add(baseIdx + 2);
+                    _textIndices.Add(baseIdx + 3);
+                    _textIndices.Add(baseIdx + 0);
+                }
+
+                vertexOffset += vertCount;
+            }
+
+            if (_textVertices.Count > 0)
+            {
+                _textMesh.Clear();
+                _textMesh.SetVertices(_textVertices);
+                _textMesh.SetColors(_textColors);
+                _textMesh.SetUVs(0, _textUVs);
+                _textMesh.SetIndices(_textIndices, MeshTopology.Triangles, 0);
+
+                if (_fontMat != null)
+                {
+                    Graphics.DrawMesh(_textMesh, Matrix4x4.identity, _fontMat, 0, null, 0);
+                }
+            }
+
+            _strings.Clear();
+        }
+
+        public void Flush(Camera camera = null)
+        {
+            FlushLines();
+            FlushStrings(camera);
         }
     }
 }
