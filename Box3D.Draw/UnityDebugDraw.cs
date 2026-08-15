@@ -571,7 +571,7 @@ namespace Box3D.Draw
             Graphics.DrawMesh(mesh, Matrix4x4.TRS(position, rotation, scale), _mat, 0, null, 0, block);
         }
 
-        private static void DrawCircleLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
+        private void DrawCircleLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
         {
             const int segments = 16;
             float3 previous = center + axisA * radius;
@@ -579,7 +579,7 @@ namespace Box3D.Draw
             {
                 float angle = i * (2f * math.PI / segments);
                 float3 next = center + (axisA * math.cos(angle) + axisB * math.sin(angle)) * radius;
-                Debug.DrawLine(previous, next, color);
+                DrawLine(previous, next, color);
                 previous = next;
             }
         }
