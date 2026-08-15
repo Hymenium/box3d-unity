@@ -573,7 +573,7 @@ namespace Box3D.Draw
 
         private void DrawCircleLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
         {
-            const int segments = 16;
+            const int segments = 32;
             float3 previous = center + axisA * radius;
             for (int i = 1; i <= segments; i++)
             {
@@ -586,7 +586,7 @@ namespace Box3D.Draw
 
         private void DrawArcLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
         {
-            const int segments = 8;
+            const int segments = 16;
             float3 previous = center + axisA * radius;
             for (int i = 1; i <= segments; i++)
             {

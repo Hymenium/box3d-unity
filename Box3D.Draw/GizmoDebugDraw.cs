@@ -25,7 +25,7 @@ namespace Box3D.Draw
 
         private static void AddCircle(LineList lines, float3 center, float radius, float3 axisA, float3 axisB)
         {
-            const int segments = 16;
+            const int segments = 32;
             float3 previous = center + axisA * radius;
             for (int i = 1; i <= segments; i++)
             {
