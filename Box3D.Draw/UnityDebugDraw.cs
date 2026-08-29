@@ -411,8 +411,34 @@ namespace Box3D.Draw
         }
     }
 
-    public class UnityDebugDrawTarget : IDebugDrawTarget
+    public class UnityDebugDrawTarget : IDebugDrawTarget, IDisposable
     {
+        public UnityDebugDrawTarget()
+        {
+            RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
+        }
+
+        ~UnityDebugDrawTarget()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
+        }
+
+        private void OnEndCameraRendering(ScriptableRenderContext context, Camera cam)
+        {
+            FlushScreenLines(cam.pixelWidth, cam.pixelHeight);
+        }
+
         private struct DebugStringData
         {
             public float3 Position;
@@ -479,9 +505,9 @@ namespace Box3D.Draw
             var shader = Shader.Find("Hidden/Internal-Colored");
             _mat = new(shader);
             _mat.hideFlags = HideFlags.HideAndDontSave;
-            _mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            _mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            _mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            _mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            _mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            _mat.SetInt("_Cull", (int)CullMode.Off);
             _mat.SetInt("_ZWrite", 0);
         }
 
@@ -489,9 +515,22 @@ namespace Box3D.Draw
         {
             if (_font != null) return;
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (!_font)
+            {
+                _font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            }
             if (_font != null)
             {
-                _fontMat = _font.material;
+                var shader = Shader.Find("Sprites/Default");
+                if (shader != null)
+                {
+                    _fontMat = new Material(shader);
+                    _fontMat.hideFlags = HideFlags.HideAndDontSave;
+                }
+                else
+                {
+                    _fontMat = _font.material;
+                }
             }
 
             _textGen = new TextGenerator();
@@ -661,7 +700,7 @@ namespace Box3D.Draw
             _lineColors.Clear();
         }
 
-        private void DrawScreenLine(
+        public void DrawScreenLine(
             in float2 start,
             in float2 end,
             Color color)
@@ -676,7 +715,16 @@ namespace Box3D.Draw
         public void FlushScreenLines(float screenWidth, float screenHeight)
         {
             if (_screenLineVertices.Count == 0) return;
-            if (_lineMat == null) InitMeshes();
+            if (_lineMat == null)
+            {
+                var shader = Shader.Find("Hidden/Internal-Colored");
+                _lineMat = new(shader);
+                _lineMat.hideFlags = HideFlags.HideAndDontSave;
+                _lineMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                _lineMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                _lineMat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+                _lineMat.SetInt("_ZWrite", 0);
+            }
 
             _lineMat.SetPass(0);
             GL.PushMatrix();
@@ -1061,10 +1109,16 @@ namespace Box3D.Draw
                 _textMesh.SetColors(_textColors);
                 _textMesh.SetUVs(0, _textUVs);
                 _textMesh.SetIndices(_textIndices, MeshTopology.Triangles, 0);
+                _textMesh.RecalculateBounds();
 
                 if (_fontMat != null)
                 {
+                    _fontMat.mainTexture = _font.material.mainTexture;
                     Graphics.DrawMesh(_textMesh, Matrix4x4.identity, _fontMat, 0, null, 0);
+                }
+                else
+                {
+                    Debug.LogError("Cannot draw strings because _fontMat is null!");
                 }
             }
 
@@ -1080,7 +1134,6 @@ namespace Box3D.Draw
             if (camera == null) camera = Camera.main;
             FlushLines();
             FlushStrings(camera.transform.rotation);
-            FlushScreenLines(camera.pixelWidth, camera.pixelHeight);
         }
     }
 }
