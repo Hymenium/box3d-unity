@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -437,17 +438,27 @@ namespace Box3D.Draw
             UpperBound = new float3(50f, 50f, 50f)
         };
 
+        private const int _circleSegments = 32;
+        private const int _arcSegments = 16;
+
         private static Mesh _solidSphere;
         private static Mesh _solidCapsule;
         private static Mesh _solidCube;
         private static Mesh _solidCylinder;
         private static Material _mat;
 
-        private System.Collections.Generic.List<UnityEngine.Vector3> _lineVertices = new(16384);
-        private System.Collections.Generic.List<UnityEngine.Color32> _lineColors = new(16384);
-        private System.Collections.Generic.List<int> _lineIndices = new(16384);
+        private const int _worldLineVertexCount = 16384;
+        private const int _worldLineIndexCount = 16384;
+        private const int _screenLineVertexCount = 1024;
+
+        private readonly List<UnityEngine.Vector3> _lineVertices = new(_worldLineVertexCount);
+        private readonly List<UnityEngine.Color32> _lineColors = new(_worldLineVertexCount);
+        private readonly List<int> _lineIndices = new(_worldLineIndexCount);
         private Mesh _lineMesh;
         private Material _lineMat;
+
+        private readonly List<UnityEngine.Vector3> _screenLineVertices = new(_screenLineVertexCount);
+        private readonly List<UnityEngine.Color32> _screenLineColors = new(_screenLineVertexCount);
 
         private static void InitMeshes()
         {
@@ -466,7 +477,7 @@ namespace Box3D.Draw
             UnityEngine.Object.Destroy(cube);
 
             var shader = Shader.Find("Hidden/Internal-Colored");
-            _mat = new Material(shader);
+            _mat = new(shader);
             _mat.hideFlags = HideFlags.HideAndDontSave;
             _mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             _mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
@@ -566,18 +577,17 @@ namespace Box3D.Draw
         {
             if (mesh == null) return;
             InitMeshes();
-            MaterialPropertyBlock block = new MaterialPropertyBlock();
+            MaterialPropertyBlock block = new();
             block.SetColor("_Color", color);
             Graphics.DrawMesh(mesh, Matrix4x4.TRS(position, rotation, scale), _mat, 0, null, 0, block);
         }
 
         private void DrawCircleLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
         {
-            const int segments = 32;
             float3 previous = center + axisA * radius;
-            for (int i = 1; i <= segments; i++)
+            for (int i = 1; i <= _circleSegments; i++)
             {
-                float angle = i * (2f * math.PI / segments);
+                float angle = i * (2f * math.PI / _circleSegments);
                 float3 next = center + (axisA * math.cos(angle) + axisB * math.sin(angle)) * radius;
                 DrawLine(previous, next, color);
                 previous = next;
@@ -586,11 +596,10 @@ namespace Box3D.Draw
 
         private void DrawArcLines(float3 center, float radius, float3 axisA, float3 axisB, Color color)
         {
-            const int segments = 16;
             float3 previous = center + axisA * radius;
-            for (int i = 1; i <= segments; i++)
+            for (int i = 1; i <= _arcSegments; i++)
             {
-                float angle = i * (math.PI / segments);
+                float angle = i * (math.PI / _arcSegments);
                 float3 next = center + (axisA * math.cos(angle) + axisB * math.sin(angle)) * radius;
                 DrawLine(previous, next, color);
                 previous = next;
@@ -650,6 +659,70 @@ namespace Box3D.Draw
 
             _lineVertices.Clear();
             _lineColors.Clear();
+        }
+
+        private void DrawScreenLine(
+            in float2 start,
+            in float2 end,
+            Color color)
+        {
+            Color32 c32 = color;
+            _screenLineVertices.Add(new(start.x, start.y, 0));
+            _screenLineVertices.Add(new(end.x, end.y, 0));
+            _screenLineColors.Add(c32);
+            _screenLineColors.Add(c32);
+        }
+
+        public void FlushScreenLines(float screenWidth, float screenHeight)
+        {
+            if (_screenLineVertices.Count == 0) return;
+            if (_lineMat == null) InitMeshes();
+
+            _lineMat.SetPass(0);
+            GL.PushMatrix();
+            GL.LoadPixelMatrix(0, screenWidth, 0, screenHeight);
+
+            GL.Begin(GL.LINES);
+            for (int i = 0; i < _screenLineVertices.Count; i++)
+            {
+                GL.Color(_screenLineColors[i]);
+                GL.Vertex(_screenLineVertices[i]);
+            }
+            GL.End();
+            GL.PopMatrix();
+
+            _screenLineVertices.Clear();
+            _screenLineColors.Clear();
+        }
+
+        public void DrawScreenCircle(float2 center, float radius, Color color)
+        {
+            Color32 c32 = color;
+
+            for (int i = 0; i < _circleSegments; i++)
+            {
+                float a1 = i * (2f * math.PI / _circleSegments);
+                float a2 = (i + 1) * (2f * math.PI / _circleSegments);
+
+                float2 p1 = new(center.x + math.cos(a1) * radius, center.y + math.sin(a1) * radius);
+                float2 p2 = new(center.x + math.cos(a2) * radius, center.y + math.sin(a2) * radius);
+                DrawScreenLine(p1, p2, color);
+            }
+        }
+
+        public void DrawScreenBox(float2 position, float2 size, Color color)
+        {
+            float2 halfSize = size * 0.5f;
+            float2 p1 = position - halfSize;
+            float2 p2 = position + halfSize;
+
+            float2 topLeft = new(p1.x, p2.y);
+            float2 bottomRight = new(p2.x, p1.y);
+
+            DrawScreenLine(p1, topLeft, color);
+            DrawScreenLine(topLeft, p2, color);
+            DrawScreenLine(p2, bottomRight, color);
+            DrawScreenLine(bottomRight, p1, color);
         }
 
         private void DrawSphere(
@@ -927,14 +1000,11 @@ namespace Box3D.Draw
             });
         }
 
-        public void FlushStrings(Camera camera = null)
+        public void FlushStrings(in quaternion cameraRotation)
         {
-            if (camera == null) camera = Camera.main;
-
-            Debug.Log($"FlushStrings called. String Count: {_strings.Count}. Camera null? {camera == null}");
+            Debug.Log($"FlushStrings called. String Count: {_strings.Count}.");
 
             if (_strings.Count == 0) return;
-            if (camera == null) return;
 
             InitText();
 
@@ -943,7 +1013,6 @@ namespace Box3D.Draw
             _textUVs.Clear();
             _textIndices.Clear();
 
-            quaternion camRotation = camera.transform.rotation;
             float scale = 0.02f;
 
             int vertexOffset = 0;
@@ -963,7 +1032,7 @@ namespace Box3D.Draw
                     UIVertex v = verts[i];
 
                     float3 localPos = new float3(v.position.x, v.position.y, v.position.z) * scale;
-                    float3 worldPos = strData.Position + math.rotate(camRotation, localPos);
+                    float3 worldPos = strData.Position + math.rotate(cameraRotation, localPos);
 
                     _textVertices.Add(worldPos);
                     _textColors.Add(v.color);
@@ -1002,10 +1071,16 @@ namespace Box3D.Draw
             _strings.Clear();
         }
 
+        /// <summary>
+        /// Flush all buffered drawings to the screen.
+        /// </summary>
+        /// <param name="camera">Optional camera to use. If null, Camera.main will be used.</param>
         public void Flush(Camera camera = null)
         {
+            if (camera == null) camera = Camera.main;
             FlushLines();
-            FlushStrings(camera);
+            FlushStrings(camera.transform.rotation);
+            FlushScreenLines(camera.pixelWidth, camera.pixelHeight);
         }
     }
 }
