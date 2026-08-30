@@ -1050,7 +1050,7 @@ namespace Box3D.Draw
 
         public void FlushStrings(in quaternion cameraRotation)
         {
-            Debug.Log($"FlushStrings called. String Count: {_strings.Count}.");
+            // Debug.Log($"FlushStrings called. String Count: {_strings.Count}.");
 
             if (_strings.Count == 0) return;
 
